@@ -54,7 +54,7 @@ module.exports = {
             const userMail = await User.findOne({ where: { email } })
 
             if (userMail) return res.status(401).json({ message: 'the email you entered is already registered' })
-
+            //sdad
             if (superUser.type != `super` && type == `super`)
                 return res.status(401).json({ message: 'You are not allowed to register this type of user' })
 
