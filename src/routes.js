@@ -12,7 +12,7 @@ const ImageProductController = require('./controllers/ImageProductController')
 
 const routes = express.Router()
 
-const credentials = require('./middlewares/UserCredentials')
+//const credentials = require('./middlewares/UserCredentials')
 
 //Test de rota
 routes.get(`/`, (req, res) => {
@@ -22,6 +22,9 @@ routes.get(`/`, (req, res) => {
 //Dashboard
 
 //Login
+routes.get(`/login`, (req, res) => {
+    return res.render('login', { pageClasses: `bg-gradient-primary`, pageTitle: `Login` })
+})
 
 /* Forgot e Recuperação de senha */
 routes.post('/api/forgot', UserController.forgot)
