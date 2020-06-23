@@ -20,6 +20,9 @@ routes.get(`/`, (req, res) => {
 })
 
 //Dashboard
+routes.get(`/dashboard`, (req, res) => {
+    return res.render('dashboard', { pageClasses: ``, pageTitle: `Dashboard` })
+})
 
 //Login
 routes.get(`/login`, (req, res) => {
