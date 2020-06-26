@@ -94,7 +94,10 @@ class Product extends Model {
         )
     }
 
-    static associate(models) {}
+    static associate(models) {
+        this.hasMany(models.ProductIten, { foreignKey: 'product_id', as: 'items' })
+        this.hasMany(models.Code, { foreignKey: 'product_id', as: 'codes' })
+    }
 }
 
 module.exports = Product

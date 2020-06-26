@@ -75,6 +75,21 @@ const productResource = `product`
 
 let codesInsert = []
 
+const putSpinnet = (target, action) => {
+    const spinner = document.createElement('div')
+
+    spinner.classList.add('spinner-border', 'text-primary', 'float-right')
+
+    spinner.setAttribute('role', 'status')
+
+    spinner.innerHTML = `<span class="sr-only">Loading...</span>`
+    if (action === `insert`) {
+        return target.append(spinner)
+    }
+
+    if (action === `remove`) return target.querySelector('.spinner-border').remove()
+}
+
 const changeBadgeForm = (num) => {
     //colapseCodes
     const colapseCodes = document.querySelector('.colapseCodes')
@@ -164,6 +179,8 @@ const insertSingleCode = (btn) => {
 
         const form = btn.closest('form')
 
+        putSpinnet(form, `insert`)
+
         const inputPrefix = form.querySelector('.productItemName')
         const productCode = form.querySelector('.productCode')
 
@@ -178,13 +195,15 @@ const insertSingleCode = (btn) => {
                 })
             }
 
-            if (!checkCodeInList(productCode.value))
+            if (!checkCodeInList(productCode.value)) {
+                putSpinnet(form, `remove`)
                 return Swal.fire({
                     title: `O Código duplicado`,
                     text: `O Código ${productCode.value} já está cadastrado em um item`,
                     icon: 'error',
                     confirmButtonText: 'Ok',
                 })
+            }
 
             codesInsert.push({ code: productCode.value, name: inputPrefix.value })
 
@@ -197,6 +216,8 @@ const insertSingleCode = (btn) => {
                 colapseCodes.querySelector('.card-body > .row').append(item)
 
                 changeBadgeForm(codesInsert.length)
+
+                putSpinnet(form, `remove`)
 
                 return colapseCodes.classList.add('show')
             }
@@ -211,6 +232,8 @@ const changeFileProduct = (input) => {
         input.closest('.custom-file').querySelector('label').innerHTML = filename
 
         const PrefixName = document.querySelector('.productItemName')
+
+        putSpinnet(PrefixName.closest('form'), `insert`)
 
         return formValidate([PrefixName]).then((validate) => {
             const { invalids, valids } = validate
@@ -237,13 +260,16 @@ const changeFileProduct = (input) => {
                         return res.map((code) => {
                             const div = createItem({ prefix: PrefixName.value, code: code.text })
 
-                            if (!checkCodeInList(code.text))
+                            //check if code already exist in list
+                            if (!checkCodeInList(code.text)) {
+                                putSpinnet(PrefixName.closest('form'), `remove`)
                                 return Swal.fire({
                                     title: `O Código duplicado`,
                                     text: `O Código ${code.text} já está cadastrado em um item`,
                                     icon: 'error',
                                     confirmButtonText: 'Ok',
                                 })
+                            }
 
                             codesInsert.push({ code: code.text, name: PrefixName.value })
 
@@ -253,9 +279,16 @@ const changeFileProduct = (input) => {
                         })
                     })
                     .catch((err) => {
-                        return console.log(err)
+                        putSpinnet(PrefixName.closest('form'), `remove`)
+                        return Swal.fire({
+                            title: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
                     })
             }
+
+            putSpinnet(PrefixName.closest('form'), `remove`)
 
             //Caso tenha erros
             input.value = ``
@@ -276,13 +309,15 @@ const readFile = (file) => {
 
         const { type } = file
 
-        if (type != `text/plain`)
+        if (type != `text/plain`) {
+            reject('O tipo de arquivo deve ser .txt')
             return Swal.fire({
                 title: 'O tipo de arquivo deve ser .txt',
                 text: 'Selecione um arquivo com extensão txt',
                 icon: 'error',
                 confirmButtonText: 'Ok',
             })
+        }
 
         const reqUrl = `/api/file`
         fetch(reqUrl, {
@@ -304,7 +339,7 @@ const readFile = (file) => {
 
 const requestInsertProduct = (object) => {
     return new Promise((resolve, reject) => {
-        const { name, description, weight, lot, type, availability } = object
+        const { name, description, weight, brand, lot, type, availability, items } = object
 
         const token = document.body.dataset.token
 
@@ -315,12 +350,12 @@ const requestInsertProduct = (object) => {
                 'content-type': 'application/json',
                 authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ name, description, weight, lot, type, availability }),
+            body: JSON.stringify({ name, description, weight, brand, lot, type, availability, items }),
         })
             .then((res) => res.json())
             .then((response) => {
                 if (response.error) {
-                    return reject(response.error)
+                    return reject(response.error.replace(/(\r\n|\n|\r)/gm, '<br>'))
                 }
 
                 resolve(response)
@@ -334,6 +369,7 @@ const productCreate = (form) => {
     const inputName = form.querySelector('.productName')
     const inputDescription = form.querySelector('.productDescription')
     const inputWeight = form.querySelector('.productWeigth')
+    const inputBrand = form.querySelector('.productBrand')
     const inputLot = form.querySelector('.productLot')
     const inputType = form.querySelector('.productType')
     const inputAvailability = form.querySelector('.productAvailability')
@@ -344,7 +380,9 @@ const productCreate = (form) => {
 
     form.classList.add('was-validated')
 
-    const itensValidate = [inputName, inputWeight, inputLot, inputType, inputAvailability, inputPrefix]
+    putSpinnet(form.closest('form'), `insert`)
+
+    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
@@ -359,112 +397,91 @@ const productCreate = (form) => {
 
             console.log(`Invalidos: `, invalids, `Validos: `, valids)
 
-            //itens invalidos
-            invalids.forEach((input) => {
-                input.classList.remove('is-valid')
-                input.classList.add('is-invalid')
-            })
+            if (invalids.length) {
+                putSpinnet(form.closest('form'), `remove`)
+                //itens invalidos
+                invalids.forEach((input) => {
+                    input.classList.remove('is-valid')
+                    input.classList.add('is-invalid')
+                })
+            }
+
+            //check if exist itens
+            if (!codesInsert.length) {
+                return Swal.fire({
+                    title: `Nenhum item cadastrado`,
+                    text: `Por favor ensira ao menos 1 item no produto`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            }
 
             //itens validos
             valids.forEach((input) => {
                 input.classList.remove('is-invalid')
                 input.classList.add('is-valid')
             })
+
+            return requestInsertProduct({
+                name: inputName.value,
+                description: inputDescription.value,
+                weight: inputWeight.value,
+                brand: inputBrand.value,
+                lot: inputLot.value,
+                type: inputType.value,
+                availability: inputAvailability.value,
+                items: codesInsert,
+            })
+                .then((res) => {
+                    //erro
+                    if (res.error) {
+                        const divAlert = document.createElement('div')
+                        divAlert.classList.add('alert', 'alert-danger')
+                        divAlert.setAttribute('role', 'alert')
+                        divAlert.innerHTML = res.error
+
+                        form.prepend(divAlert)
+
+                        setTimeout(() => {
+                            divAlert.remove()
+                        }, 4000)
+                    }
+                    ///dashboard
+                    //limpar formulário
+                    const allInputs = form.querySelectorAll('input, textarea, .is-valid')
+
+                    form.classList.remove('was-validated')
+
+                    Array.from(allInputs).forEach((input) => {
+                        input.value = ``
+                        return input.classList.remove('is-valid')
+                    })
+
+                    putSpinnet(form.closest('form'), `remove`)
+                    return Swal.fire({
+                        title: `Produto cadastrado`,
+                        text: `O produto ${res.name} foi cadastrado com sucesso`,
+                        icon: 'success',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
+
+                    form.prepend(divAlert)
+
+                    putSpinnet(form.closest('form'), `remove`)
+
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
         })
         .catch((err) => {
             console.log(err)
-        })
-
-    //Nome do produto
-    if (!inputName.value) {
-        return inputName.classList.add('is-invalid')
-    } else {
-        inputName.classList.remove('is-invalid')
-        inputName.classList.add('is-valid')
-        //
-    }
-
-    //Peso do produto
-    if (!inputWeight.value) {
-        return inputWeight.classList.add('is-invalid')
-    } else {
-        inputWeight.classList.remove('is-invalid')
-        inputWeight.classList.add('is-valid')
-        //
-    }
-
-    //Lote do produto
-    if (!inputLot.value) {
-        return inputLot.classList.add('is-invalid')
-    } else {
-        inputLot.classList.remove('is-invalid')
-        inputLot.classList.add('is-valid')
-        //
-    }
-
-    //Tipo do produto
-    if (!inputType.value) {
-        return inputType.classList.add('is-invalid')
-    } else {
-        inputType.classList.remove('is-invalid')
-        inputType.classList.add('is-valid')
-        //
-    }
-
-    //Disponibilidade do produto
-    if (!inputAvailability.value) {
-        return inputAvailability.classList.add('is-invalid')
-    } else {
-        inputAvailability.classList.remove('is-invalid')
-        inputAvailability.classList.add('is-valid')
-        //
-    }
-
-    return requestInsertProduct({
-        name: inputName.value,
-        description: inputDescription.value,
-        weight: inputWeight.value,
-        lot: inputLot.value,
-        type: inputType.value,
-        availability: inputAvailability.value,
-    })
-        .then((res) => {
-            //erro
-            if (res.error) {
-                const divAlert = document.createElement('div')
-                divAlert.classList.add('alert', 'alert-danger')
-                divAlert.setAttribute('role', 'alert')
-                divAlert.innerHTML = res.error
-
-                form.prepend(divAlert)
-
-                setTimeout(() => {
-                    divAlert.remove()
-                }, 4000)
-            }
-            ///dashboard
-            //limpar formulário
-            const allInputs = form.querySelectorAll('input, textarea, .is-valid')
-
-            form.classList.remove('was-validated')
-
-            Array.from(allInputs).forEach((input) => {
-                input.value = ``
-                return input.classList.remove('is-valid')
-            })
-            return alert(`Produto ${res.name} cadastrado!`)
-        })
-        .catch((error) => {
-            const divAlert = document.createElement('div')
-            divAlert.classList.add('alert', 'alert-danger')
-            divAlert.setAttribute('role', 'alert')
-            divAlert.innerHTML = error
-
-            form.prepend(divAlert)
-
-            setTimeout(() => {
-                divAlert.remove()
-            }, 4000)
         })
 }
 
