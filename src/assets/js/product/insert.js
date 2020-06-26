@@ -211,7 +211,7 @@ const readFile = (file) => {
                 confirmButtonText: 'Ok',
             })
 
-        const reqUrl = `${URL}/file`
+        const reqUrl = `/api/file`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -235,7 +235,7 @@ const requestInsertProduct = (object) => {
 
         const token = document.body.dataset.token
 
-        const reqUrl = `${URL}/${productResource}`
+        const reqUrl = `/api/${productResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {

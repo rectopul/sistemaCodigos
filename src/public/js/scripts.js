@@ -6,7 +6,7 @@ const requestLogin = (object) => {
     return new Promise((resolve, reject) => {
         const { email, password } = object
 
-        const reqUrl = `${URL}/${loginResource}`
+        const reqUrl = `/api/${loginResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -284,7 +284,7 @@ const readFile = (file) => {
                 confirmButtonText: 'Ok',
             })
 
-        const reqUrl = `${URL}/file`
+        const reqUrl = `/api/file`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -308,7 +308,7 @@ const requestInsertProduct = (object) => {
 
         const token = document.body.dataset.token
 
-        const reqUrl = `${URL}/${productResource}`
+        const reqUrl = `/api/${productResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -517,7 +517,7 @@ const requestInsertAvatar = (file) => {
         const form = new FormData()
         form.append('file', file)
 
-        const reqUrl = `${URL}/user/image`
+        const reqUrl = `/api/user/image`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -539,7 +539,7 @@ const requestInsertUser = (object) => {
 
         const token = document.body.dataset.token
 
-        const reqUrl = `${URL}/${userResource}`
+        const reqUrl = `/api/${userResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {

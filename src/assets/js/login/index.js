@@ -4,7 +4,7 @@ const requestLogin = (object) => {
     return new Promise((resolve, reject) => {
         const { email, password } = object
 
-        const reqUrl = `${URL}/${loginResource}`
+        const reqUrl = `/api/${loginResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {

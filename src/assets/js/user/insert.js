@@ -7,7 +7,7 @@ const requestInsertAvatar = (file) => {
         const form = new FormData()
         form.append('file', file)
 
-        const reqUrl = `${URL}/user/image`
+        const reqUrl = `/api/user/image`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
@@ -29,7 +29,7 @@ const requestInsertUser = (object) => {
 
         const token = document.body.dataset.token
 
-        const reqUrl = `${URL}/${userResource}`
+        const reqUrl = `/api/${userResource}`
         fetch(reqUrl, {
             method: `POST`,
             headers: {
