@@ -1,4 +1,5 @@
 node_modules
 __tests__/coverage
 tmp/uploads/*.*
+!tmp/uploads/*.txt
 !tmp/uploads/
