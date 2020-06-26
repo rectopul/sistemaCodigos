@@ -19,7 +19,12 @@ class UserImage extends Model {
                 hooks: {
                     beforeSave: async (file) => {
                         if (!file.url) {
-                            file.url = `${process.env.APP_URL}/files/${file.key}`
+                            if (process.env.DATABASE_URL) {
+                                file.url = `${process.env.APP_URL}/files/${file.key}`
+                            } else {
+                                //URLAPPREMOTE
+                                file.url = `${process.env.URLAPPREMOTE}/files/${file.key}`
+                            }
 
                             file.url = file.url.replace(' ', '%20')
                         }
