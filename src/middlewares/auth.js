@@ -1,27 +1,33 @@
-const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
+/* eslint-disable no-async-promise-executor */
+const jwt = require('jsonwebtoken')
+const User = require('../models/User')
 
-const authConfig = "";
+module.exports = async (authHeader) => {
+    return new Promise(async (resolve, reject) => {
+        let decoded
 
-module.exports = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
+        if (!authHeader)
+            return reject({
+                name: `userToken`,
+                message: `No token provided`,
+            })
 
-    if (!authHeader)
-        return res.status(401).send({ error: "No token provided 6" });
+        try {
+            decoded = jwt.verify(authHeader, process.env.APP_SECRET)
+        } catch (error) {
+            return reject(error)
+        }
 
-    const [, token] = authHeader.split(" ");
+        const { id, name } = decoded
 
+        // Fetch the user by id
+        const UserExist = await User.findOne({ where: { id, name } })
 
-    try {
-        const decoded = await jwt.verify(token, process.env.APP_SECRET)
-
-        req.userId = decoded.id;
-
-        return next();
-    } catch (err) {
-
-        return res.status(401).send({ error: err });
-    }
-
-    return next();
-};
+        if (!UserExist)
+            return reject({
+                name: `userToken`,
+                message: `User informed by token not exists`,
+            })
+        else return resolve({ user_id: UserExist.id })
+    })
+}

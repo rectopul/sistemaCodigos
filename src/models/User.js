@@ -116,7 +116,9 @@ class User extends Model {
         )
     }
 
-    static associate(models) {}
+    static associate(models) {
+        this.hasOne(models.UserImage, { foreignKey: 'user_id', as: 'avatar' })
+    }
 }
 
 User.prototype.checkPassword = function (password) {

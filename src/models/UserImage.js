@@ -6,7 +6,7 @@ const { promisify } = require('util')
 
 const s3 = new aws.S3()
 
-class ProductImages extends Model {
+class UserImage extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -45,8 +45,8 @@ class ProductImages extends Model {
     }
 
     static associate(models) {
-        this.belongsTo(models.Product, { foreignKey: 'product_id', as: 'images_products' })
+        this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' })
     }
 }
 
-module.exports = ProductImages
+module.exports = UserImage

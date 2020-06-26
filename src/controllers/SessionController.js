@@ -1,41 +1,21 @@
 const User = require('../models/User')
-const Manager = require('../models/Manager')
 
 class SessionController {
     async store(req, res) {
         try {
             const { email, password } = req.body
 
-            //Managers
-            const manager = await Manager.findOne({
-                where: { email },
-            })
-
-            if (manager) {
-                if (!(await manager.checkPassword(password))) {
-                    return res.status(401).json({ message: 'incorrect Password' })
-                }
-
-                const managerJson = user.toJSON()
-
-                delete managerJson.password_hash
-
-                return res.json({
-                    manager,
-                    token: manager.generateToken(),
-                })
-            }
+            const expiration = process.env.EXPIRATION_TOKEN === 'testing' ? 60 : 1440
 
             //super and administrator
             const user = await User.findOne({ where: { email } })
 
-            //console.log(user);
             if (!user) {
-                return res.status(401).json({ message: 'User not found' })
+                return res.status(401).json({ error: 'User not found' })
             }
 
             if (!(await user.checkPassword(password))) {
-                return res.status(401).json({ message: 'incorrect Password' })
+                return res.status(401).json({ error: 'Incorrect Password' })
             }
 
             const userjson = user.toJSON()
@@ -44,11 +24,19 @@ class SessionController {
             delete userjson.passwordResetToken
             delete userjson.passwordResetExpires
 
+            res.cookie('token', user.generateToken(), {
+                maxAge: expiration * 60000,
+                expires: new Date(Date.now() + expiration * 60000),
+                httpOnly: true,
+                //secure: false, // set to true if your using https
+            })
+
             return res.json({
                 userjson,
                 token: user.generateToken(),
             })
         } catch (error) {
+            return res.status(500).json({ error: error.message })
             console.log(`Erro de sessão: `, error)
         }
     }

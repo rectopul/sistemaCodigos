@@ -43,12 +43,15 @@ module.exports = {
         fileSize: 2 * 1024 * 1024,
     },
     fileFilter: (req, file, cb) => {
-        const allowedMines = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif']
+        const allowedMines = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'text/plain']
 
         if (allowedMines.includes(file.mimetype)) {
             cb(null, true)
         } else {
-            cb(new Error('Invalid file type'))
+            cb({
+                name: `multerError`,
+                message: `Invalid file Type`,
+            })
         }
     },
 }

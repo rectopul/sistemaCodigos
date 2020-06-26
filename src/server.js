@@ -1,19 +1,29 @@
 require('dotenv').config({
     path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
 })
-
+//toggled
 const express = require('express')
 const routes = require('./routes')
 const cors = require('cors')
 const morgan = require('morgan')
 const path = require('path')
 const handlebars = require('express-handlebars')
-//const Sigep = require('./modules/Sigep')
-//const Rastro = require('./modules/Rastro')
+const session = require('express-session')
+const flash = require('connect-flash')
+const cookieParser = require('cookie-parser')
 
 require('./database')
 
 const app = express()
+
+//sessão
+app.use(
+    session({
+        secret: `SisCodePassword`,
+        resave: true,
+        saveUninitialized: true,
+    })
+)
 
 //config
 //template angine
@@ -21,8 +31,27 @@ app.engine(
     `handlebars`,
     handlebars({
         defaultLayout: `main`,
+        helpers: {
+            ifCond: (v1, v2, options) => {
+                if (v1 === v2) {
+                    return options.fn(this)
+                }
+                return options.inverse(this)
+            },
+        },
     })
 )
+
+//flash
+app.use(flash())
+
+//middleware sessions
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success_msg')
+    res.locals.error_msg = req.flash('error_msg')
+
+    next()
+})
 
 app.set(`view engine`, `handlebars`)
 app.set('views', path.join(__dirname, 'views'))

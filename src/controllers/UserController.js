@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const UserImage = require('../models/UserImage')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const mailer = require('../modules/mailer')
@@ -6,7 +7,7 @@ const UserByToken = require('../middlewares/userByToken')
 
 module.exports = {
     async index(req, res) {
-        const users = await User.findAll()
+        const users = await User.findAll({ include: { association: `avatar` } })
         return res.json(users)
     },
 
@@ -15,19 +16,10 @@ module.exports = {
 
         if (!authHeader) return res.status(401).send({ error: 'No token provided' })
 
-        const [, token] = authHeader.split(' ')
+        const { user_id } = await UserByToken(authHeader)
 
-        var decoded
-
-        try {
-            decoded = jwt.verify(token, process.env.APP_SECRET)
-        } catch (e) {
-            return res.status(401).send({ error: 'unauthorized' })
-        }
-
-        var id = decoded.id
-        const userToken = await User.findByPk(id, {
-            include: { association: 'addresses' },
+        const userToken = await User.findByPk(user_id, {
+            include: { association: 'avatar' },
         })
 
         if (!userToken) {
@@ -45,7 +37,7 @@ module.exports = {
             if (Object.keys(req.body).length === 0)
                 return res.status(400).send({ error: `Por favor envie as infomações` })
 
-            const { name, email, phone, cell, password, type } = req.body
+            const { name, email, phone, cell, password, type, image_id } = req.body
 
             const { user_id } = await UserByToken(authHeader)
 
@@ -58,6 +50,14 @@ module.exports = {
             if (superUser.type != `super` && type == `super`)
                 return res.status(401).json({ message: 'You are not allowed to register this type of user' })
 
+            if (image_id) {
+                const checkImage = await UserImage.findByPk(image_id)
+
+                if (!checkImage) {
+                    return res.status(401).json({ error: `This image_id not exist` })
+                }
+            }
+
             const user = await User.create({
                 name,
                 email,
@@ -66,6 +66,11 @@ module.exports = {
                 cell,
                 type,
             })
+
+            if (image_id) {
+                const avatar = await UserImage.findByPk(image_id)
+                if (!avatar.user_id || avatar.user_id == user.id) await avatar.update({ user_id: user.id })
+            }
 
             return res.json(user)
         } catch (error) {

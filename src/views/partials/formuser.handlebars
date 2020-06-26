@@ -1,0 +1,77 @@
+<form class="needs-validation" novalidate>
+    <div class="form-row">
+        <div class="col-md-6 mb-3">
+            <label for="userName">Nome do usuário</label>
+            <input type="text" class="form-control userName" id="userName" name="user_name"
+                placeholder="Nome do usuário" required>
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="userMail">E-mail</label>
+            <input type="mail" class="form-control userMail" name="user_mail" id="userMail"
+                placeholder="E-mail do usuário" required>
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col-md-6 mb-3">
+            <label for="userPhone">Telefone</label>
+            <input type="text" class="form-control userPhone" name="user_phone" placeholder="Telefone" required>
+            <div class="invalid-feedback">
+                Please provide a valid city.
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="userCell">Celular</label>
+            <input type="text" class="form-control userCell" name="user_cell" id="userCell" placeholder="Celular"
+                required>
+            <div class="invalid-feedback">
+                Please provide a valid zip.
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="userType">Permissões</label>
+            <select class="custom-select userType" id="userType" name="user_type" required>
+                <option selected value="super">Total</option>
+                <option value="simple">Simples</option>
+            </select>
+            <div class="invalid-feedback">
+                Please select a valid state.
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label for="userPassword">Senha</label>
+            <input type="password" class="form-control userPassword" name="user_cell" id="userPassword"
+                placeholder="Senha" required>
+            <div class="invalid-feedback">
+                Please select a valid state.
+            </div>
+            <input type="hidden" name="user_image" class="inputUserImage">
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <hr>
+            <label for="userType">Avatar</label>
+            <p>
+                <img src="https://via.placeholder.com/200" width="120" alt="avatar_default"
+                    class="img-thumbnail insertUserAvatar"> <br>
+
+            </p>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input userFile" id="customFile">
+                <label class="custom-file-label" for="customFile">Choose file</label>
+            </div>
+            <div class="invalid-feedback">
+                Please select a valid state.
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary btnCreateUser" type="submit">Cadastrar Usuário</button>
+</form>

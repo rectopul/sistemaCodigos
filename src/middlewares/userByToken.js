@@ -29,11 +29,6 @@ module.exports = async (authHeader) => {
 
         const { id, name } = decoded
 
-        //Check clients table
-        const client = await Client.findOne({ where: { id, name } })
-
-        if (client) return resolve({ client_id: client.id })
-
         // Fetch the user by id
         const UserExist = await User.findOne({ where: { id, name } })
 
