@@ -58,7 +58,6 @@ app.set('views', path.join(__dirname, 'views'))
 
 //Public
 app.use(express.static(path.resolve(__dirname, 'public')))
-app.use(express.static(path.resolve(__dirname, 'files')))
 
 app.use(cors())
 app.use(express.json())
