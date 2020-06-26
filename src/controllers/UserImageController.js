@@ -1,4 +1,5 @@
 const UserImage = require('../models/UserImage')
+const UserByToken = require('../middlewares/userByToken')
 
 module.exports = {
     async index(req, res) {
@@ -31,15 +32,22 @@ module.exports = {
     },
 
     async store(req, res) {
-        let { originalname: name, size, key, location: url = '' } = req.file
+        try {
+            const authHeader = req.headers.authorization
 
-        const image = await UserImage.create({
-            name,
-            size,
-            key,
-            url,
-        })
+            const { user_id } = await UserByToken(authHeader)
 
-        return res.json(image)
+            let { originalname: name, size, key, location: url = '' } = req.file
+
+            const image = await UserImage.create({
+                name,
+                size,
+                key,
+                url,
+                user_id,
+            })
+
+            return res.json(image)
+        } catch (error) {}
     },
 }
