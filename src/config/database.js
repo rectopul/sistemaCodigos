@@ -8,19 +8,19 @@ if (process.env.DATABASE_URL) {
     // the application is executed on Heroku ... use the postgres database
     database = {
         use_env_variable:
-            'postgres://jtrvnyrvmjrdwp:3705400f1f83b6da784400b7f03f314146e259da0a1efb8d2aecf6f97b5ee9bd@ec2-23-21-13-88.compute-1.amazonaws.com:5432/d3kocn1ecciobs',
+            'postgres://xsmwpiwdiswucr:5f11c61ab31ba705b3bfe5e84a7455344f2b5eb8b16ea2181643df88d706eddd@ec2-52-72-221-20.compute-1.amazonaws.com:5432/d3gp5kd23selll',
         url:
-            'postgres://jtrvnyrvmjrdwp:3705400f1f83b6da784400b7f03f314146e259da0a1efb8d2aecf6f97b5ee9bd@ec2-23-21-13-88.compute-1.amazonaws.com:5432/d3kocn1ecciobs',
+            'postgres://xsmwpiwdiswucr:5f11c61ab31ba705b3bfe5e84a7455344f2b5eb8b16ea2181643df88d706eddd@ec2-52-72-221-20.compute-1.amazonaws.com:5432/d3gp5kd23selll',
         dialect: process.env.DB_DIALECT || 'postgres',
         dialectOptions: {
             ssl: {
                 require: true,
             },
         },
-        host: 'ec2-23-21-13-88.compute-1.amazonaws.com',
-        username: 'jtrvnyrvmjrdwp',
-        password: '3705400f1f83b6da784400b7f03f314146e259da0a1efb8d2aecf6f97b5ee9bd',
-        database: 'd3kocn1ecciobs',
+        host: 'ec2-52-72-221-20.compute-1.amazonaws.com',
+        username: 'xsmwpiwdiswucr',
+        password: '5f11c61ab31ba705b3bfe5e84a7455344f2b5eb8b16ea2181643df88d706eddd',
+        database: 'd3gp5kd23selll',
         storage: './__tests__/database.sqlite',
         ssl: true,
         options: {
