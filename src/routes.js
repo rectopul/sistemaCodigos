@@ -1,6 +1,7 @@
 const express = require('express')
 const multer = require('multer')
 const multerConfig = require('./config/multer')
+const multerText = require('./config/multerText')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 
@@ -21,9 +22,17 @@ const ImageProductController = require('./controllers/ImageProductController')
 const FileController = require('./controllers/FileController')
 //session
 const SessionController = require('./controllers/SessionController')
+//categories
+const CategoryController = require('./controllers/CategoryController')
+const Category = require('./models/Category')
+//Searches
+const SearchController = require('./controllers/SearchController')
+const SearchView = require('./controllers/views/searchViews')
 
 //Views
 const UsersView = require('./controllers/views/UsersViews')
+
+const CategoryView = require('./controllers/views/CategoriesViews')
 
 /**
  * Product
@@ -67,7 +76,8 @@ routes.get(`/dashboard`, async (req, res) => {
         return res.redirect('/login')
     }
 })
-
+//search
+routes.get(`/search`, SearchView.view)
 //Users
 routes.get(`/users`, UsersView.view)
 //Products
@@ -82,7 +92,10 @@ routes.get(`/products`, async (req, res) => {
         const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 
         //products
-        const products = await Product.findAll()
+        const products = await Product.findAll({
+            order: [['updatedAt', 'DESC']],
+            include: { association: `image`, where: { default: true }, limit: 1 },
+        })
 
         return res.render('products', {
             userName: user.name,
@@ -97,6 +110,8 @@ routes.get(`/products`, async (req, res) => {
         return res.redirect('/login')
     }
 })
+//Categories
+routes.get(`/category`, CategoryView.view)
 
 //Insert Product
 routes.get(`/product_insert`, async (req, res) => {
@@ -109,12 +124,15 @@ routes.get(`/product_insert`, async (req, res) => {
 
         const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 
+        const categories = await Category.findAll()
+
         return res.render('insertProduct', {
             userName: user.name,
             avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
             pageId: `page-top`,
             pageTitle: `Cadastro de Produtos`,
             token,
+            categories: categories.map((category) => category.toJSON()),
         })
     } catch (error) {
         console.log(error)
@@ -138,9 +156,10 @@ routes.get(`/logout`, (req, res) => {
 //Product
 routes.post(`/api/product`, ProductController.store)
 routes.get(`/api/product`, ProductController.index)
+routes.delete(`/api/product/:product_id`, ProductController.destroy)
 routes.get(`/api/product/:product_id`, ProductController.show)
 //File
-routes.post(`/api/file`, multer(multerConfig).single('file'), FileController.read)
+routes.post(`/api/file`, multer(multerText).single('file'), FileController.read)
 /* Forgot e Recuperação de senha */
 routes.post('/api/forgot', UserController.forgot)
 routes.post('/api/reset_password', UserController.reset)
@@ -156,6 +175,14 @@ routes.get('/api/user', UserController.index)
 routes.post('/api/user', UserController.store)
 routes.get('/api/user/:user_id', UserController.single)
 routes.post('/api/user/image', multer(multerConfig).single('file'), UserImageController.store)
+//categories
+routes.post(`/api/category`, CategoryController.store)
+routes.get(`/api/category/:categori_id`, CategoryController.show)
+routes.get(`/api/category`, CategoryController.index)
+routes.delete(`/api/category/:category_id`, CategoryController.destroy)
+routes.put(`/api/category/:category_id`, CategoryController.edit)
+//Consultas
+routes.post(`/api/search`, SearchController.store)
 
 //session
 routes.post(`/api/login`, SessionController.store)

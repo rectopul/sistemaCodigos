@@ -2,7 +2,7 @@
 
 module.exports = {
     up: (queryInterface, Sequelize) => {
-        return queryInterface.createTable('product_images', {
+        return queryInterface.createTable('product_categories"', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -11,30 +11,17 @@ module.exports = {
             },
             product_id: {
                 type: Sequelize.INTEGER,
+                allowNull: false,
                 references: { model: 'products', key: 'id' },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
-            name: {
-                type: Sequelize.STRING,
+            category_id: {
+                type: Sequelize.INTEGER,
                 allowNull: false,
-            },
-            size: {
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            key: {
-                type: Sequelize.STRING,
-                allowNull: false,
-                unique: true,
-            },
-            url: {
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            default: {
-                type: Sequelize.BOOLEAN,
-                allowNull: false,
+                references: { model: 'categories', key: 'id' },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
             },
             created_at: {
                 type: Sequelize.DATE,
@@ -48,6 +35,6 @@ module.exports = {
     },
 
     down: (queryInterface) => {
-        return queryInterface.dropTable('product_images')
+        return queryInterface.dropTable('product_categories"')
     },
 }

@@ -1,6 +1,21 @@
 const productResource = `product`
 
-let codesInsert = []
+let codesInsert = [],
+    productImages = []
+
+const clearListItems = () => {
+    codesInsert = []
+
+    const Codes = document.querySelectorAll('.colapseCodes > div > .row > div')
+
+    if (Codes) {
+        Array.from(Codes).forEach((code) => {
+            if (code) return code.remove()
+        })
+
+        return (document.querySelector('.headerListItem span.badge,badge-primary').innerHTML = codesInsert.length)
+    }
+}
 
 const putSpinnet = (target, action) => {
     const spinner = document.createElement('div')
@@ -14,7 +29,9 @@ const putSpinnet = (target, action) => {
         return target.append(spinner)
     }
 
-    if (action === `remove`) return target.querySelector('.spinner-border').remove()
+    if (action === `remove`) {
+        if (target.querySelector('.spinner-border')) return target.querySelector('.spinner-border').remove()
+    }
 }
 
 const changeBadgeForm = (num) => {
@@ -184,7 +201,7 @@ const changeFileProduct = (input) => {
                         })
 
                         //list codes
-                        return res.map((code) => {
+                        res.map((code) => {
                             const div = createItem({ prefix: PrefixName.value, code: code.text })
 
                             //check if code already exist in list
@@ -204,6 +221,8 @@ const changeFileProduct = (input) => {
 
                             colapseCodes.querySelector('.card-body > .row').append(div)
                         })
+
+                        return putSpinnet(PrefixName.closest('form'), `remove`)
                     })
                     .catch((err) => {
                         putSpinnet(PrefixName.closest('form'), `remove`)
@@ -256,6 +275,7 @@ const readFile = (file) => {
         })
             .then((res) => res.json())
             .then((response) => {
+                if (response.error) return reject(response.error)
                 return resolve(response)
             })
             .catch((error) => {
@@ -266,7 +286,7 @@ const readFile = (file) => {
 
 const requestInsertProduct = (object) => {
     return new Promise((resolve, reject) => {
-        const { name, description, weight, brand, lot, type, availability, items } = object
+        const { name, description, weight, brand, lot, type, availability, items, image_id, category_id } = object
 
         const token = document.body.dataset.token
 
@@ -277,7 +297,18 @@ const requestInsertProduct = (object) => {
                 'content-type': 'application/json',
                 authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ name, description, weight, brand, lot, type, availability, items }),
+            body: JSON.stringify({
+                name,
+                description,
+                weight,
+                brand,
+                lot,
+                type,
+                category_id,
+                availability,
+                items,
+                image_id,
+            }),
         })
             .then((res) => res.json())
             .then((response) => {
@@ -289,6 +320,73 @@ const requestInsertProduct = (object) => {
                 return console.log(response)
             })
             .catch((error) => reject(error))
+    })
+}
+
+const imageProductApi = (file) => {
+    return new Promise((resolve, reject) => {
+        const token = document.body.dataset.token
+
+        const form = new FormData()
+        form.append('file', file)
+
+        const reqUrl = `/api/image/product`
+
+        fetch(reqUrl, {
+            method: `POST`,
+            headers: {
+                authorization: `Bearer ${token}`,
+            },
+            body: form,
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                if (response.error) return reject(response.error)
+
+                return resolve(response)
+            })
+            .catch((error) => reject(error))
+    })
+}
+
+const imageProductChange = (input) => {
+    input.addEventListener('change', (e) => {
+        e.preventDefault()
+
+        putSpinnet(input.closest('form'), `insert`)
+
+        const filename = input.value.split(/(\\|\/)/g).pop()
+        const containerImages = document.querySelector('.imagesProductContainer')
+
+        input.closest('.custom-file').querySelector('label').innerHTML = filename
+
+        console.log(input.files[0])
+
+        return imageProductApi(input.files[0])
+            .then((res) => {
+                const imageId = document.querySelector('.idProductImage')
+
+                putSpinnet(input.closest('form'), `remove`)
+
+                if (imageId) imageId.value = res.id
+
+                const image = document.createElement('img')
+
+                image.setAttribute('src', res.url)
+                image.setAttribute('width', 150)
+
+                image.classList.add('img-thumbnail', 'mx-2')
+
+                containerImages.append(image)
+
+                if (productImages.length === 0) return productImages.push({ id: res.id, default: true })
+
+                return productImages.push({ id: res.id, default: false })
+            })
+            .catch((err) => {
+                putSpinnet(input.closest('form'), `remove`)
+                console.log(err)
+            })
     })
 }
 
@@ -304,12 +402,23 @@ const productCreate = (form) => {
     const Checkswitch = document.querySelector('.multCodes')
     const productCode = document.querySelector('.productCode')
     const fileToRead = document.querySelector('.fileToRead')
+    const imageId = productImages
+    const productCategory = form.querySelector('.productCategory')
 
     form.classList.add('was-validated')
 
     putSpinnet(form.closest('form'), `insert`)
 
-    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
+    const itensValidate = [
+        inputName,
+        inputWeight,
+        inputBrand,
+        inputLot,
+        inputType,
+        inputAvailability,
+        inputPrefix,
+        productCategory,
+    ]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
@@ -321,8 +430,6 @@ const productCreate = (form) => {
     return formValidate(itensValidate)
         .then((inputs) => {
             const { valids, invalids } = inputs
-
-            console.log(`Invalidos: `, invalids, `Validos: `, valids)
 
             if (invalids.length) {
                 putSpinnet(form.closest('form'), `remove`)
@@ -358,6 +465,8 @@ const productCreate = (form) => {
                 type: inputType.value,
                 availability: inputAvailability.value,
                 items: codesInsert,
+                category_id: productCategory.value,
+                image_id: imageId,
             })
                 .then((res) => {
                     //erro
@@ -440,6 +549,15 @@ if (switchMultCodes) {
     })
 }
 
+//clear items
+btnClearCodes = document.querySelector('.btnCleamListProduct')
+if (btnClearCodes) {
+    btnClearCodes.addEventListener('click', (e) => {
+        e.preventDefault()
+        return clearListItems()
+    })
+}
+
 //change inpiut file
 const inputFileProduct = document.querySelector('.fileToRead')
 
@@ -448,6 +566,9 @@ if (inputFileProduct) changeFileProduct(inputFileProduct)
 //insert single code insertSingleCode
 const btnInsertItemProduct = document.querySelector('.btnInsertItemProduct')
 
-if (btnInsertItemProduct) {
-    insertSingleCode(btnInsertItemProduct)
-}
+if (btnInsertItemProduct) insertSingleCode(btnInsertItemProduct)
+
+//image products
+const ImageProduct = document.querySelector('.productImage')
+
+if (ImageProduct) imageProductChange(ImageProduct)

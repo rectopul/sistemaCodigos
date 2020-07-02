@@ -1,2 +1,32 @@
 .productAvaliability
     text-transform capitalize
+.productStats
+    text-transform: capitalize
+.productList
+    & h5
+        color #283846
+    & .productOptions
+        & h2
+            color #EDF1F6
+        & .dropdown
+            &.show
+                & > button.btn
+                    background-color transparent
+                    border 0
+                    box-shadow none !important
+            & button
+                &.delete
+                    color: #e74a3b
+                &:focus
+                    outline none
+            & > button.btn
+                &, &:focus, &:active, &:not(:disabled):not(.disabled):active
+                    background-color transparent
+                    border 0
+                    box-shadow none !important
+                & i
+                    color #EDF1F6
+                    font-size 2rem
+                &:after
+                    display none
+                

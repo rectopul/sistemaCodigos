@@ -14,6 +14,18 @@ class ProductImages extends Model {
                 size: DataTypes.STRING,
                 key: DataTypes.STRING,
                 url: DataTypes.STRING,
+                default: {
+                    type: DataTypes.BOOLEAN,
+                    allowNull: false,
+                    validate: {
+                        notNull: {
+                            msg: `please infor default value`,
+                        },
+                        notEmpty: {
+                            msg: `please infor default value`,
+                        },
+                    },
+                },
             },
             {
                 hooks: {

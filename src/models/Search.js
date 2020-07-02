@@ -1,6 +1,9 @@
 const { DataTypes, Model } = require('sequelize')
 
-class Product extends Model {
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+
+class Search extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -9,81 +12,85 @@ class Product extends Model {
                     allowNull: false,
                     validate: {
                         notNull: {
-                            msg: `The name field cannot be empty`,
+                            msg: `The name field cannot be null`,
                         },
                         notEmpty: {
                             msg: `The name field cannot be empty`,
                         },
                     },
                 },
-                description: {
-                    type: DataTypes.STRING,
-                    validate: {
-                        notEmpty: {
-                            msg: `The description field cannot be empty`,
-                        },
-                    },
-                },
-                weight: {
-                    type: DataTypes.DECIMAL,
-                    allowNull: false,
-                    validate: {
-                        notNull: {
-                            msg: `The weight field cannot be empty`,
-                        },
-                        notEmpty: {
-                            msg: `The weight cannot be empty`,
-                        },
-                        isDecimal: {
-                            msg: `The weight field must be in decimal format`,
-                        },
-                    },
-                },
-                brand: {
+                surname: {
                     type: DataTypes.STRING,
                     allowNull: false,
                     validate: {
                         notNull: {
-                            msg: `The brand field cannot be empty`,
+                            msg: `The surname field cannot be null`,
                         },
                         notEmpty: {
-                            msg: `The brand cannot be empty`,
+                            msg: `The surname field cannot be empty`,
                         },
                     },
                 },
-                lot: {
+                email: {
                     type: DataTypes.STRING,
                     allowNull: false,
                     validate: {
                         notNull: {
-                            msg: `The lot field cannot be empty`,
+                            msg: `The email field cannot be null`,
                         },
                         notEmpty: {
-                            msg: `The lot cannot be empty`,
+                            msg: `The email field cannot be empty`,
+                        },
+                        isEmail: {
+                            msg: `The email field must be an email`,
                         },
                     },
                 },
-                type: {
+                address: {
+                    type: DataTypes.TEXT,
+                    allowNull: false,
+                    validate: {
+                        notNull: {
+                            msg: `The address field cannot be null`,
+                        },
+                        notEmpty: {
+                            msg: `The address field cannot be empty`,
+                        },
+                    },
+                },
+                city: {
                     type: DataTypes.STRING,
                     allowNull: false,
                     validate: {
                         notNull: {
-                            msg: `The type field cannot be empty`,
+                            msg: `The city field cannot be null`,
                         },
                         notEmpty: {
-                            msg: `This field cannot be empty`,
+                            msg: `The city field cannot be empty`,
                         },
                     },
                 },
-                availability: {
-                    type: DataTypes.STRING,
+                device: {
+                    type: DataTypes.TEXT,
                     allowNull: false,
                     validate: {
                         notNull: {
-                            msg: `The availability field cannot be empty`,
+                            msg: `The device field cannot be null`,
                         },
                         notEmpty: {
-                            msg: `This availability cannot be empty`,
+                            msg: `The device field cannot be empty`,
+                        },
+                    },
+                },
+                ip: {
+                    type: DataTypes.TEXT,
+                    allowNull: false,
+                    validate: {
+                        notNull: {
+                            msg: `The ip field cannot be null`,
+                        },
+                        notEmpty: {
+                            msg: `The ip field cannot be empty`,
                         },
                     },
                 },
@@ -95,11 +102,8 @@ class Product extends Model {
     }
 
     static associate(models) {
-        this.hasMany(models.ProductIten, { foreignKey: 'product_id', as: 'items' })
-        this.hasMany(models.Code, { foreignKey: 'product_id', as: 'codes' })
-        this.hasMany(models.ProductImages, { foreignKey: 'product_id', as: 'image' })
-        this.hasMany(models.ProductCategory, { foreignKey: 'product_id', as: 'category' })
+        this.belongsTo(models.Category, { foreignKey: 'code_id', as: 'code' })
     }
 }
 
-module.exports = Product
+module.exports = Search

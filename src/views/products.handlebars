@@ -47,31 +47,66 @@
                     ou alterar alguma informação sobre o mesmo</p>
 
                 <!-- Content Row -->
-                <div class="row">
+                <div class="row productList">
 
                     <!-- Lista de categorias -->
                     {{#each products}}
                     <!-- Product -->
-                    <div class="col-lg-3">
+                    <div class="col-12">
 
                         <!-- Custom Text Color Utilities -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">{{name}}</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-gray-700 p-3 m-0">{{description}}</p>
-                                <hr>
-                                <p class="text-gray-700 px-3 py-1 m-0"><b>Peso:</b> {{weight}} Kg</p>
-                                <p class="text-gray-700 px-3 py-1  m-0"><b>Lote:</b> <kbd>{{lot}}</kbd></p>
-                                <p class="text-gray-700 px-3 py-1  m-0"><b>Tipo de produto:</b> {{type}}</p>
-                            </div>
-                            <!-- "text-success" "text-danger" -->
-                            <div class="card-footer text-muted productAvaliability">
-                                Disponibilidade - <b
-                                    class="{{#ifCond availability "available"}}text-success{{else}}text-danger{{/ifCond}}">
-                                    {{availability}}
-                                </b>
+                        <div class="card shadow mb-1">
+                            <div class="card-body p-0">
+                                <div class="row">
+
+                                    <div class="col-auto">
+                                        {{#each image}}
+                                        <figure class="figure m-0">
+                                            <img src="{{url}}" class="figure-img img-fluid m-0" width="100px" alt="...">
+                                        </figure>
+                                        {{else}}
+                                        <figure class="figure m-0">
+                                            <img src="https://via.placeholder.com/100" class="figure-img img-fluid m-0"
+                                                width="100px" alt="...">
+                                        </figure>
+                                        {{/each}}
+
+                                    </div>
+                                    <div class="col-7 d-flex flex-column justify-content-center">
+                                        <div class="row">
+                                            <h5 class="px-4 ">{{name}}</h5>
+                                        </div>
+                                        <div class="row">
+                                            <small class="text-gray-700 px-4 m-0">{{description}}</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col d-flex flex-column justify-content-center">
+                                        <h5
+                                            class="productStats {{#ifCond availability "available"}}text-success{{else}}text-danger{{/ifCond}}">
+                                            {{availability}}
+                                        </h5>
+                                    </div>
+
+                                    <div
+                                        class="col d-flex flex-column align-items-end justify-content-center productOptions">
+                                        <div class="dropdown">
+                                            <button class="btn btn-secondary dropdown-toggle" type="button"
+                                                id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="false">
+                                                <i class="fas fa-bars"></i>
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                                                <button class="dropdown-item" data-product="{{id}}"
+                                                    type="button">Visualizar</button>
+                                                <button class="dropdown-item" data-product="{{id}}"
+                                                    type="button">Editar</button>
+                                                <button class="dropdown-item delete productDelete" data-product="{{id}}"
+                                                    type="button">Excluir</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

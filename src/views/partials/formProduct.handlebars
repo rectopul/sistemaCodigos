@@ -73,7 +73,7 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <!-- Disponibilidade do produto -->
-                        <label for="productAvailability">Disponibilidade do produto</label>
+                        <label for="productAvailability">Disponibilidade</label>
                         <select class="custom-select productAvailability" name="product_availability"
                             id="productAvailability" required>
                             <option selected value="available">Disponível</option>
@@ -90,15 +90,36 @@
                     <textarea class="form-control productDescription" name="product_description" id="productDescription"
                         rows="4" placeholder="Descrição do produto"></textarea>
                 </div>
-                <div class="form-group">
-                    <!-- Tipo de produto product -->
-                    <label for="productImage">Imagens do produto</label>
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input productImage" name="file" id="productImage">
-                        <label class="custom-file-label" for="customFile">Selecionar imagem</label>
+                <div class="form-row">
+                    <div class="col-xl-6">
+                        <!-- Tipo de produto product -->
+                        <label for="productImage">Imagens do produto</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input productImage" name="file" id="productImage">
+                            <label class="custom-file-label" for="customFile">Selecionar imagem</label>
+                            <input type="hidden" name="idProductImage" class="idProductImage">
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <label for="productCategory">Categoria</label>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <label class="input-group-text" for="productCategory">Categorias</label>
+                            </div>
+                            <select class="custom-select productCategory" id="productCategory">
+                                <option selected>Selecione uma categoria</option>
+                                {{#each categories}}
+                                <option value="{{id}}">{{name}}</option>
+                                {{else}}
+                                {{/each}}
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn-primary btnInsertProduct" type="submit">Submit form</button>
+
+                <div class="form-row imagesProductContainer mb-3">
+                </div>
+                <button class="btn btn-primary btnInsertProduct" type="submit">Cadastrar produto</button>
             </form>
         </div>
     </div>

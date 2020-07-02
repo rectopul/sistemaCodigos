@@ -1,0 +1,48 @@
+<h1 class="h3 mb-2 text-gray-800">Cadastro</h1>
+<!-- Titulo // -->
+
+<p class="mb-4">
+    Utilize o formulário abaixo para cadastrar novas categorias
+</p> <!-- Descrição -->
+
+<div class="card shadow mb-4 border-bottom-primary">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Cadastro de categorias</h6>
+    </div>
+    <div class="card-body">
+        <form>
+            <div class="form-group">
+                <label for="categoryName">Nome</label>
+                <input type="email" class="form-control categoryName" id="categoryName" placeholder="Nome da categoria">
+            </div>
+
+            <div class="form-group">
+                <label for="categoryDescription">Descrição</label>
+                <textarea class="form-control categoryDescription" id="categoryDescription"
+                    placeholder="Descrição da categoria"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="categorySlug">Slug</label>
+                    <input type="text" class="form-control categorySlug" id="categorySlug"
+                        placeholder="Informe um slug">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="categoryParent">Pai</label>
+
+                    <select id="categoryParent" class="form-control categoryParent">
+                        <option value="" selected>Selecione...</option>
+                        {{#each categories}}
+                        <option value="{{id}}">{{name}}</option>
+                        {{else}}
+                        {{/each}}
+
+                    </select>
+                    <small>Caso seja uma categoria filha, selecione um pai</small>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btnCreateCategory">Cadastrar</button>
+        </form>
+    </div>
+</div>

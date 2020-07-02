@@ -33,6 +33,7 @@ class ProductIten extends Model {
 
     static associate(models) {
         this.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' })
+        this.hasOne(models.Code, { foreignKey: 'item_id', as: 'code' })
     }
 }
 
