@@ -10,15 +10,22 @@ const search = (() => {
 
             return requestIP().then((res) => {
                 const { ip, city, region } = res
-                return request({ code: inputCode.value, ip, city, region }).then((res) => {
-                    const { device, code, ip, city, region } = res
-                    const clientInfo = document.querySelector('.clientInfo')
+                return request({ code: inputCode.value, ip, city, region })
+                    .then((res) => {
+                        const { device, code, ip, city, region, product, item } = res
+                        const clientInfo = document.querySelector('.clientInfo')
 
-                    console.log(res)
+                        console.log(res)
 
-                    return (clientInfo.innerHTML = `
+                        return (clientInfo.innerHTML = `
                         <p>
                             <strong>Código: </strong> ${code}
+                        </p>
+                        <p>
+                            <strong>Produto: </strong> ${product.name}
+                        </p>
+                        <p>
+                            <strong>Item: </strong> ${item.name}
                         </p>
                         <p>
                             <strong>Device: </strong> ${device}
@@ -33,7 +40,14 @@ const search = (() => {
                             <strong>Endereço IP: </strong> ${ip}
                         </p>
                     `)
-                })
+                    })
+                    .catch((err) => {
+                        return Swal.fire({
+                            title: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
             })
         })
     }
@@ -66,11 +80,12 @@ const search = (() => {
                 },
                 body: JSON.stringify({ code, ip, city, region }),
             })
+                .then((res) => res.json())
                 .then((res) => {
-                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
-                    return res.json()
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
                 })
-                .then((res) => resolve(res))
                 .catch((error) => reject(error))
         })
     }
