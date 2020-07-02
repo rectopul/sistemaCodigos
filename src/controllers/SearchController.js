@@ -8,10 +8,11 @@ const { Op } = require('sequelize')
 module.exports = {
     async store(req, res) {
         try {
-            const { ip, city, region } = req.body
+            const { code, ip, city, region } = req.body
             require('dns').reverse(req.connection.remoteAddress, function (err, domains) {
                 console.log(domains)
                 return res.json({
+                    code,
                     ip,
                     city,
                     region,

@@ -1052,7 +1052,28 @@ const search = (() => {
             return requestIP().then((res) => {
                 const { ip, city, region } = res
                 return request({ code: inputCode.value, ip, city, region }).then((res) => {
+                    const { device, code, ip, city, region } = res
+                    const clientInfo = document.querySelector('.clientInfo')
+
                     console.log(res)
+
+                    return (clientInfo.innerHTML = `
+                        <p>
+                            <strong>Código: </strong> ${code}
+                        </p>
+                        <p>
+                            <strong>Device: </strong> ${device}
+                        </p>
+                        <p>
+                            <strong>Cidade: </strong> ${city}
+                        </p>
+                        <p>
+                            <strong>Estado: </strong> ${region}
+                        </p>
+                        <p>
+                            <strong>Endereço IP: </strong> ${ip}
+                        </p>
+                    `)
                 })
             })
         })
