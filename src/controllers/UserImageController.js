@@ -50,4 +50,25 @@ module.exports = {
             return res.json(image)
         } catch (error) {}
     },
+    async edit(req, res) {
+        try {
+            const authHeader = req.headers.authorization
+
+            const { user_id } = await UserByToken(authHeader)
+
+            let { originalname: name, size, key, location: url = '' } = req.file
+
+            await UserImage.destroy({ where: { user_id } })
+
+            const image = await UserImage.create({
+                name,
+                size,
+                key,
+                url,
+                user_id,
+            })
+
+            return res.json(image)
+        } catch (error) {}
+    },
 }

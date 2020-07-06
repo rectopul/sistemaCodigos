@@ -37,13 +37,14 @@
                                             <label class="custom-control-label" for="customCheck">Remember Me</label>
                                         </div>
                                     </div>
+
                                     <a href="index.html" class="btn btn-primary btn-user btn-block btnLogin">
                                         Login
                                     </a>
                                 </form>
                                 <hr>
                                 <div class="text-center">
-                                    <a class="small" href="forgot-password.html">Forgot Password?</a>
+                                    <a class="small" href="/forgot">Forgot Password?</a>
                                 </div>
                                 <div class="text-center">
                                     <a class="small" href="register.html">Create an Account!</a>
@@ -69,3 +70,15 @@
 
 <!-- Custom scripts for all pages-->
 <script src="js/sb-admin-2.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js?render={{rcSiteKey}}"></script>
+<script>
+    function onClick(e) {
+        e.preventDefault();
+        grecaptcha.ready(function () {
+            grecaptcha.execute('{{rcSiteKey}}', { action: 'submit' }).then(function (token) {
+                // Add your logic to submit to your backend server here.
+                console.log(token)
+            });
+        });
+    }
+</script>

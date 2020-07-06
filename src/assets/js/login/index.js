@@ -2,7 +2,7 @@ const loginResource = `login`
 
 const requestLogin = (object) => {
     return new Promise((resolve, reject) => {
-        const { email, password } = object
+        const { email, password, gToken } = object
 
         const reqUrl = `/api/${loginResource}`
         fetch(reqUrl, {
@@ -10,7 +10,7 @@ const requestLogin = (object) => {
             headers: {
                 'content-type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, gToken }),
         })
             .then((res) => res.json())
             .then((response) => {
@@ -40,23 +40,28 @@ const login = (form) => {
     }
     if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
 
-    return requestLogin({ email: inputMail.value, password: inputPassword.value })
-        .then((res) => {
-            ///dashboard
-            window.location.href = '/dashboard'
-        })
-        .catch((error) => {
-            const divAlert = document.createElement('div')
-            divAlert.classList.add('alert', 'alert-danger')
-            divAlert.setAttribute('role', 'alert')
-            divAlert.innerHTML = error
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
+            // Add your logic to submit to your backend server here.
+            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
+                .then((res) => {
+                    ///dashboard
+                    window.location.href = '/dashboard'
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
 
-            form.prepend(divAlert)
+                    form.prepend(divAlert)
 
-            setTimeout(() => {
-                divAlert.remove()
-            }, 4000)
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
         })
+    })
 }
 
 const btnLogin = document.querySelector('.btnLogin')

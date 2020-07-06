@@ -10,9 +10,6 @@ class Category extends Model {
                 name: {
                     type: DataTypes.STRING,
                     allowNull: false,
-                    unique: {
-                        msg: `This name already exist`,
-                    },
                     validate: {
                         notEmpty: {
                             msg: `The name field cannot be empty`,
@@ -30,6 +27,9 @@ class Category extends Model {
                 slug: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    unique: {
+                        msg: `This category slug already exist`,
+                    },
                     validate: {
                         notNull: {
                             msg: `The slug field cannot be null`,
@@ -47,7 +47,8 @@ class Category extends Model {
     }
 
     static associate(models) {
-        this.hasMany(models.Category, { foreignKey: 'parent', as: 'sub' })
+        //this.hasOne(models.Category, { foreignKey: 'parent', as: 'parent' })
+        this.hasMany(models.Category, { foreignKey: 'parent', as: 'child' })
         this.hasMany(models.ProductCategory, { foreignKey: 'category_id', as: 'products' })
     }
 }

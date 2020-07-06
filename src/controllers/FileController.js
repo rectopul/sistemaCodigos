@@ -33,9 +33,7 @@ module.exports = {
                     },
                 })
 
-                console.log(checkItem.map((item) => item.toJSON()))
-
-                if (checkItem.length)
+                if (checkItem.length > 0)
                     return res
                         .status(400)
                         .json({ error: `One or more codes already exist`, codes: checkItem.map((code) => code.code) })

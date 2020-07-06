@@ -28,6 +28,17 @@ module.exports = {
                 unique: true,
                 allowNull: false,
             },
+            address: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
+            city: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
+            about: {
+                type: Sequelize.STRING,
+            },
             password_hash: {
                 type: Sequelize.STRING,
                 allowNull: false,

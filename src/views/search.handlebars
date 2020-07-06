@@ -8,7 +8,10 @@
                     <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone
                         else.</small>
                 </div>
-                <button type="submit" class="btn btn-primary btnSearchCode">Consultar</button>
+                <!-- Button trigger modal -->
+                <button type="button" data-toggle="modal" data-target="#modalFormSearch" class="btn btn-primary">
+                    Consultar
+                </button>
             </form>
         </div>
     </div>
@@ -27,3 +30,4 @@
         </div>
     </div>
 </div>
+{{>modalSearch}}

@@ -38,6 +38,11 @@ app.engine(
                 }
                 return options.inverse(this)
             },
+            printArray: function (arr) {
+                for (i = 0; i < arr.length; i++) {
+                    console.log(arr[i])
+                }
+            },
         },
     })
 )
@@ -63,7 +68,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/files', express.static(path.resolve(__dirname, '..', 'tmp', 'uploads')))
-app.use(morgan('dev'))
+//app.use(morgan('dev'))
 app.use(routes)
 
 app.use((req, res) => {

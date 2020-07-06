@@ -89,6 +89,68 @@ module.exports = {
             return res.status(500).send({ error: `Erro de servidor` })
         }
     },
+    async update(req, res) {
+        try {
+            //Get user id by token
+            const authHeader = req.headers.authorization
+
+            if (Object.keys(req.body).length === 0)
+                return res.status(400).send({ error: `Por favor envie as infomações` })
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = req.body
+
+            const { user_id } = await UserByToken(authHeader)
+
+            const user = await User.findByPk(user_id)
+
+            const superUser = await User.findByPk(user_id)
+
+            if (newPassword) {
+                if (!(await user.checkPassword(currentPassword))) {
+                    return res.status(401).json({ error: 'Incorrect Password' })
+                }
+
+                const updateUser = await user.update({
+                    name,
+                    email,
+                    phone,
+                    cell,
+                    address,
+                    city,
+                    about,
+                    password: newPassword,
+                })
+
+                return res.json(updateUser)
+            }
+
+            const updateUser = await user.update({
+                name,
+                email,
+                phone,
+                cell,
+                address,
+                city,
+                about,
+            })
+
+            return res.json(updateUser)
+        } catch (error) {
+            //Validação de erros
+            if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
+
+            if (
+                error.name == `SequelizeValidationError` ||
+                error.name == `SequelizeUniqueConstraintError` ||
+                error.name == `userToken`
+            )
+                return res.status(400).send({ error: error.message })
+
+            console.log(`Erro ao criar novo usuário: `, error)
+
+            return res.status(500).send({ error: `Erro de servidor` })
+        }
+    },
 
     async forgot(req, res) {
         const { email } = req.body

@@ -1,3 +1,108 @@
+@font-face
+    font-family "Futura Std"
+    font-style normal
+    src url(../fonts/FuturaStd-Medium.otf) format("opentype")
+    font-weight 400
+@font-face
+    font-family "Futura Std"
+    font-style normal
+    src url(../fonts/FuturaStd-Bold.otf) format("opentype")
+    font-weight 700
+@font-face
+    font-family "Futura Std"
+    font-style normal
+    src url(../fonts/FuturaStd-Heavy.otf) format("opentype")
+    font-weight 500
+@font-face
+    font-family "Futura Std"
+    font-style italic
+    src url(../fonts/FuturaStd-MediumOblique.otf) format("opentype")
+    font-weight 400
+@font-face
+    font-family "Futura Std"
+    font-style normal
+    src url(../fonts/FuturaStd-Heavy.otf) format("opentype")
+    font-weight 600
+@font-face
+    font-family "Futura Std"
+    font-style normal
+    src url(../fonts/FuturaStd-Book.otf) format("opentype")
+    font-weight 300
+
 body 
     margin: 0
     padding: 0
+    &.page
+        font-family "Futura Std" !important
+    & > footer
+        height 100px
+        // Style for "Copyright"
+        color #333333
+        font-size 14px
+        font-weight 400
+
+.insertProduct
+    & .custom-file
+        & label
+            overflow hidden
+
+.imagesProductContainer
+    & img
+        &:hover, &.active
+            border-color #5AAD75
+
+body
+    & .btn-gray
+        width 100%
+        // Style for "Retângulo"
+        height 60px
+        border-radius 5px
+        background-color #555555
+        color #ffffff
+        // Style for "entrar no"
+        font-size 20px
+        font-weight 400
+        // Text style for "entrar no"
+        letter-spacing 0.5px
+    & .btn-black
+        width 100%
+        // Style for "Retângulo"
+        height 60px
+        border-radius 5px
+        background-color #000000
+        color #ffffff
+        // Style for "entrar no"
+        font-size 20px
+        font-weight 400
+        // Text style for "entrar no"
+        letter-spacing 0.5px
+    & .bg-black
+        // Style for "Retângulo"
+        height 490px
+        background-color #000000
+        color #fff
+        padding-right 80px !important
+    & .bg-gray
+        // Style for "Retângulo"
+        height 490px
+        background-color rgba(0,0,0,0.25)
+        padding-left 80px !important
+        color #000000
+    .miniforms
+        // Style for "BratvaClub"
+        font-size 20px
+        font-weight 400
+        line-height 26px
+        // Text style for "Faça parte"
+        letter-spacing 0.2px
+        & h1
+            font-size 32px
+            font-weight 700
+        & form 
+            max-width 320px
+            & input
+                height 50px
+
+ 
+
+    

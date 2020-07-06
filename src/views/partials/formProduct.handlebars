@@ -1,29 +1,15 @@
-<div class="col-xl-8 col-lg-7">
+<div class="col-xl-6">
     <div class="card shadow mb-4">
         <!-- Card Header - Dropdown -->
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Informações sobre o produto</h6>
-            <div class="dropdown no-arrow">
-                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                    aria-labelledby="dropdownMenuLink" style="">
-                    <div class="dropdown-header">Dropdown Header:</div>
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                </div>
-            </div>
         </div>
         <!-- Card Body -->
         <div class="card-body">
             <form class="needs-validation insertProduct" novalidate>
                 <div class="form-row">
                     <!-- Name product -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 mb-3">
                         <label for="productName">Nome do produto</label>
                         <input type="text" class="form-control productName" name="product_name" id="productName"
                             placeholder="Nome do produto" required>
@@ -31,7 +17,7 @@
                             Looks good!
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-6 mb-3">
                         <!-- Peso product -->
                         <label for="productWeigth">Peso do produto</label>
                         <input type="text" class="form-control productWeigth" id="productWeigth"
@@ -40,7 +26,7 @@
                             Looks good!
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-6 mb-3">
                         <!-- Peso product -->
                         <label for="productBrand">Marca do produto</label>
                         <input type="text" class="form-control productBrand" id="productBrand"
@@ -51,7 +37,7 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-12 mb-3">
                         <!-- Lote product -->
                         <label for="productLot">Lote do produto</label>
                         <input type="text" class="form-control productLot" id="productLot" name="product_lot"
@@ -60,7 +46,7 @@
                             Looks good!
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-6 mb-3">
                         <!-- Tipo de produto product -->
                         <label for="productType">Tipo de produto</label>
                         <select class="custom-select productType" name="product_type" id="productType" required>
@@ -71,7 +57,7 @@
                             Please select a valid state.
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-6 mb-3">
                         <!-- Disponibilidade do produto -->
                         <label for="productAvailability">Disponibilidade</label>
                         <select class="custom-select productAvailability" name="product_availability"
@@ -91,33 +77,19 @@
                         rows="4" placeholder="Descrição do produto"></textarea>
                 </div>
                 <div class="form-row">
-                    <div class="col-xl-6">
+                    <div class="col-xl-12">
                         <!-- Tipo de produto product -->
                         <label for="productImage">Imagens do produto</label>
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input productImage" name="file" id="productImage">
+                            <input type="file" class="custom-file-input productImage" name="file" id="productImage"
+                                multiple>
                             <label class="custom-file-label" for="customFile">Selecionar imagem</label>
                             <input type="hidden" name="idProductImage" class="idProductImage">
                         </div>
                     </div>
-                    <div class="col-xl-6">
-                        <label for="productCategory">Categoria</label>
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <label class="input-group-text" for="productCategory">Categorias</label>
-                            </div>
-                            <select class="custom-select productCategory" id="productCategory">
-                                <option selected>Selecione uma categoria</option>
-                                {{#each categories}}
-                                <option value="{{id}}">{{name}}</option>
-                                {{else}}
-                                {{/each}}
-                            </select>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="form-row imagesProductContainer mb-3">
+                <div class="form-row imagesProductContainer my-3">
                 </div>
                 <button class="btn btn-primary btnInsertProduct" type="submit">Cadastrar produto</button>
             </form>

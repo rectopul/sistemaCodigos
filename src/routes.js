@@ -4,6 +4,8 @@ const multerConfig = require('./config/multer')
 const multerText = require('./config/multerText')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const { Op } = require('sequelize')
+const sequelize = require('sequelize')
 
 const User = require('./models/User')
 const Product = require('./models/Product')
@@ -12,6 +14,8 @@ const Product = require('./models/Product')
 const authUser = require('./middlewares/auth')
 
 const UserController = require('./controllers/UserController')
+//Profile
+const ProfileView = require('./controllers/views/ProfileView')
 //User Image
 const UserImageController = require('./controllers/UserImageController')
 //products
@@ -28,11 +32,15 @@ const Category = require('./models/Category')
 //Searches
 const SearchController = require('./controllers/SearchController')
 const SearchView = require('./controllers/views/searchViews')
+const Search = require('./models/Search')
 
 //Views
 const UsersView = require('./controllers/views/UsersViews')
 
 const CategoryView = require('./controllers/views/CategoriesViews')
+
+//Pages
+const Index = require('./controllers/views/indexView')
 
 /**
  * Product
@@ -43,9 +51,7 @@ const routes = express.Router()
 //const credentials = require('./middlewares/UserCredentials')
 
 //Test de rota
-routes.get(`/`, (req, res) => {
-    return res.status(200).send({ message: `Rota principal` })
-})
+routes.get(`/`, Index.view)
 routes.use(cookieParser())
 
 //Dashboard
@@ -59,6 +65,8 @@ routes.get(`/dashboard`, async (req, res) => {
 
         const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 
+        const totalSearchs = await Search.count()
+
         const productsCount = await Product.count()
 
         //userName
@@ -69,6 +77,7 @@ routes.get(`/dashboard`, async (req, res) => {
             productsCount,
             pageId: `page-top`,
             pageTitle: `Dashboard`,
+            totalSearchs,
             token,
         })
     } catch (error) {
@@ -124,7 +133,14 @@ routes.get(`/product_insert`, async (req, res) => {
 
         const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 
-        const categories = await Category.findAll()
+        const categories = await Category.findAll({
+            where: {
+                parent: {
+                    [Op.eq]: null,
+                },
+            },
+            include: { association: `child`, include: { association: `child` } },
+        })
 
         return res.render('insertProduct', {
             userName: user.name,
@@ -140,10 +156,19 @@ routes.get(`/product_insert`, async (req, res) => {
     }
 })
 
+//Profile
+routes.get(`/profile`, ProfileView.view)
+
 //Login
 routes.get(`/login`, (req, res) => {
-    return res.render('login', { pageClasses: `bg-gradient-primary`, pageTitle: `Login` })
+    const rcSiteKey = process.env.RECAPTCHA_SITE_KEY
+    const secretKey = process.env.RECAPTCHA_SITE_KEY
+    console.log(req.ips)
+    return res.render('login', { pageClasses: `bg-gradient-primary`, pageTitle: `Login`, rcSiteKey, secretKey })
 })
+
+//forgot password
+routes.get(`/forgot`, (req, res) => res.render('forgot'))
 
 //logout
 routes.get(`/logout`, (req, res) => {
@@ -173,8 +198,12 @@ routes.delete('/api/image/product/:id', ImageProductController.delete)
 //routes.use(credentials)
 routes.get('/api/user', UserController.index)
 routes.post('/api/user', UserController.store)
+routes.put('/api/user', UserController.update)
 routes.get('/api/user/:user_id', UserController.single)
 routes.post('/api/user/image', multer(multerConfig).single('file'), UserImageController.store)
+routes.put('/api/user/image', multer(multerConfig).single('file'), UserImageController.edit)
+routes.post('/api/forgot', UserController.forgot)
+routes.post('/api/reset', UserController.reset)
 //categories
 routes.post(`/api/category`, CategoryController.store)
 routes.get(`/api/category/:categori_id`, CategoryController.show)
@@ -183,6 +212,7 @@ routes.delete(`/api/category/:category_id`, CategoryController.destroy)
 routes.put(`/api/category/:category_id`, CategoryController.edit)
 //Consultas
 routes.post(`/api/search`, SearchController.store)
+routes.get(`/api/search`, SearchController.index)
 
 //session
 routes.post(`/api/login`, SessionController.store)

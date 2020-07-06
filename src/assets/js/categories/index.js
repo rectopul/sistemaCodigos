@@ -98,11 +98,11 @@ const category = (() => {
                 },
                 body: JSON.stringify({ name, description, slug, parent }),
             })
+                .then((r) => r.json())
                 .then((res) => {
-                    if (!res.ok) return reject(`Erro ao criar categoria`)
-                    return res.json()
+                    if (res.error) return reject(res.error)
+                    resolve(res)
                 })
-                .then((res) => resolve(res))
                 .catch((error) => reject(error))
         })
     }
@@ -121,7 +121,6 @@ const category = (() => {
                 name,
                 description,
                 0,
-                data,
                 `<!-- Botão de ação Editar // -->
             <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
                 <i class="fas fa-edit"></i>
@@ -247,7 +246,6 @@ const category = (() => {
 
             valuesEdit[1] = name
             valuesEdit[2] = description
-            valuesEdit[4] = data
 
             table.row($(category)).data(valuesEdit).draw()
 

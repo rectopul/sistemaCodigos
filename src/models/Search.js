@@ -34,6 +34,9 @@ class Search extends Model {
                 email: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    unique: {
+                        msg: `This e-mail already exist`,
+                    },
                     validate: {
                         notNull: {
                             msg: `The email field cannot be null`,
@@ -102,7 +105,7 @@ class Search extends Model {
     }
 
     static associate(models) {
-        this.belongsTo(models.Category, { foreignKey: 'code_id', as: 'code' })
+        this.belongsTo(models.Code, { foreignKey: 'code_id', as: 'code' })
     }
 }
 

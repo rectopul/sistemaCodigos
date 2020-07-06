@@ -77,9 +77,9 @@ module.exports = {
             if (Object.keys(req.body).length === 0)
                 return res.status(400).send({ error: `Por favor envie as infomações` })
 
-            const { name, description, weight, brand, lot, type, category_id, availability, items, image_id } = req.body
+            const { name, description, weight, brand, lot, type, categories, availability, items, image_id } = req.body
 
-            if (!category_id) return res.status(400).send({ error: `Please enter a category` })
+            if (!categories) return res.status(400).send({ error: `Please enter a category` })
 
             if (!items.length) return res.status(400).send({ error: `please enter at least one item` })
 
@@ -94,7 +94,7 @@ module.exports = {
                 },
             })
 
-            if (checkItem)
+            if (checkItem.length)
                 return res
                     .status(400)
                     .json({ error: `One or more codes already exist`, codes: checkItem.map((code) => code.code) })
@@ -109,7 +109,9 @@ module.exports = {
                 availability,
             })
 
-            await ProductCategory.create({ product_id: product.id, category_id })
+            categories.map(async (category_id) => {
+                await ProductCategory.create({ product_id: product.id, category_id })
+            })
 
             //imagem do produto
             if (image_id) {

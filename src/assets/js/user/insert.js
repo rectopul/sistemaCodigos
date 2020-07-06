@@ -1,5 +1,52 @@
 const userResource = `user`
 
+const user = (() => {
+    //private vars/functions
+
+    const requestForgot = (email) => {
+        return new Promise((resolve, reject) => {
+            const reqUrl = `/api/forgot`
+
+            fetch(reqUrl, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const forgot = (button) => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault()
+
+            const email = document.querySelector('#input-forgot-email')
+
+            if (email) {
+                requestForgot(email.value)
+                    .then((res) => {
+                        if (res.erro) return alert(res.erro)
+                        return (window.location.href = `/login`)
+                    })
+                    .catch((err) => console.log(err))
+            }
+        })
+    }
+
+    return {
+        //public vars/functions
+        forgot,
+    }
+})()
+
+const btnForgot = document.querySelector('.btnForgot')
+
+if (btnForgot) user.forgot(btnForgot)
+
 const requestInsertAvatar = (file) => {
     return new Promise((resolve, reject) => {
         const token = document.body.dataset.token

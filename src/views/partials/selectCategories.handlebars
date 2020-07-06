@@ -1,0 +1,40 @@
+<div class="col-xl-2 px-0">
+    <div class="card shadow mb-4">
+        <!-- Card Header - Dropdown -->
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de categorias</h6>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body">
+            <form class="needs-validation insertProduct" novalidate>
+                {{#each categories}}
+                <div class="form-check">
+                    <input class="form-check-input productCategory" type="checkbox" name="productCategory"
+                        id="categori{{id}}" value="{{id}}">
+                    <label class="form-check-label" for="categori{{id}}">
+                        {{name}}
+                    </label>
+                    {{#each child}}
+                    <div class="form-check">
+                        <input class="form-check-input productCategory" type="checkbox" name="productCategory"
+                            id="categori{{id}}" value="{{id}}">
+                        <label class="form-check-label" for="categori{{id}}">
+                            {{name}}
+                        </label>
+                        {{#each child}}
+                        <div class="form-check">
+                            <input class="form-check-input productCategory" type="checkbox" name="productCategory"
+                                id="categori{{id}}" value="{{id}}">
+                            <label class="form-check-label" for="categori{{id}}">
+                                {{name}}
+                            </label>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{/each}}
+                </div>
+                {{/each}}
+            </form>
+        </div>
+    </div>
+</div>

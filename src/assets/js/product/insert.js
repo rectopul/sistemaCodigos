@@ -3,6 +3,132 @@ const productResource = `product`
 let codesInsert = [],
     productImages = []
 
+const imgProduct = (() => {
+    //private vars/functions
+    const images = []
+    const imagesId = []
+    let imageDefault = 0
+    //.imagesProductContainer
+    const setImageDefault = (image) => {
+        image.addEventListener('click', (e) => {
+            const index = image.dataset.index
+
+            allImages = image.closest('.imagesProductContainer').querySelectorAll('img')
+
+            Array.from(allImages).forEach((img) => {
+                img.classList.remove('active')
+            })
+
+            image.classList.add('active')
+
+            imageDefault = parseInt(index)
+
+            return console.log(imageDefault)
+        })
+    }
+
+    const imageProductChange = (input) => {
+        input.addEventListener('change', (e) => {
+            e.preventDefault()
+
+            //if (!input.closest('form').querySelector('.spinner-border')) putSpinnet(input.closest('form'), `insert`)
+
+            const containerImages = document.querySelector('.imagesProductContainer')
+
+            const inputFiles = [...input.files]
+
+            input.closest('.custom-file').querySelector('label').innerHTML = inputFiles.length + ` imagens`
+
+            console.log(`Lista de imagens`, inputFiles)
+
+            inputFiles.map((file) => {
+                const imageContainer = document.createElement('div')
+
+                imageContainer.classList.add(`mb-2`, `col-sm-3`)
+
+                imageContainer.innerHTML = `
+                <img class="img-thumbnail" src="">
+                `
+
+                const image = imageContainer.querySelector('img')
+
+                // FileReader support
+                if (FileReader && file) {
+                    var fr = new FileReader()
+                    fr.onload = function () {
+                        image.src = fr.result
+                    }
+                    fr.readAsDataURL(file)
+
+                    images.push(file)
+
+                    image.dataset.index = images.indexOf(file)
+
+                    if (images.length === 1) image.classList.add('active')
+
+                    setImageDefault(image)
+
+                    return containerImages.append(imageContainer)
+                }
+
+                // Not supported
+                else {
+                    // fallback -- perhaps submit the input to an iframe and temporarily store
+                    // them on the server until the user's session ends.
+                }
+            })
+        })
+    }
+
+    //Send request to upload images
+    const imageProductApi = () => {
+        return new Promise(async (resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const imagesUploaded = images.map(async (image) => {
+                const form = new FormData()
+                form.append('file', image)
+
+                const reqUrl = `/api/image/product`
+
+                image = await fetch(reqUrl, {
+                    method: `POST`,
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                    body: form,
+                })
+                    .then((r) => r.json())
+                    .then((res) => {
+                        if (res.error) return reject(res.error)
+
+                        imagesId.push(res.id)
+
+                        return res
+                    })
+                    .catch((error) => reject(error))
+
+                return await image
+            })
+
+            const result = await Promise.all(imagesUploaded)
+
+            result[imageDefault].default = true
+
+            console.log(`Resultado retornado: `, result)
+
+            return resolve(result)
+        })
+    }
+
+    return {
+        create: imageProductApi,
+        change: imageProductChange,
+        images: imagesId,
+        default: setImageDefault,
+    }
+})()
+
 const clearListItems = () => {
     codesInsert = []
 
@@ -286,9 +412,11 @@ const readFile = (file) => {
 
 const requestInsertProduct = (object) => {
     return new Promise((resolve, reject) => {
-        const { name, description, weight, brand, lot, type, availability, items, image_id, category_id } = object
+        const { name, description, weight, brand, lot, type, availability, items, image_id, categories } = object
 
         const token = document.body.dataset.token
+
+        if (!categories.length) return reject(`Selecione ao menos 1 categoria`)
 
         const reqUrl = `/api/${productResource}`
         fetch(reqUrl, {
@@ -304,7 +432,7 @@ const requestInsertProduct = (object) => {
                 brand,
                 lot,
                 type,
-                category_id,
+                categories,
                 availability,
                 items,
                 image_id,
@@ -323,73 +451,6 @@ const requestInsertProduct = (object) => {
     })
 }
 
-const imageProductApi = (file) => {
-    return new Promise((resolve, reject) => {
-        const token = document.body.dataset.token
-
-        const form = new FormData()
-        form.append('file', file)
-
-        const reqUrl = `/api/image/product`
-
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                authorization: `Bearer ${token}`,
-            },
-            body: form,
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) return reject(response.error)
-
-                return resolve(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const imageProductChange = (input) => {
-    input.addEventListener('change', (e) => {
-        e.preventDefault()
-
-        putSpinnet(input.closest('form'), `insert`)
-
-        const filename = input.value.split(/(\\|\/)/g).pop()
-        const containerImages = document.querySelector('.imagesProductContainer')
-
-        input.closest('.custom-file').querySelector('label').innerHTML = filename
-
-        console.log(input.files[0])
-
-        return imageProductApi(input.files[0])
-            .then((res) => {
-                const imageId = document.querySelector('.idProductImage')
-
-                putSpinnet(input.closest('form'), `remove`)
-
-                if (imageId) imageId.value = res.id
-
-                const image = document.createElement('img')
-
-                image.setAttribute('src', res.url)
-                image.setAttribute('width', 150)
-
-                image.classList.add('img-thumbnail', 'mx-2')
-
-                containerImages.append(image)
-
-                if (productImages.length === 0) return productImages.push({ id: res.id, default: true })
-
-                return productImages.push({ id: res.id, default: false })
-            })
-            .catch((err) => {
-                putSpinnet(input.closest('form'), `remove`)
-                console.log(err)
-            })
-    })
-}
-
 const productCreate = (form) => {
     const inputName = form.querySelector('.productName')
     const inputDescription = form.querySelector('.productDescription')
@@ -402,23 +463,32 @@ const productCreate = (form) => {
     const Checkswitch = document.querySelector('.multCodes')
     const productCode = document.querySelector('.productCode')
     const fileToRead = document.querySelector('.fileToRead')
-    const imageId = productImages
-    const productCategory = form.querySelector('.productCategory')
+    const imageId = imgProduct.images
+    const productCategory = document.querySelectorAll('.productCategory')
+    let categories = []
+
+    //validate categories
+    if (productCategory) {
+        Array.from(productCategory).forEach((checkbox) => {
+            if (checkbox.checked) categories.push(parseInt(checkbox.value))
+        })
+    }
+
+    if (!categories.length)
+        return Swal.fire({
+            title: `Selecione a categoria`,
+            text: `Por favor selecione ao menos 1 categoria`,
+            icon: 'error',
+            confirmButtonText: 'Ok',
+        })
+
+    console.log(`Categorias`, categories)
 
     form.classList.add('was-validated')
 
     putSpinnet(form.closest('form'), `insert`)
 
-    const itensValidate = [
-        inputName,
-        inputWeight,
-        inputBrand,
-        inputLot,
-        inputType,
-        inputAvailability,
-        inputPrefix,
-        productCategory,
-    ]
+    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
@@ -442,6 +512,7 @@ const productCreate = (form) => {
 
             //check if exist itens
             if (!codesInsert.length) {
+                putSpinnet(form.closest('form'), `remove`)
                 return Swal.fire({
                     title: `Nenhum item cadastrado`,
                     text: `Por favor ensira ao menos 1 item no produto`,
@@ -456,65 +527,67 @@ const productCreate = (form) => {
                 input.classList.add('is-valid')
             })
 
-            return requestInsertProduct({
-                name: inputName.value,
-                description: inputDescription.value,
-                weight: inputWeight.value,
-                brand: inputBrand.value,
-                lot: inputLot.value,
-                type: inputType.value,
-                availability: inputAvailability.value,
-                items: codesInsert,
-                category_id: productCategory.value,
-                image_id: imageId,
-            })
-                .then((res) => {
-                    //erro
-                    if (res.error) {
+            return imgProduct.create().then((res) => {
+                return requestInsertProduct({
+                    name: inputName.value,
+                    description: inputDescription.value,
+                    weight: inputWeight.value,
+                    brand: inputBrand.value,
+                    lot: inputLot.value,
+                    type: inputType.value,
+                    availability: inputAvailability.value,
+                    items: codesInsert,
+                    categories,
+                    image_id: res,
+                })
+                    .then((res) => {
+                        //erro
+                        if (res.error) {
+                            const divAlert = document.createElement('div')
+                            divAlert.classList.add('alert', 'alert-danger')
+                            divAlert.setAttribute('role', 'alert')
+                            divAlert.innerHTML = res.error
+
+                            form.prepend(divAlert)
+
+                            setTimeout(() => {
+                                divAlert.remove()
+                            }, 4000)
+                        }
+                        ///dashboard
+                        //limpar formulário
+                        const allInputs = form.querySelectorAll('input, textarea, .is-valid')
+
+                        form.classList.remove('was-validated')
+
+                        Array.from(allInputs).forEach((input) => {
+                            input.value = ``
+                            return input.classList.remove('is-valid')
+                        })
+
+                        putSpinnet(form.closest('form'), `remove`)
+                        return Swal.fire({
+                            title: `Produto cadastrado`,
+                            text: `O produto ${res.name} foi cadastrado com sucesso`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((error) => {
                         const divAlert = document.createElement('div')
                         divAlert.classList.add('alert', 'alert-danger')
                         divAlert.setAttribute('role', 'alert')
-                        divAlert.innerHTML = res.error
+                        divAlert.innerHTML = error
 
                         form.prepend(divAlert)
+
+                        putSpinnet(form.closest('form'), `remove`)
 
                         setTimeout(() => {
                             divAlert.remove()
                         }, 4000)
-                    }
-                    ///dashboard
-                    //limpar formulário
-                    const allInputs = form.querySelectorAll('input, textarea, .is-valid')
-
-                    form.classList.remove('was-validated')
-
-                    Array.from(allInputs).forEach((input) => {
-                        input.value = ``
-                        return input.classList.remove('is-valid')
                     })
-
-                    putSpinnet(form.closest('form'), `remove`)
-                    return Swal.fire({
-                        title: `Produto cadastrado`,
-                        text: `O produto ${res.name} foi cadastrado com sucesso`,
-                        icon: 'success',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-                .catch((error) => {
-                    const divAlert = document.createElement('div')
-                    divAlert.classList.add('alert', 'alert-danger')
-                    divAlert.setAttribute('role', 'alert')
-                    divAlert.innerHTML = error
-
-                    form.prepend(divAlert)
-
-                    putSpinnet(form.closest('form'), `remove`)
-
-                    setTimeout(() => {
-                        divAlert.remove()
-                    }, 4000)
-                })
+            })
         })
         .catch((err) => {
             console.log(err)
@@ -571,4 +644,4 @@ if (btnInsertItemProduct) insertSingleCode(btnInsertItemProduct)
 //image products
 const ImageProduct = document.querySelector('.productImage')
 
-if (ImageProduct) imageProductChange(ImageProduct)
+if (ImageProduct) imgProduct.change(ImageProduct)

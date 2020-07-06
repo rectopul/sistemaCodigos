@@ -1,4 +1,23 @@
 const search = (() => {
+    //validate form
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.value) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
     //private vars/functions
     const search = (btn) => {
         btn.addEventListener('click', (e) => {
@@ -6,49 +25,71 @@ const search = (() => {
 
             console.log()
 
-            const inputCode = btn.closest('form').querySelector('input.Code')
+            const inputCode = document.querySelector('input.Code')
 
-            return requestIP().then((res) => {
-                const { ip, city, region } = res
-                return request({ code: inputCode.value, ip, city, region })
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
                     .then((res) => {
-                        const { device, code, ip, city, region, product, item } = res
-                        const clientInfo = document.querySelector('.clientInfo')
+                        return requestIP().then((res) => {
+                            const { ip, city, region } = res
+                            return request({
+                                code: inputCode.value,
+                                ip,
+                                city,
+                                region,
+                                name: inputName.value,
+                                surname: inputSurname.value,
+                                email: inputMail.value,
+                            })
+                                .then((res) => {
+                                    const { device, code, ip, city, address } = res
+                                    const clientInfo = document.querySelector('.clientInfo')
 
-                        console.log(res)
-
-                        return (clientInfo.innerHTML = `
-                        <p>
-                            <strong>Código: </strong> ${code}
-                        </p>
-                        <p>
-                            <strong>Produto: </strong> ${product.name}
-                        </p>
-                        <p>
-                            <strong>Item: </strong> ${item.name}
-                        </p>
-                        <p>
-                            <strong>Device: </strong> ${device}
-                        </p>
-                        <p>
-                            <strong>Cidade: </strong> ${city}
-                        </p>
-                        <p>
-                            <strong>Estado: </strong> ${region}
-                        </p>
-                        <p>
-                            <strong>Endereço IP: </strong> ${ip}
-                        </p>
-                    `)
-                    })
-                    .catch((err) => {
-                        return Swal.fire({
-                            title: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
+                                    return (clientInfo.innerHTML = `
+                                <p>
+                                    <strong>Código: </strong> ${code.code}
+                                </p>
+                                <p>
+                                    <strong>Produto: </strong> ${code.product.name}
+                                </p>
+                                <p>
+                                    <strong>Item: </strong> ${code.item.name}
+                                </p>
+                                <p>
+                                    <strong>Device: </strong> ${device}
+                                </p>
+                                <p>
+                                    <strong>Cidade: </strong> ${city}
+                                </p>
+                                <p>
+                                    <strong>Estado: </strong> ${address}
+                                </p>
+                                <p>
+                                    <strong>Endereço IP: </strong> ${ip}
+                                </p>
+                            `)
+                                })
+                                .catch((err) => {
+                                    return Swal.fire({
+                                        title: err,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok',
+                                    })
+                                })
                         })
                     })
-            })
+                    .catch((err) => console.log(err))
+            }
         })
     }
 
@@ -71,14 +112,14 @@ const search = (() => {
 
     const request = (object) => {
         return new Promise((resolve, reject) => {
-            const { code, ip, city, region } = object
+            const { name, surname, email, code, ip, city, region } = object
 
             fetch(`/api/search`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
                 },
-                body: JSON.stringify({ code, ip, city, region }),
+                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
             })
                 .then((res) => res.json())
                 .then((res) => {
@@ -95,6 +136,6 @@ const search = (() => {
     }
 })()
 
-const btnSearchCode = document.querySelector('.btnSearchCode')
+const btnSearchCode = document.querySelector('.submitSearch')
 
 if (btnSearchCode) search.search(btnSearchCode)

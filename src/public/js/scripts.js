@@ -1,69 +1,58 @@
 const URL = `http://192.168.0.10:3333/api`
 
-const search = (() => {
-    //private vars/functions
-    const search = (btn) => {
+const category = (() => {
+    const table = $('#dataTable').DataTable()
+
+    //Private vars/functions
+    const btnClick = (btn) => {
+        const id = btn.dataset.id
+
         btn.addEventListener('click', (e) => {
             e.preventDefault()
-
-            console.log()
-
-            const inputCode = btn.closest('form').querySelector('input.Code')
-
-            return requestIP().then((res) => {
-                const { ip, city, region } = res
-                return request({ code: inputCode.value, ip, city, region })
-                    .then((res) => {
-                        const { device, code, ip, city, region, product, item } = res
-                        const clientInfo = document.querySelector('.clientInfo')
-
-                        console.log(res)
-
-                        return (clientInfo.innerHTML = `
-                        <p>
-                            <strong>Código: </strong> ${code}
-                        </p>
-                        <p>
-                            <strong>Produto: </strong> ${product.name}
-                        </p>
-                        <p>
-                            <strong>Item: </strong> ${item.name}
-                        </p>
-                        <p>
-                            <strong>Device: </strong> ${device}
-                        </p>
-                        <p>
-                            <strong>Cidade: </strong> ${city}
-                        </p>
-                        <p>
-                            <strong>Estado: </strong> ${region}
-                        </p>
-                        <p>
-                            <strong>Endereço IP: </strong> ${ip}
-                        </p>
-                    `)
-                    })
-                    .catch((err) => {
-                        return Swal.fire({
-                            title: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            })
+            return removeCategory(btn, id)
         })
     }
 
-    const requestIP = () => {
+    const removeCategory = (element, id) => {
+        requestDestroy(id)
+            .then((res) => {
+                table
+                    .row($(element.closest('tr')))
+                    .remove()
+                    .draw()
+                /* if (element.closest('tr')) {
+                    element.closest('tr').remove()
+                } */
+
+                return Swal.fire({
+                    title: `Categoria ${res.name} removida com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) => {
+                return Swal.fire({
+                    title: err,
+                    text: `Ocorreu um erro ao remover a categoria`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            })
+    }
+
+    const requestDestroy = (id) => {
         return new Promise((resolve, reject) => {
-            fetch(`https://ipapi.co/json/`, {
-                method: 'GET',
+            const token = document.body.dataset.token
+
+            fetch(`/api/category/${id}`, {
+                method: 'DELETE',
                 headers: {
                     'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
                 },
             })
                 .then((res) => {
-                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
+                    if (!res.ok) return reject(`Erro ao deletar categoria`)
                     return res.json()
                 })
                 .then((res) => resolve(res))
@@ -71,35 +60,361 @@ const search = (() => {
         })
     }
 
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { code, ip, city, region } = object
+    const destroy = (btn) => {
+        return btnClick(btn)
+    }
 
-            fetch(`/api/search`, {
+    //Validate form
+    const validateForm = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //Create new category
+    const requestCreate = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, description, slug, parent } = object
+
+            fetch(`/api/category`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ code, ip, city, region }),
+                body: JSON.stringify({ name, description, slug, parent }),
             })
-                .then((res) => res.json())
+                .then((r) => r.json())
                 .then((res) => {
-                    console.log(res)
                     if (res.error) return reject(res.error)
-                    return resolve(res)
+                    resolve(res)
                 })
                 .catch((error) => reject(error))
         })
     }
+
+    //Create category in front
+    const createFront = (object) => {
+        const { id, name, description, createdAt } = object
+
+        let data = new Date(createdAt)
+
+        data = new Intl.DateTimeFormat('pt-BR').format(data)
+
+        const newRow = table.row
+            .add([
+                id,
+                name,
+                description,
+                0,
+                `<!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
+                <i class="far fa-trash-alt"></i>
+            </button>`,
+            ])
+            .draw()
+            .node()
+
+        newRow.classList.add(`category-${id}`)
+
+        const btnEdit = newRow.querySelector('.editCategory')
+
+        openModal(btnEdit)
+
+        const btnDestroy = newRow.querySelector('.categoryDestroy')
+
+        destroy(btnDestroy)
+
+        //document.querySelector('.listCaregories').append(tr)
+    }
+
+    const create = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const inputName = document.querySelector('.categoryName')
+            const inputDescription = document.querySelector('.categoryDescription')
+            const inputSlug = document.querySelector('.categorySlug')
+            const inputParent = document.querySelector('.categoryParent')
+
+            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
+
+            return validateForm(inputsValidate)
+                .then(() => {
+                    return requestCreate({
+                        name: inputName.value,
+                        description: inputDescription.value,
+                        slug: inputSlug.value,
+                        parent: inputParent.value || null,
+                    })
+                        .then((res) => {
+                            createFront(res)
+                            return Swal.fire({
+                                title: `Categoria ${res.name} criada com sucesso!`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((err) => {
+                            return Swal.fire({
+                                title: err,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                })
+                .catch((err) => console.log(err))
+        })
+    }
+
+    //Find category
+    const find = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+            fetch(`/api/category/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //edit
+    const edit = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { id, name, description, slug, parent } = object
+
+            fetch(`/api/category/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, description, slug, parent }),
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao criar categoria`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //Update category in front
+    const updateFront = (object) => {
+        const { id, name, description, slug, parent, createdAt } = object
+
+        const category = document.querySelector(`.category-${id}`)
+
+        if (category) {
+            const fieldName = category.querySelector('td:nth-child(2)')
+            const fieldDescription = category.querySelector('td:nth-child(3)')
+            const fieldCreate = category.querySelector('td:nth-child(5)')
+
+            let data = new Date(createdAt)
+            data = new Intl.DateTimeFormat('pt-BR').format(data)
+
+            let valuesEdit = table.row($(category)).data()
+
+            console.log(category)
+
+            valuesEdit[1] = name
+            valuesEdit[2] = description
+
+            table.row($(category)).data(valuesEdit).draw()
+
+            /* const btnEdit = category.querySelector('.editCategory')
+
+            openModal(btnEdit) */
+
+            /* const btnDestroy = category.querySelector('.categoryDestroy')
+
+            destroy(btnDestroy) */
+
+            return Swal.fire({
+                title: `Categoria ${name} editada com sucesso!`,
+                icon: 'success',
+                confirmButtonText: 'Ok',
+            })
+        }
+    }
+
+    //Functions from edit categories
+    const openModal = (btn) => {
+        btn.addEventListener('click', (e) => {
+            const id = btn.dataset.id
+            const action = `editCategory`
+            const btnModal = document.querySelector('.btnEditCategory')
+
+            return find(id)
+                .then((res) => {
+                    const inputName = document.querySelector('.editCategoryName')
+                    const inputDescription = document.querySelector('.editCategoryDescription')
+                    const inputSlug = document.querySelector('.editCategorySlug')
+                    const inputParent = document.querySelector('.editCategoryParent')
+
+                    const { id, name, description, slug, parent } = res
+
+                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
+                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
+                    }
+
+                    inputName.value = name
+                    inputDescription.value = description
+                    inputSlug.value = slug
+
+                    return btnModal.addEventListener('click', (e) => {
+                        return edit({
+                            id,
+                            name: inputName.value,
+                            description: inputDescription.value,
+                            slug: inputSlug.value,
+                            parent: inputParent.value || null,
+                        }).then((res) => {
+                            return updateFront(res)
+                        })
+                    })
+                })
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro ao editar categoria`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+        })
+    }
+
     return {
-        //piblic vars/function
-        search,
+        destroy,
+        create,
+        edit: openModal,
     }
 })()
 
-const btnSearchCode = document.querySelector('.btnSearchCode')
+const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
 
-if (btnSearchCode) search.search(btnSearchCode)
+if (btnCategoryDestroy) {
+    Array.from(btnCategoryDestroy).forEach((btn) => {
+        return category.destroy(btn)
+    })
+}
+
+const btnModalEditCategory = document.querySelectorAll('.editCategory')
+
+if (btnModalEditCategory) {
+    Array.from(btnModalEditCategory).forEach((btn) => {
+        return category.edit(btn)
+    })
+}
+
+const btnCreateCategory = document.querySelector('.btnCreateCategory')
+
+if (btnCreateCategory) category.create(btnCreateCategory)
+
+const loginResource = `login`
+
+const requestLogin = (object) => {
+    return new Promise((resolve, reject) => {
+        const { email, password, gToken } = object
+
+        const reqUrl = `/api/${loginResource}`
+        fetch(reqUrl, {
+            method: `POST`,
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, gToken }),
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                if (response.error) {
+                    return reject(response.error)
+                }
+
+                resolve(response)
+                return console.log(response)
+            })
+            .catch((error) => reject(error))
+    })
+}
+
+const login = (form) => {
+    const inputMail = form.querySelector('.loginMail')
+    const inputPassword = form.querySelector('.loginPassword')
+
+    form.classList.add('was-validated')
+
+    if (!inputMail.value) {
+        return inputMail.classList.add('is-invalid')
+    } else {
+        inputMail.classList.remove('is-invalid')
+        inputMail.classList.add('is-valid')
+        //
+    }
+    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
+
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
+            // Add your logic to submit to your backend server here.
+            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
+                .then((res) => {
+                    ///dashboard
+                    window.location.href = '/dashboard'
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
+
+                    form.prepend(divAlert)
+
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
+        })
+    })
+}
+
+const btnLogin = document.querySelector('.btnLogin')
+
+if (btnLogin) {
+    btnLogin.addEventListener('click', (e) => {
+        e.preventDefault()
+
+        login(btnLogin.closest('form'))
+    })
+}
 
 const btnsProduct = document.querySelectorAll('.productDelete')
 
@@ -156,6 +471,132 @@ const productResource = `product`
 
 let codesInsert = [],
     productImages = []
+
+const imgProduct = (() => {
+    //private vars/functions
+    const images = []
+    const imagesId = []
+    let imageDefault = 0
+    //.imagesProductContainer
+    const setImageDefault = (image) => {
+        image.addEventListener('click', (e) => {
+            const index = image.dataset.index
+
+            allImages = image.closest('.imagesProductContainer').querySelectorAll('img')
+
+            Array.from(allImages).forEach((img) => {
+                img.classList.remove('active')
+            })
+
+            image.classList.add('active')
+
+            imageDefault = parseInt(index)
+
+            return console.log(imageDefault)
+        })
+    }
+
+    const imageProductChange = (input) => {
+        input.addEventListener('change', (e) => {
+            e.preventDefault()
+
+            //if (!input.closest('form').querySelector('.spinner-border')) putSpinnet(input.closest('form'), `insert`)
+
+            const containerImages = document.querySelector('.imagesProductContainer')
+
+            const inputFiles = [...input.files]
+
+            input.closest('.custom-file').querySelector('label').innerHTML = inputFiles.length + ` imagens`
+
+            console.log(`Lista de imagens`, inputFiles)
+
+            inputFiles.map((file) => {
+                const imageContainer = document.createElement('div')
+
+                imageContainer.classList.add(`mb-2`, `col-sm-3`)
+
+                imageContainer.innerHTML = `
+                <img class="img-thumbnail" src="">
+                `
+
+                const image = imageContainer.querySelector('img')
+
+                // FileReader support
+                if (FileReader && file) {
+                    var fr = new FileReader()
+                    fr.onload = function () {
+                        image.src = fr.result
+                    }
+                    fr.readAsDataURL(file)
+
+                    images.push(file)
+
+                    image.dataset.index = images.indexOf(file)
+
+                    if (images.length === 1) image.classList.add('active')
+
+                    setImageDefault(image)
+
+                    return containerImages.append(imageContainer)
+                }
+
+                // Not supported
+                else {
+                    // fallback -- perhaps submit the input to an iframe and temporarily store
+                    // them on the server until the user's session ends.
+                }
+            })
+        })
+    }
+
+    //Send request to upload images
+    const imageProductApi = () => {
+        return new Promise(async (resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const imagesUploaded = images.map(async (image) => {
+                const form = new FormData()
+                form.append('file', image)
+
+                const reqUrl = `/api/image/product`
+
+                image = await fetch(reqUrl, {
+                    method: `POST`,
+                    headers: {
+                        authorization: `Bearer ${token}`,
+                    },
+                    body: form,
+                })
+                    .then((r) => r.json())
+                    .then((res) => {
+                        if (res.error) return reject(res.error)
+
+                        imagesId.push(res.id)
+
+                        return res
+                    })
+                    .catch((error) => reject(error))
+
+                return await image
+            })
+
+            const result = await Promise.all(imagesUploaded)
+
+            result[imageDefault].default = true
+
+            console.log(`Resultado retornado: `, result)
+
+            return resolve(result)
+        })
+    }
+
+    return {
+        create: imageProductApi,
+        change: imageProductChange,
+        images: imagesId,
+        default: setImageDefault,
+    }
+})()
 
 const clearListItems = () => {
     codesInsert = []
@@ -440,9 +881,11 @@ const readFile = (file) => {
 
 const requestInsertProduct = (object) => {
     return new Promise((resolve, reject) => {
-        const { name, description, weight, brand, lot, type, availability, items, image_id, category_id } = object
+        const { name, description, weight, brand, lot, type, availability, items, image_id, categories } = object
 
         const token = document.body.dataset.token
+
+        if (!categories.length) return reject(`Selecione ao menos 1 categoria`)
 
         const reqUrl = `/api/${productResource}`
         fetch(reqUrl, {
@@ -458,7 +901,7 @@ const requestInsertProduct = (object) => {
                 brand,
                 lot,
                 type,
-                category_id,
+                categories,
                 availability,
                 items,
                 image_id,
@@ -477,73 +920,6 @@ const requestInsertProduct = (object) => {
     })
 }
 
-const imageProductApi = (file) => {
-    return new Promise((resolve, reject) => {
-        const token = document.body.dataset.token
-
-        const form = new FormData()
-        form.append('file', file)
-
-        const reqUrl = `/api/image/product`
-
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                authorization: `Bearer ${token}`,
-            },
-            body: form,
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) return reject(response.error)
-
-                return resolve(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const imageProductChange = (input) => {
-    input.addEventListener('change', (e) => {
-        e.preventDefault()
-
-        putSpinnet(input.closest('form'), `insert`)
-
-        const filename = input.value.split(/(\\|\/)/g).pop()
-        const containerImages = document.querySelector('.imagesProductContainer')
-
-        input.closest('.custom-file').querySelector('label').innerHTML = filename
-
-        console.log(input.files[0])
-
-        return imageProductApi(input.files[0])
-            .then((res) => {
-                const imageId = document.querySelector('.idProductImage')
-
-                putSpinnet(input.closest('form'), `remove`)
-
-                if (imageId) imageId.value = res.id
-
-                const image = document.createElement('img')
-
-                image.setAttribute('src', res.url)
-                image.setAttribute('width', 150)
-
-                image.classList.add('img-thumbnail', 'mx-2')
-
-                containerImages.append(image)
-
-                if (productImages.length === 0) return productImages.push({ id: res.id, default: true })
-
-                return productImages.push({ id: res.id, default: false })
-            })
-            .catch((err) => {
-                putSpinnet(input.closest('form'), `remove`)
-                console.log(err)
-            })
-    })
-}
-
 const productCreate = (form) => {
     const inputName = form.querySelector('.productName')
     const inputDescription = form.querySelector('.productDescription')
@@ -556,23 +932,32 @@ const productCreate = (form) => {
     const Checkswitch = document.querySelector('.multCodes')
     const productCode = document.querySelector('.productCode')
     const fileToRead = document.querySelector('.fileToRead')
-    const imageId = productImages
-    const productCategory = form.querySelector('.productCategory')
+    const imageId = imgProduct.images
+    const productCategory = document.querySelectorAll('.productCategory')
+    let categories = []
+
+    //validate categories
+    if (productCategory) {
+        Array.from(productCategory).forEach((checkbox) => {
+            if (checkbox.checked) categories.push(parseInt(checkbox.value))
+        })
+    }
+
+    if (!categories.length)
+        return Swal.fire({
+            title: `Selecione a categoria`,
+            text: `Por favor selecione ao menos 1 categoria`,
+            icon: 'error',
+            confirmButtonText: 'Ok',
+        })
+
+    console.log(`Categorias`, categories)
 
     form.classList.add('was-validated')
 
     putSpinnet(form.closest('form'), `insert`)
 
-    const itensValidate = [
-        inputName,
-        inputWeight,
-        inputBrand,
-        inputLot,
-        inputType,
-        inputAvailability,
-        inputPrefix,
-        productCategory,
-    ]
+    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
@@ -596,6 +981,7 @@ const productCreate = (form) => {
 
             //check if exist itens
             if (!codesInsert.length) {
+                putSpinnet(form.closest('form'), `remove`)
                 return Swal.fire({
                     title: `Nenhum item cadastrado`,
                     text: `Por favor ensira ao menos 1 item no produto`,
@@ -610,65 +996,67 @@ const productCreate = (form) => {
                 input.classList.add('is-valid')
             })
 
-            return requestInsertProduct({
-                name: inputName.value,
-                description: inputDescription.value,
-                weight: inputWeight.value,
-                brand: inputBrand.value,
-                lot: inputLot.value,
-                type: inputType.value,
-                availability: inputAvailability.value,
-                items: codesInsert,
-                category_id: productCategory.value,
-                image_id: imageId,
-            })
-                .then((res) => {
-                    //erro
-                    if (res.error) {
+            return imgProduct.create().then((res) => {
+                return requestInsertProduct({
+                    name: inputName.value,
+                    description: inputDescription.value,
+                    weight: inputWeight.value,
+                    brand: inputBrand.value,
+                    lot: inputLot.value,
+                    type: inputType.value,
+                    availability: inputAvailability.value,
+                    items: codesInsert,
+                    categories,
+                    image_id: res,
+                })
+                    .then((res) => {
+                        //erro
+                        if (res.error) {
+                            const divAlert = document.createElement('div')
+                            divAlert.classList.add('alert', 'alert-danger')
+                            divAlert.setAttribute('role', 'alert')
+                            divAlert.innerHTML = res.error
+
+                            form.prepend(divAlert)
+
+                            setTimeout(() => {
+                                divAlert.remove()
+                            }, 4000)
+                        }
+                        ///dashboard
+                        //limpar formulário
+                        const allInputs = form.querySelectorAll('input, textarea, .is-valid')
+
+                        form.classList.remove('was-validated')
+
+                        Array.from(allInputs).forEach((input) => {
+                            input.value = ``
+                            return input.classList.remove('is-valid')
+                        })
+
+                        putSpinnet(form.closest('form'), `remove`)
+                        return Swal.fire({
+                            title: `Produto cadastrado`,
+                            text: `O produto ${res.name} foi cadastrado com sucesso`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((error) => {
                         const divAlert = document.createElement('div')
                         divAlert.classList.add('alert', 'alert-danger')
                         divAlert.setAttribute('role', 'alert')
-                        divAlert.innerHTML = res.error
+                        divAlert.innerHTML = error
 
                         form.prepend(divAlert)
+
+                        putSpinnet(form.closest('form'), `remove`)
 
                         setTimeout(() => {
                             divAlert.remove()
                         }, 4000)
-                    }
-                    ///dashboard
-                    //limpar formulário
-                    const allInputs = form.querySelectorAll('input, textarea, .is-valid')
-
-                    form.classList.remove('was-validated')
-
-                    Array.from(allInputs).forEach((input) => {
-                        input.value = ``
-                        return input.classList.remove('is-valid')
                     })
-
-                    putSpinnet(form.closest('form'), `remove`)
-                    return Swal.fire({
-                        title: `Produto cadastrado`,
-                        text: `O produto ${res.name} foi cadastrado com sucesso`,
-                        icon: 'success',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-                .catch((error) => {
-                    const divAlert = document.createElement('div')
-                    divAlert.classList.add('alert', 'alert-danger')
-                    divAlert.setAttribute('role', 'alert')
-                    divAlert.innerHTML = error
-
-                    form.prepend(divAlert)
-
-                    putSpinnet(form.closest('form'), `remove`)
-
-                    setTimeout(() => {
-                        divAlert.remove()
-                    }, 4000)
-                })
+            })
         })
         .catch((err) => {
             console.log(err)
@@ -725,145 +1113,106 @@ if (btnInsertItemProduct) insertSingleCode(btnInsertItemProduct)
 //image products
 const ImageProduct = document.querySelector('.productImage')
 
-if (ImageProduct) imageProductChange(ImageProduct)
+if (ImageProduct) imgProduct.change(ImageProduct)
 
-const loginResource = `login`
-
-const requestLogin = (object) => {
-    return new Promise((resolve, reject) => {
-        const { email, password } = object
-
-        const reqUrl = `/api/${loginResource}`
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) {
-                    return reject(response.error)
-                }
-
-                resolve(response)
-                return console.log(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const login = (form) => {
-    const inputMail = form.querySelector('.loginMail')
-    const inputPassword = form.querySelector('.loginPassword')
-
-    form.classList.add('was-validated')
-
-    if (!inputMail.value) {
-        return inputMail.classList.add('is-invalid')
-    } else {
-        inputMail.classList.remove('is-invalid')
-        inputMail.classList.add('is-valid')
-        //
-    }
-    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
-
-    return requestLogin({ email: inputMail.value, password: inputPassword.value })
-        .then((res) => {
-            ///dashboard
-            window.location.href = '/dashboard'
-        })
-        .catch((error) => {
-            const divAlert = document.createElement('div')
-            divAlert.classList.add('alert', 'alert-danger')
-            divAlert.setAttribute('role', 'alert')
-            divAlert.innerHTML = error
-
-            form.prepend(divAlert)
-
-            setTimeout(() => {
-                divAlert.remove()
-            }, 4000)
-        })
-}
-
-const btnLogin = document.querySelector('.btnLogin')
-
-if (btnLogin) {
-    btnLogin.addEventListener('click', (e) => {
-        e.preventDefault()
-
-        login(btnLogin.closest('form'))
-    })
-}
-
-const category = (() => {
-    const table = $('#dataTable').DataTable()
-
-    //Private vars/functions
-    const btnClick = (btn) => {
-        const id = btn.dataset.id
-
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-            return removeCategory(btn, id)
-        })
-    }
-
-    const removeCategory = (element, id) => {
-        requestDestroy(id)
-            .then((res) => {
-                table
-                    .row($(element.closest('tr')))
-                    .remove()
-                    .draw()
-                /* if (element.closest('tr')) {
-                    element.closest('tr').remove()
-                } */
-
-                return Swal.fire({
-                    title: `Categoria ${res.name} removida com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) => {
-                return Swal.fire({
-                    title: err,
-                    text: `Ocorreu um erro ao remover a categoria`,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            })
-    }
-
-    const requestDestroy = (id) => {
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
         return new Promise((resolve, reject) => {
             const token = document.body.dataset.token
 
-            fetch(`/api/category/${id}`, {
-                method: 'DELETE',
+            const reqUrl = `/api/user/image`
+
+            const form = new FormData()
+            form.append('file', file)
+
+            fetch(reqUrl, {
+                method: 'PUT',
                 headers: {
-                    'content-type': 'application/json',
                     authorization: `Bearer ${token}`,
                 },
+                body: form,
             })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao deletar categoria`)
-                    return res.json()
-                })
+                .then((res) => res.json())
                 .then((res) => resolve(res))
                 .catch((error) => reject(error))
         })
     }
 
-    const destroy = (btn) => {
-        return btnClick(btn)
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
+
+            const reqUrl = `/api/user`
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
     }
 
-    //Validate form
-    const validateForm = (list) => {
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
+
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
+                })
+
+                button.innerHTML = `Edit profile`
+
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
+            }
+        })
+    }
+
+    //get all fields
+    const validate = (list) => {
         return new Promise((resolve, reject) => {
             list.map((item) => {
                 const { input, msg } = item
@@ -883,23 +1232,176 @@ const category = (() => {
         })
     }
 
-    //Create new category
-    const requestCreate = (object) => {
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
+
+    return {
+        //public var/functions
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
+    }
+})()
+
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
+
+if (inputEditAvatar) profile.edit(inputEditAvatar)
+
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
+
+if (btnEditUser) profile.enableEdit(btnEditUser)
+
+const search = (() => {
+    //validate form
+    const validate = (list) => {
         return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
+            list.map((item) => {
+                const { input, msg } = item
 
-            const { name, description, slug, parent } = object
+                if (!input.value) {
+                    input.setCustomValidity(msg)
 
-            fetch(`/api/category`, {
-                method: 'POST',
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //private vars/functions
+    const search = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            console.log()
+
+            const inputCode = document.querySelector('input.Code')
+
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
+                    .then((res) => {
+                        return requestIP().then((res) => {
+                            const { ip, city, region } = res
+                            return request({
+                                code: inputCode.value,
+                                ip,
+                                city,
+                                region,
+                                name: inputName.value,
+                                surname: inputSurname.value,
+                                email: inputMail.value,
+                            })
+                                .then((res) => {
+                                    const { device, code, ip, city, address } = res
+                                    const clientInfo = document.querySelector('.clientInfo')
+
+                                    return (clientInfo.innerHTML = `
+                                <p>
+                                    <strong>Código: </strong> ${code.code}
+                                </p>
+                                <p>
+                                    <strong>Produto: </strong> ${code.product.name}
+                                </p>
+                                <p>
+                                    <strong>Item: </strong> ${code.item.name}
+                                </p>
+                                <p>
+                                    <strong>Device: </strong> ${device}
+                                </p>
+                                <p>
+                                    <strong>Cidade: </strong> ${city}
+                                </p>
+                                <p>
+                                    <strong>Estado: </strong> ${address}
+                                </p>
+                                <p>
+                                    <strong>Endereço IP: </strong> ${ip}
+                                </p>
+                            `)
+                                })
+                                .catch((err) => {
+                                    return Swal.fire({
+                                        title: err,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok',
+                                    })
+                                })
+                        })
+                    })
+                    .catch((err) => console.log(err))
+            }
+        })
+    }
+
+    const requestIP = () => {
+        return new Promise((resolve, reject) => {
+            fetch(`https://ipapi.co/json/`, {
+                method: 'GET',
                 headers: {
                     'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ name, description, slug, parent }),
             })
                 .then((res) => {
-                    if (!res.ok) return reject(`Erro ao criar categoria`)
+                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
                     return res.json()
                 })
                 .then((res) => resolve(res))
@@ -907,95 +1409,51 @@ const category = (() => {
         })
     }
 
-    //Create category in front
-    const createFront = (object) => {
-        const { id, name, description, createdAt } = object
-
-        let data = new Date(createdAt)
-
-        data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-        const newRow = table.row
-            .add([
-                id,
-                name,
-                description,
-                0,
-                data,
-                `<!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
-                <i class="fas fa-edit"></i>
-            </button>
-            <!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
-                <i class="far fa-trash-alt"></i>
-            </button>`,
-            ])
-            .draw()
-            .node()
-
-        newRow.classList.add(`category-${id}`)
-
-        const btnEdit = newRow.querySelector('.editCategory')
-
-        openModal(btnEdit)
-
-        const btnDestroy = newRow.querySelector('.categoryDestroy')
-
-        destroy(btnDestroy)
-
-        //document.querySelector('.listCaregories').append(tr)
-    }
-
-    const create = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const inputName = document.querySelector('.categoryName')
-            const inputDescription = document.querySelector('.categoryDescription')
-            const inputSlug = document.querySelector('.categorySlug')
-            const inputParent = document.querySelector('.categoryParent')
-
-            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
-
-            return validateForm(inputsValidate)
-                .then(() => {
-                    return requestCreate({
-                        name: inputName.value,
-                        description: inputDescription.value,
-                        slug: inputSlug.value,
-                        parent: inputParent.value || null,
-                    })
-                        .then((res) => {
-                            createFront(res)
-                            return Swal.fire({
-                                title: `Categoria ${res.name} criada com sucesso!`,
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                        .catch((err) => {
-                            return Swal.fire({
-                                title: err,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                })
-                .catch((err) => console.log(err))
-        })
-    }
-
-    //Find category
-    const find = (id) => {
+    const request = (object) => {
         return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-            fetch(`/api/category/${id}`, {
-                method: 'GET',
+            const { name, surname, email, code, ip, city, region } = object
+
+            fetch(`/api/search`, {
+                method: 'POST',
                 headers: {
                     'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
                 },
+                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+    return {
+        //piblic vars/function
+        search,
+    }
+})()
+
+const btnSearchCode = document.querySelector('.submitSearch')
+
+if (btnSearchCode) search.search(btnSearchCode)
+
+const userResource = `user`
+
+const user = (() => {
+    //private vars/functions
+
+    const requestForgot = (email) => {
+        return new Promise((resolve, reject) => {
+            const reqUrl = `/api/forgot`
+
+            fetch(reqUrl, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
             })
                 .then((res) => res.json())
                 .then((res) => resolve(res))
@@ -1003,144 +1461,32 @@ const category = (() => {
         })
     }
 
-    //edit
-    const edit = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
+    const forgot = (button) => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault()
 
-            const { id, name, description, slug, parent } = object
+            const email = document.querySelector('#input-forgot-email')
 
-            fetch(`/api/category/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, description, slug, parent }),
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao criar categoria`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    //Update category in front
-    const updateFront = (object) => {
-        const { id, name, description, slug, parent, createdAt } = object
-
-        const category = document.querySelector(`.category-${id}`)
-
-        if (category) {
-            const fieldName = category.querySelector('td:nth-child(2)')
-            const fieldDescription = category.querySelector('td:nth-child(3)')
-            const fieldCreate = category.querySelector('td:nth-child(5)')
-
-            let data = new Date(createdAt)
-            data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-            let valuesEdit = table.row($(category)).data()
-
-            console.log(category)
-
-            valuesEdit[1] = name
-            valuesEdit[2] = description
-            valuesEdit[4] = data
-
-            table.row($(category)).data(valuesEdit).draw()
-
-            /* const btnEdit = category.querySelector('.editCategory')
-
-            openModal(btnEdit) */
-
-            /* const btnDestroy = category.querySelector('.categoryDestroy')
-
-            destroy(btnDestroy) */
-
-            return Swal.fire({
-                title: `Categoria ${name} editada com sucesso!`,
-                icon: 'success',
-                confirmButtonText: 'Ok',
-            })
-        }
-    }
-
-    //Functions from edit categories
-    const openModal = (btn) => {
-        btn.addEventListener('click', (e) => {
-            const id = btn.dataset.id
-            const action = `editCategory`
-            const btnModal = document.querySelector('.btnEditCategory')
-
-            return find(id)
-                .then((res) => {
-                    const inputName = document.querySelector('.editCategoryName')
-                    const inputDescription = document.querySelector('.editCategoryDescription')
-                    const inputSlug = document.querySelector('.editCategorySlug')
-                    const inputParent = document.querySelector('.editCategoryParent')
-
-                    const { id, name, description, slug, parent } = res
-
-                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
-                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
-                    }
-
-                    inputName.value = name
-                    inputDescription.value = description
-                    inputSlug.value = slug
-
-                    return btnModal.addEventListener('click', (e) => {
-                        return edit({
-                            id,
-                            name: inputName.value,
-                            description: inputDescription.value,
-                            slug: inputSlug.value,
-                            parent: inputParent.value || null,
-                        }).then((res) => {
-                            return updateFront(res)
-                        })
+            if (email) {
+                requestForgot(email.value)
+                    .then((res) => {
+                        if (res.erro) return alert(res.erro)
+                        return (window.location.href = `/login`)
                     })
-                })
-                .catch((err) => {
-                    return Swal.fire({
-                        title: `Erro ao editar categoria`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
+                    .catch((err) => console.log(err))
+            }
         })
     }
 
     return {
-        destroy,
-        create,
-        edit: openModal,
+        //public vars/functions
+        forgot,
     }
 })()
 
-const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
+const btnForgot = document.querySelector('.btnForgot')
 
-if (btnCategoryDestroy) {
-    Array.from(btnCategoryDestroy).forEach((btn) => {
-        return category.destroy(btn)
-    })
-}
-
-const btnModalEditCategory = document.querySelectorAll('.editCategory')
-
-if (btnModalEditCategory) {
-    Array.from(btnModalEditCategory).forEach((btn) => {
-        return category.edit(btn)
-    })
-}
-
-const btnCreateCategory = document.querySelector('.btnCreateCategory')
-
-if (btnCreateCategory) category.create(btnCreateCategory)
-
-const userResource = `user`
+if (btnForgot) user.forgot(btnForgot)
 
 const requestInsertAvatar = (file) => {
     return new Promise((resolve, reject) => {

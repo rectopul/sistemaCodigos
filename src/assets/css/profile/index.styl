@@ -1,0 +1,137 @@
+.font-weight-300
+    font-weight 300 !important
+.edit-avatar
+    width 140px
+    height 140px
+    position absolute
+    left 50%
+    transform translate(-50%, -50%)
+    display flex
+    align-items center
+    border-radius 50%
+    display none
+    transition all 200ms linear
+    &:before
+        content ''
+        background-color #ccc
+        position absolute
+        width: 100%
+        height 100%
+        top 0
+        left 0
+        border-radius 50%
+        opacity .7
+.card-profile
+    & .custom-file
+        width 42px
+        margin 0 auto
+        & input
+            display none !important
+        & label
+            border 0
+            background-color transparent
+            border-radius 0
+            &:before
+                content none
+            &:after
+                font-family "Font Awesome 5 Free"
+                content '\f044' !important
+                border-radius 4px !important
+                background-color #5e72e4 !important
+                color #fff
+                cursor pointer
+            &:hover
+                &:after
+                    background-color #4959B3 !important
+    & .card-profile-image
+        position relative
+        & img
+            position absolute
+            left 50%
+            max-width 140px
+            transition all .15s ease
+            transform translate(-50%, -50%) scale(1)
+            border 3px solid #fff
+        &:hover
+            & .edit-avatar
+                display flex
+    .card-profile-stats
+        & > div
+            margin-right 1rem
+            padding .875rem
+            text-align center
+            & .heading 
+                font-size 1.1rem
+                font-weight bold
+                display block
+            & .description
+                font-size .875rem
+                color #adb5bd
+    & h5
+        font-weight 600
+        line-height 1.5
+        margin-bottom .5rem
+        color #32325d
+        &.h3
+            font-size 1.0625rem
+            font-weight 600
+            line-height 1.5
+            margin-bottom .5rem
+            color #32325d
+    & .h5
+        font-weight 600
+        font-size .8125rem
+        color #32325d
+.wrapper-profile
+    position relative
+    & .profile-background
+        width 100%
+        height 100%
+        z-index 1
+        background-image url('/img/background-profile.jpg')
+        background-attachment fixed
+        position absolute
+        top 0
+        left 0
+        display block
+        opacity 0.9
+    & .page-header-title, & .page-header-subtitle
+        font-family  Open Sans, sans-serif
+    & .page-header-title
+        font-size 2.75rem
+        font-weight 600
+        line-height 1.5
+    & .page-header-subtitle
+        font-size 1rem
+        font-weight 300
+        line-height 1.7
+    & #content, & footer
+        z-index 2
+    & .btn-neutral
+        font-family  Open Sans, sans-serif
+        font-size .875rem
+        position relative
+        letter-spacing .025em
+        text-transform none
+        will-change transform
+        display inline-block
+        font-weight: 600
+        color #5e72e4
+        text-align center
+        vertical-align middle
+        user-select none
+        border 1px solid transparent
+        padding: .625rem 1.25rem
+        line-height 1.5
+        border-radius .35rem
+        transition color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out
+        border-color #fff
+        background-color #fff
+        box-shadow 0 4px 6px rgba(50, 50, 93, .11), 0 1px 3px rgba(0, 0, 0, .08)
+        &:hover
+            transform translateY(-1px)
+            box-shadow 0 7px 14px rgba(50, 50, 93, .1), 0 3px 6px rgba(0, 0, 0, .08)
+            color: #212529
+            border-color: white
+            background-color: white
+        
