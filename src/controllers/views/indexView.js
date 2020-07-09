@@ -22,7 +22,7 @@ module.exports = {
                 home: home.toJSON(),
             })
         } catch (error) {
-            return res.redirect('/login')
+            return res.redirect('/dashboard')
         }
     },
 }

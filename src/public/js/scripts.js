@@ -146,6 +146,455 @@ const util = (() => {
     }
 })()
 
+const page = (() => {
+    //private var/functions
+    //slugkeydown
+    const changeSlug = (form) => {
+        const title = form.querySelector('.pageTitle')
+
+        const slug = form.querySelector('.pageSlug')
+
+        let automatic = true
+
+        if (automatic) {
+            title.addEventListener('keyup', (e) => {
+                slug.value = validateSlug(title.value)
+            })
+        }
+
+        slug.addEventListener('keyup', (e) => {
+            slug.value = validateSlug(slug.value)
+            automatic = false
+        })
+    }
+
+    const isEmpty = (obj) => {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) return false
+        }
+        return true
+    }
+
+    //validate slug
+    const validateSlug = (slug) => {
+        slug = slug
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/ /g, '_')
+
+        return slug
+    }
+
+    const actionButton = (button) => {
+        const form = button.closest('form')
+        changeSlug(form)
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+            //function
+            return create(form)
+        })
+    }
+
+    const insertMenu = (object) => {
+        const { title, slug } = object
+
+        const pai = document.querySelector('#collapsePages > div')
+        const filho = document.querySelector('#collapsePages > div .collapse-divider')
+
+        const newPage = document.createElement('a')
+
+        newPage.classList.add('collapse-item')
+
+        newPage.setAttribute('href', `/page/${slug}`)
+
+        newPage.innerHTML = title
+
+        pai.insertBefore(newPage, filho)
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const { title, slug, content } = object
+
+            const token = `Bearer ${document.body.dataset.token}`
+
+            fetch(`/api/page`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: token,
+                },
+                body: JSON.stringify({ title, slug, content }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestUpdate = (object) => {
+        return new Promise((resolve, reject) => {
+            const { slug, content, banner } = object
+
+            const token = `Bearer ${document.body.dataset.token}`
+
+            fetch(`/api/page/${object.id}`, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: token,
+                },
+                body: JSON.stringify({ slug, content, banner }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const validate = (list) => {
+        const object = {}
+        const banner = {}
+        const msg = `Preencha este campo`
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const input = item
+
+                if (!input.classList.contains('pageSlug')) {
+                    if (input.tagName != 'BUTTON') {
+                        if (!input.value || input.value == `Selecione...`) {
+                            input.setCustomValidity(msg)
+
+                            input.reportValidity()
+
+                            return reject(msg)
+                        }
+                    }
+                }
+
+                if (input.classList.contains('pageTitle')) object.title = input.value
+                if (input.classList.contains('pageContent')) object.content = input.value
+                if (input.classList.contains('pageSlug')) object.slug = input.value
+                if (input.classList.contains('bannerTitle')) banner.title = input.value
+                if (input.classList.contains('bannerPosition')) banner.position = input.value
+                if (input.classList.contains('bannerDescription')) banner.description = input.value
+            })
+
+            if (!isEmpty(banner)) object.banner = banner
+
+            return resolve(object)
+        })
+    }
+
+    const create = (form, banners) => {
+        const elements = [...form.elements]
+
+        return validate(elements)
+            .then((r) => {
+                return request(r)
+                    .then((res) => {
+                        insertMenu(res)
+                        return Swal.fire({
+                            title: `Página criada`,
+                            text: `A página ${res.title} foi criada com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((err) => {
+                        return Swal.fire({
+                            title: `Erro ao criar página`,
+                            text: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const update = (form, banners, formBanner) => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault()
+
+            console.log(`Banners`, banners)
+
+            const object = [...form.elements]
+
+            const data = {}
+
+            const imageForm = new FormData()
+            imageForm.append('file', banners[0])
+
+            if (banners) {
+                if (!formBanner) return console.log(`Nenhum formulário de banner inserido`)
+
+                const bannerInputs = [...formBanner.elements]
+
+                if (formBanner.classList.contains('changed')) {
+                    const banner = await validate(bannerInputs)
+                    const bannerImage = await util.request('banner-image', 'POST', true, imageForm)
+
+                    if (!banner) return console.log(`Erro na validação do banner`)
+
+                    data.banner = {
+                        image_id: bannerImage.id,
+                        title: banner.banner.title,
+                        position: banner.banner.position,
+                        description: banner.banner.description,
+                    }
+                }
+            }
+
+            const id = form.querySelector('button').dataset.id
+
+            return validate(object)
+                .then((r) => {
+                    const { slug, content } = r
+                    data.id = id
+                    data.slug = slug
+                    data.content = content
+                    return requestUpdate(data)
+                        .then((res) => {
+                            if (formBanner) formBanner.classList.remove('changed')
+                            return Swal.fire({
+                                title: `Página Atualizada`,
+                                text: `A página ${res.title} foi atualizada com sucesso!`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((err) => {
+                            return Swal.fire({
+                                title: `Erro ao atualizar página página`,
+                                text: err,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                })
+                .catch((err) => console.log(err))
+        })
+    }
+
+    return {
+        //public var/functions
+        create: actionButton,
+        update,
+    }
+})()
+
+const banner = (() => {
+    //private var/functions
+    const validate = (list) => {
+        const object = {}
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.classList.contains('pageSlug')) {
+                    if (!input.value || input.value == `Selecione...`) {
+                        input.setCustomValidity(msg)
+
+                        input.reportValidity()
+
+                        return reject(msg)
+                    }
+                }
+
+                if (input.classList.contains('pageTitle')) object.title = input.value
+                if (input.classList.contains('pageContent')) object.content = input.value
+                if (input.classList.contains('pageSlug')) object.slug = input.value
+            })
+            console.log(object)
+
+            return resolve(object)
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const { title, position, description, page_id } = object
+
+            const token = `Bearer ${document.body.dataset.token}`
+
+            fetch(`/api/banner/${page_id}`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: token,
+                },
+                body: JSON.stringify({ title, position, description }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const create = (form) => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault()
+
+            const page_id = form.querySelector('button').dataset.id
+
+            const elements = Array.from(form.elements).map((input) => {
+                if (input.tagName != `BUTTON`) {
+                    return {
+                        input,
+                        msg: `Preencha este campo`,
+                    }
+                }
+            })
+
+            return validate(elements).then((r) => {
+                const data = { page_id, title: r.title, position: r.position, description: r.description }
+                return request(data)
+                    .then((res) => {
+                        return Swal.fire({
+                            title: `Banner criado`,
+                            text: `O banner ${res.title} foi criado com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((err) => {
+                        return Swal.fire({
+                            title: `Erro ao criar Banner`,
+                            text: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            })
+        })
+    }
+
+    return {
+        //public var/functions
+        create,
+    }
+})()
+
+//btnAddPage
+const btnAddPage = document.querySelector('.btnCreateNewPage')
+
+if (btnAddPage) page.create(btnAddPage)
+
+const updatePageForm = document.querySelector('.updatePageForm')
+
+const formBanner = document.querySelector('.formBanner')
+
+if (updatePageForm && formBanner) page.update(updatePageForm, util.images, formBanner)
+
+const bannerImage = document.querySelector('.bannerImage')
+
+const bannersContainer = document.querySelector('.bannersContainer')
+
+if (bannerImage && bannersContainer) util.image(bannerImage, bannersContainer, 'single', 'large')
+
+const newsletter = (() => {
+    //private var/functions
+    const request = (object) => {
+        const { name, email } = object
+        return new Promise((resolve, reject) => {
+            fetch('/api/subscriber', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({ name, email }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((err) => reject(err))
+        })
+    }
+
+    const validate = (list) => {
+        const object = {}
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log(input.value)
+
+                if (input.tagName != `BUTTON`) {
+                    if (!input.value || input.value == `Selecione...`) {
+                        input.setCustomValidity(msg)
+
+                        input.reportValidity()
+
+                        return reject(msg)
+                    }
+                }
+
+                if (input.classList.contains('subName')) object.name = input.value
+                if (input.classList.contains('subEmail')) object.email = input.value
+            })
+
+            return resolve(object)
+        })
+    }
+
+    const formsubmit = (form) => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault()
+
+            const list = Array.from(form.elements).map((input) => {
+                return { input, msg: `Por favor preencha este campo` }
+            })
+
+            return validate(list)
+                .then((res) => {
+                    return request(res)
+                        .then((response) => {
+                            return Swal.fire({
+                                title: `Cadastrado com sucesso!`,
+                                text: `Olá ${res.name} você se cadastrou com sucesso em nossa newsletter`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((err) => {
+                            return Swal.fire({
+                                title: `Erro ao cadastrar-se`,
+                                text: err,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                })
+                .catch((err) => console.log(err))
+        })
+    }
+
+    return {
+        //public var/functions
+        subscribe: formsubmit,
+    }
+})()
+
+const newsForm = document.querySelector('.newsForm')
+
+if (newsForm) newsletter.subscribe(newsForm)
+
 const category = (() => {
     const table = $('#dataTable').DataTable()
 
@@ -486,6 +935,188 @@ const btnCreateCategory = document.querySelector('.btnCreateCategory')
 
 if (btnCreateCategory) category.create(btnCreateCategory)
 
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const reqUrl = `/api/user/image`
+
+            const form = new FormData()
+            form.append('file', file)
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
+
+            const reqUrl = `/api/user`
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
+
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
+                })
+
+                button.innerHTML = `Edit profile`
+
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
+            }
+        })
+    }
+
+    //get all fields
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
+
+    return {
+        //public var/functions
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
+    }
+})()
+
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
+
+if (inputEditAvatar) profile.edit(inputEditAvatar)
+
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
+
+if (btnEditUser) profile.enableEdit(btnEditUser)
+
 const loginResource = `login`
 
 const requestLogin = (object) => {
@@ -561,465 +1192,6 @@ if (btnLogin) {
         login(btnLogin.closest('form'))
     })
 }
-
-const page = (() => {
-    //private var/functions
-    //slugkeydown
-    const changeSlug = (form) => {
-        const title = form.querySelector('.pageTitle')
-
-        const slug = form.querySelector('.pageSlug')
-
-        let automatic = true
-
-        if (automatic) {
-            title.addEventListener('keyup', (e) => {
-                slug.value = validateSlug(title.value)
-            })
-        }
-
-        slug.addEventListener('keyup', (e) => {
-            slug.value = validateSlug(slug.value)
-            automatic = false
-        })
-    }
-
-    const isEmpty = (obj) => {
-        for (var key in obj) {
-            if (obj.hasOwnProperty(key)) return false
-        }
-        return true
-    }
-
-    //validate slug
-    const validateSlug = (slug) => {
-        slug = slug
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .replace(/ /g, '_')
-
-        return slug
-    }
-
-    const actionButton = (button) => {
-        const form = button.closest('form')
-        changeSlug(form)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-            //function
-            return create(form)
-        })
-    }
-
-    const insertMenu = (object) => {
-        const { title, slug } = object
-
-        const pai = document.querySelector('#collapsePages > div')
-        const filho = document.querySelector('#collapsePages > div .collapse-divider')
-
-        const newPage = document.createElement('a')
-
-        newPage.classList.add('collapse-item')
-
-        newPage.setAttribute('href', `/page/${slug}`)
-
-        newPage.innerHTML = title
-
-        pai.insertBefore(newPage, filho)
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { title, slug, content } = object
-
-            const token = `Bearer ${document.body.dataset.token}`
-
-            fetch(`/api/page`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: token,
-                },
-                body: JSON.stringify({ title, slug, content }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestUpdate = (object) => {
-        return new Promise((resolve, reject) => {
-            const { slug, content, banner } = object
-
-            const token = `Bearer ${document.body.dataset.token}`
-
-            fetch(`/api/page/${object.id}`, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: token,
-                },
-                body: JSON.stringify({ slug, content, banner }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const validate = (list) => {
-        const object = {}
-        const banner = {}
-        const msg = `Preencha este campo`
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const input = item
-
-                if (!input.classList.contains('pageSlug')) {
-                    if (input.tagName != 'BUTTON') {
-                        if (!input.value || input.value == `Selecione...`) {
-                            input.setCustomValidity(msg)
-
-                            input.reportValidity()
-
-                            return reject(msg)
-                        }
-                    }
-                }
-
-                if (input.classList.contains('pageTitle')) object.title = input.value
-                if (input.classList.contains('pageContent')) object.content = input.value
-                if (input.classList.contains('pageSlug')) object.slug = input.value
-                if (input.classList.contains('bannerTitle')) banner.title = input.value
-                if (input.classList.contains('bannerPosition')) banner.position = input.value
-                if (input.classList.contains('bannerDescription')) banner.description = input.value
-            })
-
-            if (!isEmpty(banner)) object.banner = banner
-
-            return resolve(object)
-        })
-    }
-
-    const create = (form, banners) => {
-        const elements = []
-
-        console.log(banners)
-
-        Array.from(form.elements).map((input) => {
-            if (input.tagName != 'BUTTON')
-                return elements.push({
-                    input: input,
-                    msg: `Preencha este campo`,
-                })
-        })
-
-        return validate(elements)
-            .then((r) => {
-                return request(r)
-                    .then((res) => {
-                        insertMenu(res)
-                        return Swal.fire({
-                            title: `Página criada`,
-                            text: `A página ${res.title} foi criada com sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                    .catch((err) => {
-                        return Swal.fire({
-                            title: `Erro ao criar página`,
-                            text: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const update = (form, banners, formBanner) => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault()
-
-            console.log(`Banners`, banners)
-
-            const object = [...form.elements]
-
-            const data = {}
-
-            const imageForm = new FormData()
-            imageForm.append('file', banners[0])
-
-            if (banners) {
-                if (!formBanner) return console.log(`Nenhum formulário de banner inserido`)
-
-                const bannerInputs = [...formBanner.elements]
-
-                if (formBanner.classList.contains('changed')) {
-                    const banner = await validate(bannerInputs)
-                    const bannerImage = await util.request('banner-image', 'POST', true, imageForm)
-
-                    if (!banner) return console.log(`Erro na validação do banner`)
-
-                    data.banner = {
-                        image_id: bannerImage.id,
-                        title: banner.banner.title,
-                        position: banner.banner.position,
-                        description: banner.banner.description,
-                    }
-                }
-            }
-
-            const id = form.querySelector('button').dataset.id
-
-            return validate(object)
-                .then((r) => {
-                    const { slug, content } = r
-                    data.id = id
-                    data.slug = slug
-                    data.content = content
-                    return requestUpdate(data)
-                        .then((res) => {
-                            if (formBanner) formBanner.classList.remove('changed')
-                            return Swal.fire({
-                                title: `Página Atualizada`,
-                                text: `A página ${res.title} foi atualizada com sucesso!`,
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                        .catch((err) => {
-                            return Swal.fire({
-                                title: `Erro ao atualizar página página`,
-                                text: err,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                })
-                .catch((err) => console.log(err))
-        })
-    }
-
-    return {
-        //public var/functions
-        create: actionButton,
-        update,
-    }
-})()
-
-const banner = (() => {
-    //private var/functions
-    const validate = (list) => {
-        const object = {}
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                if (!input.classList.contains('pageSlug')) {
-                    if (!input.value || input.value == `Selecione...`) {
-                        input.setCustomValidity(msg)
-
-                        input.reportValidity()
-
-                        return reject(msg)
-                    }
-                }
-
-                if (input.classList.contains('pageTitle')) object.title = input.value
-                if (input.classList.contains('pageContent')) object.content = input.value
-                if (input.classList.contains('pageSlug')) object.slug = input.value
-            })
-            console.log(object)
-
-            return resolve(object)
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { title, position, description, page_id } = object
-
-            const token = `Bearer ${document.body.dataset.token}`
-
-            fetch(`/api/banner/${page_id}`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: token,
-                },
-                body: JSON.stringify({ title, position, description }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const create = (form) => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault()
-
-            const page_id = form.querySelector('button').dataset.id
-
-            const elements = Array.from(form.elements).map((input) => {
-                if (input.tagName != `BUTTON`) {
-                    return {
-                        input,
-                        msg: `Preencha este campo`,
-                    }
-                }
-            })
-
-            return validate(elements).then((r) => {
-                const data = { page_id, title: r.title, position: r.position, description: r.description }
-                return request(data)
-                    .then((res) => {
-                        return Swal.fire({
-                            title: `Banner criado`,
-                            text: `O banner ${res.title} foi criado com sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                    .catch((err) => {
-                        return Swal.fire({
-                            title: `Erro ao criar Banner`,
-                            text: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            })
-        })
-    }
-
-    return {
-        //public var/functions
-        create,
-    }
-})()
-
-//btnAddPage
-const btnAddPage = document.querySelector('.btnCreateNewPage')
-
-if (btnAddPage) page.create(btnAddPage)
-
-const updatePageForm = document.querySelector('.updatePageForm')
-
-const formBanner = document.querySelector('.formBanner')
-
-if (updatePageForm && formBanner) page.update(updatePageForm, util.images, formBanner)
-
-const bannerImage = document.querySelector('.bannerImage')
-
-const bannersContainer = document.querySelector('.bannersContainer')
-
-if (bannerImage && bannersContainer) util.image(bannerImage, bannersContainer, 'single', 'large')
-
-const newsletter = (() => {
-    //private var/functions
-    const request = (object) => {
-        const { name, email } = object
-        return new Promise((resolve, reject) => {
-            fetch('/api/subscriber', {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, email }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((err) => reject(err))
-        })
-    }
-
-    const validate = (list) => {
-        const object = {}
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log(input.value)
-
-                if (input.tagName != `BUTTON`) {
-                    if (!input.value || input.value == `Selecione...`) {
-                        input.setCustomValidity(msg)
-
-                        input.reportValidity()
-
-                        return reject(msg)
-                    }
-                }
-
-                if (input.classList.contains('subName')) object.name = input.value
-                if (input.classList.contains('subEmail')) object.email = input.value
-            })
-
-            return resolve(object)
-        })
-    }
-
-    const formsubmit = (form) => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault()
-
-            const list = Array.from(form.elements).map((input) => {
-                return { input, msg: `Por favor preencha este campo` }
-            })
-
-            return validate(list)
-                .then((res) => {
-                    return request(res)
-                        .then((response) => {
-                            return Swal.fire({
-                                title: `Cadastrado com sucesso!`,
-                                text: `Olá ${res.name} você se cadastrou com sucesso em nossa newsletter`,
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                        .catch((err) => {
-                            return Swal.fire({
-                                title: `Erro ao cadastrar-se`,
-                                text: err,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                })
-                .catch((err) => console.log(err))
-        })
-    }
-
-    return {
-        //public var/functions
-        subscribe: formsubmit,
-    }
-})()
-
-const newsForm = document.querySelector('.newsForm')
-
-if (newsForm) newsletter.subscribe(newsForm)
 
 const btnsProduct = document.querySelectorAll('.productDelete')
 
@@ -1720,355 +1892,6 @@ const ImageProduct = document.querySelector('.productImage')
 
 if (ImageProduct) imgProduct.change(ImageProduct)
 
-const profile = (() => {
-    //private functions/var
-    const request = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const reqUrl = `/api/user/image`
-
-            const form = new FormData()
-            form.append('file', file)
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestProfile = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
-
-            const reqUrl = `/api/user`
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const changeState = (input) => {
-        input.addEventListener('change', function (e) {
-            editAvatar(input)
-        })
-    }
-
-    const editAvatar = (input) => {
-        console.log(input.files)
-        return request(input.files[0])
-            .then((res) => {
-                if (res.error) return console.log(res.error)
-
-                document.querySelector('.img-profile').src = res.url
-
-                return (document.querySelector('.profile-avatar').src = res.url)
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const enableForm = (button) => {
-        if (!button) console.log(`Botão não existe`)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
-
-            const formulario = document.querySelector('.formEditUser')
-
-            if (button.classList.contains('save')) {
-                Array.from(form).forEach((input) => {
-                    input.disabled = true
-                })
-
-                button.innerHTML = `Edit profile`
-
-                if (formulario) getFields(formulario)
-
-                return button.classList.remove('save')
-            } else {
-                Array.from(form).forEach((input) => {
-                    input.disabled = false
-                })
-
-                button.innerHTML = `Salvar alterações`
-
-                return button.classList.add('save')
-            }
-        })
-    }
-
-    //get all fields
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    const getFields = (form) => {
-        if (!form) return console.log(`Formulário não existe`)
-
-        const listElements = Array.from(form.elements)
-
-        const object = {
-            name: form.querySelector('#input-username').value,
-            email: form.querySelector('#input-email').value,
-            currentPassword: form.querySelector('#input-current-password').value,
-            newPassword: form.querySelector('#input-new-password').value,
-            address: form.querySelector('#input-address').value,
-            city: form.querySelector('#input-city').value,
-            phone: form.querySelector('#input-phone').value,
-            cell: form.querySelector('#input-cell').value,
-            about: form.querySelector('#textarea-about').value,
-        }
-
-        return requestProfile(object)
-            .then((res) => {
-                if (res.error)
-                    return Swal.fire({
-                        title: `Erro ao atualizar usuário`,
-                        text: res.error,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-
-                return Swal.fire({
-                    title: `Perfil atualizado`,
-                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) =>
-                Swal.fire({
-                    title: `Erro ao atualizar usuário`,
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            )
-
-        console.log(object)
-    }
-
-    //requestSaveProfile
-
-    return {
-        //public var/functions
-        edit: changeState,
-        enableEdit: enableForm,
-        save: getFields,
-    }
-})()
-
-const inputEditAvatar = document.querySelector('.inputProfileAvatar')
-
-if (inputEditAvatar) profile.edit(inputEditAvatar)
-
-//btnEditUser
-const btnEditUser = document.querySelector('.btnEditUser')
-
-if (btnEditUser) profile.enableEdit(btnEditUser)
-
-const search = (() => {
-    //validate form
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                if (!input.value) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //private vars/functions
-    const search = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            console.log()
-
-            const inputCode = document.querySelector('input.Code')
-
-            const inputName = document.querySelector('input.name')
-            const inputSurname = document.querySelector('input.surname')
-            const inputMail = document.querySelector('input.mail')
-
-            if (inputName && inputSurname && inputMail) {
-                const objectValidate = [
-                    { input: inputName, msg: `Informe seu nome` },
-                    { input: inputSurname, msg: `Informe seu sobrenome` },
-                    { input: inputMail, msg: `Informe seu e-mail` },
-                ]
-
-                return validate(objectValidate)
-                    .then((res) => {
-                        return requestIP().then((res) => {
-                            const { ip, city, region } = res
-                            return request({
-                                code: inputCode.value,
-                                ip,
-                                city,
-                                region,
-                                name: inputName.value,
-                                surname: inputSurname.value,
-                                email: inputMail.value,
-                            })
-                                .then((res) => {
-                                    const { device, code, ip, city, address } = res
-                                    const clientInfo = document.querySelector('.clientInfo')
-
-                                    return (clientInfo.innerHTML = `
-                                <p>
-                                    <strong>Código: </strong> ${code.code}
-                                </p>
-                                <p>
-                                    <strong>Produto: </strong> ${code.product.name}
-                                </p>
-                                <p>
-                                    <strong>Item: </strong> ${code.item.name}
-                                </p>
-                                <p>
-                                    <strong>Device: </strong> ${device}
-                                </p>
-                                <p>
-                                    <strong>Cidade: </strong> ${city}
-                                </p>
-                                <p>
-                                    <strong>Estado: </strong> ${address}
-                                </p>
-                                <p>
-                                    <strong>Endereço IP: </strong> ${ip}
-                                </p>
-                            `)
-                                })
-                                .catch((err) => {
-                                    return Swal.fire({
-                                        title: err,
-                                        icon: 'error',
-                                        confirmButtonText: 'Ok',
-                                    })
-                                })
-                        })
-                    })
-                    .catch((err) => console.log(err))
-            }
-        })
-    }
-
-    const requestIP = () => {
-        return new Promise((resolve, reject) => {
-            fetch(`https://ipapi.co/json/`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                },
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { name, surname, email, code, ip, city, region } = object
-
-            fetch(`/api/search`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestShow = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/search/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    show = (searche) => {
-        const id = searche.dataset.id
-    }
-    return {
-        //piblic vars/function
-        search,
-    }
-})()
-
-const btnSearchCode = document.querySelector('.submitSearch')
-
-if (btnSearchCode) search.search(btnSearchCode)
-
 const userResource = `user`
 
 const user = (() => {
@@ -2305,6 +2128,175 @@ if (btnInsertUser) {
         userCreate(btnInsertUser.closest('form'))
     })
 }
+
+const search = (() => {
+    //validate form
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.value) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //private vars/functions
+    const search = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            console.log()
+
+            const inputCode = document.querySelector('input.Code')
+
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
+                    .then((res) => {
+                        return requestIP().then((res) => {
+                            const { ip, city, region } = res
+                            return request({
+                                code: inputCode.value,
+                                ip,
+                                city,
+                                region,
+                                name: inputName.value,
+                                surname: inputSurname.value,
+                                email: inputMail.value,
+                            })
+                                .then((res) => {
+                                    const { device, code, ip, city, address } = res
+                                    const clientInfo = document.querySelector('.clientInfo')
+
+                                    return (clientInfo.innerHTML = `
+                                <p>
+                                    <strong>Código: </strong> ${code.code}
+                                </p>
+                                <p>
+                                    <strong>Produto: </strong> ${code.product.name}
+                                </p>
+                                <p>
+                                    <strong>Item: </strong> ${code.item.name}
+                                </p>
+                                <p>
+                                    <strong>Device: </strong> ${device}
+                                </p>
+                                <p>
+                                    <strong>Cidade: </strong> ${city}
+                                </p>
+                                <p>
+                                    <strong>Estado: </strong> ${address}
+                                </p>
+                                <p>
+                                    <strong>Endereço IP: </strong> ${ip}
+                                </p>
+                            `)
+                                })
+                                .catch((err) => {
+                                    return Swal.fire({
+                                        title: err,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok',
+                                    })
+                                })
+                        })
+                    })
+                    .catch((err) => console.log(err))
+            }
+        })
+    }
+
+    const requestIP = () => {
+        return new Promise((resolve, reject) => {
+            fetch(`https://ipapi.co/json/`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                },
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const { name, surname, email, code, ip, city, region } = object
+
+            fetch(`/api/search`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestShow = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/search/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    show = (searche) => {
+        const id = searche.dataset.id
+
+        return requestShow()
+    }
+    return {
+        //piblic vars/function
+        search,
+    }
+})()
+
+const btnSearchCode = document.querySelector('.submitSearch')
+
+if (btnSearchCode) search.search(btnSearchCode)
 
 const consult = (() => {
     //private var/functions

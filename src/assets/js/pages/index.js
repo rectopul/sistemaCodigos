@@ -148,17 +148,7 @@ const page = (() => {
     }
 
     const create = (form, banners) => {
-        const elements = []
-
-        console.log(banners)
-
-        Array.from(form.elements).map((input) => {
-            if (input.tagName != 'BUTTON')
-                return elements.push({
-                    input: input,
-                    msg: `Preencha este campo`,
-                })
-        })
+        const elements = [...form.elements]
 
         return validate(elements)
             .then((r) => {
