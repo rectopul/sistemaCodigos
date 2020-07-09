@@ -1,0 +1,48 @@
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Assinantes</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Lista de assinantes</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover stripe" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>E-mail</th>
+                        <th>Nome</th>
+                        <th>Sobrenome</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>E-mail</th>
+                        <th>Nome</th>
+                        <th>Sobrenome</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                    </tr>
+                </tfoot>
+                <tbody class="listCaregories">
+                    {{#each subscribers}}
+                    <tr role="row" class="odd subscriber-{{id}}">
+                        <td>{{id}}</td>
+                        <td class="sorting_1">{{email}}</td>
+                        <td>{{name}}</td>
+                        <td>{{surname}}</td>
+                        <td>{{date}}</td>
+                        <td>{{status}}</td>
+                    </tr>
+                    {{else}}
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

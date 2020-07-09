@@ -1,0 +1,41 @@
+{{>header}}
+
+<div class="container mt-5 pt-5 text-center">
+    {{{content.content}}}
+</div>
+
+{{>bannerContent}}
+
+<div class="row m-0 page-product-list">
+    {{#each listProducts.products}}
+    <div class="col-md-6">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-md-7 product-title">
+                    <h1>{{product.name}}</h1>
+                    <p>{{product.description}}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-7 product-media mt-5">
+                    <div class="row">
+                        <div class="col-7 product-thumbnail">
+                            {{#each product.image}}
+                            <img src="{{url}}" width="207" alt="">
+                            {{/each}}
+                        </div>
+
+                        <div class="col-auto d-flex align-items-center product-link">
+                            <a class="btn btn-light" href="#" role="button">ver detalhes</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{#each products}}
+
+    {{/each}}
+    {{/each}}
+</div>
+{{>footer}}

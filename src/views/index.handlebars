@@ -6,16 +6,7 @@
 
 <div class="container home-about text-center">
     <div class="col-md-8 mx-auto px-0">
-        <h1 class="my-5">BratvaLabs®</h1>
-        <p>
-            Estamos entre os laboratórios farmacêuticos mais renomados da Europa.
-            Desenvolvemos a mais segura tecnologia de fármacos para atletas de alta performance,
-            e realizamos negócios há mais de 25 anos, exportando para 30 países
-            ao redor de 4 continentes pelo mundo. Esse é nosso know-how global.
-            E agora <i>“the growth science to powerul results”</i> chega ao Paraguay.
-        </p>
-
-        <h4 class="my-5"><a href="/products">Conheça nossos produtos ></a></h4>
+        {{{home.content}}}
     </div>
 </div>
 
@@ -33,13 +24,13 @@
             </p>
 
             <!-- Form newsletter // -->
-            <form class="ml-auto mt-4">
+            <form class="ml-auto mt-4 newsForm">
                 <div class="form-group">
-                    <input type="email" class="form-control" id="news-email" autocomplete="email"
+                    <input type="email" class="form-control subEmail" id="subEmail" autocomplete="email"
                         aria-describedby="emailHelp" placeholder="seu e-mail">
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" autocomplete="full-name" id="news-username"
+                    <input type="text" class="form-control subName" autocomplete="full-name" id="subName"
                         placeholder="nome completo">
                 </div>
 
@@ -56,17 +47,18 @@
             </p>
 
             <!-- Form consulta codigo // -->
-            <form class="mr-auto mt-4">
+            <form class="mr-auto mt-4 formValidateCode">
                 <div class="form-group">
-                    <input type="email" class="form-control" id="news-email" autocomplete="email"
+                    <input type="email" class="form-control consultMail" id="consultMail" autocomplete="email"
                         aria-describedby="emailHelp" placeholder="seu e-mail">
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" autocomplete="code" id="news-username"
+                    <input type="text" class="form-control consultCode" autocomplete="code" id="consultCode"
                         placeholder="código do produto">
                 </div>
-
-                <button type="submit" class="btn btn-black">entrar no clube</button>
+                <!-- modalConsult -->
+                <button type="submit" class="btn btn-black">entrar no
+                    clube</button>
             </form>
         </div>
         <!-- Consulta codigo // -->
@@ -80,16 +72,16 @@
             <h1>Bratva Global Certification</h1>
             <div class="row mt-5">
 
-                <div class="col-3">
+                <div class="col-md-3">
                     <img src="http://via.placeholder.com/140" alt="">
                 </div>
-                <div class="col-3">
+                <div class="col-md-3">
                     <img src="http://via.placeholder.com/140" alt="">
                 </div>
-                <div class="col-3">
+                <div class="col-md-3">
                     <img src="http://via.placeholder.com/140" alt="">
                 </div>
-                <div class="col-3">
+                <div class="col-md-3">
                     <img src="http://via.placeholder.com/140" alt="">
                 </div>
 
@@ -97,4 +89,7 @@
         </div>
     </div>
 </div>
+{{>modalConsult}}
+{{>modalErrorValidation}}
+{{>modalConsultNotFound}}
 {{>footer}}

@@ -1,58 +1,38 @@
-const express = require('express')
-const multer = require('multer')
-const multerConfig = require('./config/multer')
-const multerText = require('./config/multerText')
-const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser')
-const { Op } = require('sequelize')
-const sequelize = require('sequelize')
+const routes = require('express').Router()
 
-const User = require('./models/User')
-const Product = require('./models/Product')
+const { Op } = require('sequelize')
+
+const User = require('../models/User')
+const Product = require('../models/Product')
 
 //userbytoken
-const authUser = require('./middlewares/auth')
+const authUser = require('../middlewares/auth')
 
-const UserController = require('./controllers/UserController')
 //Profile
-const ProfileView = require('./controllers/views/ProfileView')
-//User Image
-const UserImageController = require('./controllers/UserImageController')
-//products
-const ProductController = require('./controllers/ProductController')
-//image Products
-const ImageProductController = require('./controllers/ImageProductController')
-//Files
-const FileController = require('./controllers/FileController')
-//session
-const SessionController = require('./controllers/SessionController')
+const ProfileView = require('../controllers/views/ProfileView')
 //categories
-const CategoryController = require('./controllers/CategoryController')
-const Category = require('./models/Category')
+const Category = require('../models/Category')
 //Searches
-const SearchController = require('./controllers/SearchController')
-const SearchView = require('./controllers/views/searchViews')
-const Search = require('./models/Search')
-
-//Views
-const UsersView = require('./controllers/views/UsersViews')
-
-const CategoryView = require('./controllers/views/CategoriesViews')
+const SearchView = require('../controllers/views/searchViews')
+const Search = require('../models/Search')
 
 //Pages
-const Index = require('./controllers/views/indexView')
+const Page = require('../models/Page')
 
-/**
- * Product
- */
+//Views
+const UsersView = require('../controllers/views/UsersViews')
 
-const routes = express.Router()
+const CategoryView = require('../controllers/views/CategoriesViews')
 
-//const credentials = require('./middlewares/UserCredentials')
+const Subscribers = require('../models/Subscriber')
+const SubscribersView = require('../controllers/views/EmailViews')
 
-//Test de rota
-routes.get(`/`, Index.view)
-routes.use(cookieParser())
+const PageProducts = require('../controllers/views/ProductsView')
+const NewPageView = require('../controllers/views/newPageView')
+const EditPageView = require('../controllers/views/EditPageView')
+
+//Consultas
+const SearchesController = require('../controllers/views/ConsultsView')
 
 //Dashboard
 routes.get(`/dashboard`, async (req, res) => {
@@ -67,7 +47,11 @@ routes.get(`/dashboard`, async (req, res) => {
 
         const totalSearchs = await Search.count()
 
+        const subscribers = await Subscribers.count()
+
         const productsCount = await Product.count()
+
+        const pages = await Page.findAll()
 
         //userName
 
@@ -79,12 +63,22 @@ routes.get(`/dashboard`, async (req, res) => {
             pageTitle: `Dashboard`,
             totalSearchs,
             token,
+            pages: pages.map((page) => page.toJSON()),
+            subscribers,
         })
     } catch (error) {
         console.log(error)
         return res.redirect('/login')
     }
 })
+
+routes.get(`/seachs`, SearchesController.view)
+
+routes.get(`/subscribers`, SubscribersView.view)
+
+routes.get(`/new-page`, NewPageView.view)
+routes.get(`/edit-page/:page_slug`, EditPageView.view)
+
 //search
 routes.get(`/search`, SearchView.view)
 //Users
@@ -106,6 +100,8 @@ routes.get(`/products`, async (req, res) => {
             include: { association: `image`, where: { default: true }, limit: 1 },
         })
 
+        const pages = await Page.findAll()
+
         return res.render('products', {
             userName: user.name,
             avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
@@ -113,12 +109,14 @@ routes.get(`/products`, async (req, res) => {
             pageTitle: `Lista de Produtos`,
             token,
             products: products.map((product) => product.toJSON()),
+            pages: pages.map((page) => page.toJSON()),
         })
     } catch (error) {
         console.log(error)
         return res.redirect('/login')
     }
 })
+routes.get(`/products/:category_slug`, PageProducts.view)
 //Categories
 routes.get(`/category`, CategoryView.view)
 
@@ -141,6 +139,7 @@ routes.get(`/product_insert`, async (req, res) => {
             },
             include: { association: `child`, include: { association: `child` } },
         })
+        const pages = await Page.findAll()
 
         return res.render('insertProduct', {
             userName: user.name,
@@ -149,6 +148,7 @@ routes.get(`/product_insert`, async (req, res) => {
             pageTitle: `Cadastro de Produtos`,
             token,
             categories: categories.map((category) => category.toJSON()),
+            pages: pages.map((page) => page.toJSON()),
         })
     } catch (error) {
         console.log(error)
@@ -176,45 +176,5 @@ routes.get(`/logout`, (req, res) => {
 
     return res.redirect('/login')
 })
-
-//API
-//Product
-routes.post(`/api/product`, ProductController.store)
-routes.get(`/api/product`, ProductController.index)
-routes.delete(`/api/product/:product_id`, ProductController.destroy)
-routes.get(`/api/product/:product_id`, ProductController.show)
-//File
-routes.post(`/api/file`, multer(multerText).single('file'), FileController.read)
-/* Forgot e Recuperação de senha */
-routes.post('/api/forgot', UserController.forgot)
-routes.post('/api/reset_password', UserController.reset)
-
-/* Images Products */
-routes.post('/api/image/product', multer(multerConfig).single('file'), ImageProductController.store)
-routes.get('/api/image/product/:id_product', ImageProductController.index)
-routes.delete('/api/image/product/:id', ImageProductController.delete)
-
-//somente superuser
-//routes.use(credentials)
-routes.get('/api/user', UserController.index)
-routes.post('/api/user', UserController.store)
-routes.put('/api/user', UserController.update)
-routes.get('/api/user/:user_id', UserController.single)
-routes.post('/api/user/image', multer(multerConfig).single('file'), UserImageController.store)
-routes.put('/api/user/image', multer(multerConfig).single('file'), UserImageController.edit)
-routes.post('/api/forgot', UserController.forgot)
-routes.post('/api/reset', UserController.reset)
-//categories
-routes.post(`/api/category`, CategoryController.store)
-routes.get(`/api/category/:categori_id`, CategoryController.show)
-routes.get(`/api/category`, CategoryController.index)
-routes.delete(`/api/category/:category_id`, CategoryController.destroy)
-routes.put(`/api/category/:category_id`, CategoryController.edit)
-//Consultas
-routes.post(`/api/search`, SearchController.store)
-routes.get(`/api/search`, SearchController.index)
-
-//session
-routes.post(`/api/login`, SessionController.store)
 
 module.exports = routes

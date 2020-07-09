@@ -1,0 +1,45 @@
+.page-product
+    & .banner-bottom
+        margin-top 0
+.page-product-list
+    & .btn
+        // Style for "ver detalh"
+        // Style for "Retângulo"
+        width 146px
+        height 50px
+        background-color #fafafa
+        padding 0
+        line-height 1
+        color #333333
+        font-size 16px
+        padding 17px 30px
+        font-weight 400
+    & > div
+        padding-right 0
+        padding-top 10px
+        padding-bottom 10px
+        & .product-thumbnail
+            order 1
+        & .product-media
+            transform translateY(10px)
+        &:nth-child(odd)
+            padding-right 15px
+            padding-left 0
+            & .product-media
+                margin-left auto
+            & .product-thumbnail
+                order 0
+            & .product-title
+                margin-left auto
+        &:nth-child(3n+1)
+            & > div
+                background-color #bbbbbb
+                color #000000
+        & > div
+            color #ffffff
+            padding-top 80px
+            background-color #000000
+            padding 80px 43px
+            padding-bottom 0
+            min-height 490px
+            

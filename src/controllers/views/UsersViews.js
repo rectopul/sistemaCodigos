@@ -1,6 +1,7 @@
 const Users = require('../../models/User')
 const User = require('../../models/User')
 const Product = require('../../models/Product')
+const Page = require('../../models/Page')
 const authUser = require('../../middlewares/auth')
 
 module.exports = {
@@ -19,6 +20,8 @@ module.exports = {
             //userName
             const users = await Users.findAll()
 
+            const pages = await Page.findAll()
+
             return res.render('users', {
                 users: users.map((user) => user.toJSON()),
                 userName: user.name,
@@ -27,6 +30,7 @@ module.exports = {
                 pageId: `page-top`,
                 pageTitle: `Usuários`,
                 token,
+                pages: pages.map((page) => page.toJSON()),
             })
         } catch (error) {
             console.log(error)

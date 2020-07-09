@@ -12,6 +12,10 @@ const Code = require('../models/Code')
 const Category = require('../models/Category')
 const ProductCategory = require('../models/ProductCategory')
 const Search = require('../models/Search')
+const Page = require('../models/Page')
+const Subscriber = require('../models/Subscriber')
+const Banner = require('../models/Banner')
+const BannerImage = require('../models/BannerImage')
 
 //user
 User.init(connection)
@@ -23,6 +27,10 @@ Code.init(connection)
 Category.init(connection)
 ProductCategory.init(connection)
 Search.init(connection)
+Page.init(connection)
+Subscriber.init(connection)
+Banner.init(connection)
+BannerImage.init(connection)
 
 //associations
 Product.associate(connection.models)
@@ -34,5 +42,8 @@ Code.associate(connection.models)
 Category.associate(connection.models)
 ProductCategory.associate(connection.models)
 Search.associate(connection.models)
+Page.associate(connection.models)
+Banner.associate(connection.models)
+BannerImage.associate(connection.models)
 
 module.exports = connection

@@ -3,6 +3,7 @@ const User = require('../../models/User')
 const Product = require('../../models/Product')
 const authUser = require('../../middlewares/auth')
 const Category = require('../../models/Category')
+const Page = require('../../models/Page')
 
 module.exports = {
     async view(req, res) {
@@ -23,6 +24,8 @@ module.exports = {
             //userName
             const users = await Users.findAll()
 
+            const pages = await Page.findAll()
+
             return res.render('categories', {
                 users: users.map((user) => user.toJSON()),
                 userName: user.name,
@@ -30,6 +33,7 @@ module.exports = {
                 productsCount,
                 pageId: `page-top`,
                 pageTitle: `Usuários`,
+                pages: pages.map((page) => page.toJSON()),
                 categories: categories.map((category) => {
                     const categoria = category.toJSON()
                     const { products, createdAt } = categoria

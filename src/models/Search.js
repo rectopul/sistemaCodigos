@@ -9,11 +9,7 @@ class Search extends Model {
             {
                 name: {
                     type: DataTypes.STRING,
-                    allowNull: false,
                     validate: {
-                        notNull: {
-                            msg: `The name field cannot be null`,
-                        },
                         notEmpty: {
                             msg: `The name field cannot be empty`,
                         },
@@ -21,11 +17,7 @@ class Search extends Model {
                 },
                 surname: {
                     type: DataTypes.STRING,
-                    allowNull: false,
                     validate: {
-                        notNull: {
-                            msg: `The surname field cannot be null`,
-                        },
                         notEmpty: {
                             msg: `The surname field cannot be empty`,
                         },
@@ -34,9 +26,6 @@ class Search extends Model {
                 email: {
                     type: DataTypes.STRING,
                     allowNull: false,
-                    unique: {
-                        msg: `This e-mail already exist`,
-                    },
                     validate: {
                         notNull: {
                             msg: `The email field cannot be null`,

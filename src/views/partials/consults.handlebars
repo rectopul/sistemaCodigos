@@ -1,0 +1,48 @@
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Consultas</h1>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Lista de consultas realizadas</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover stripe" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>E-mail</th>
+                        <th>Cidade</th>
+                        <th>Código</th>
+                        <th>IP</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>ID</th>
+                        <th>E-mail</th>
+                        <th>Cidade</th>
+                        <th>Código</th>
+                        <th>IP</th>
+                        <th>Data</th>
+                    </tr>
+                </tfoot>
+                <tbody class="listCaregories">
+                    {{#each searches}}
+                    <tr role="row" class="odd" data-id="{{id}}">
+                        <td>{{id}}</td>
+                        <td class="sorting_1">{{email}}</td>
+                        <td>{{city}}</td>
+                        <td>{{code.code}}</td>
+                        <td>{{ip}}</td>
+                        <td>{{date}}</td>
+                    </tr>
+                    {{else}}
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

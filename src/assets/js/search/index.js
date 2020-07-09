@@ -130,6 +130,33 @@ const search = (() => {
                 .catch((error) => reject(error))
         })
     }
+
+    const requestShow = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/search/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    show = (searche) => {
+        const id = searche.dataset.id
+
+        return requestShow()
+    }
     return {
         //piblic vars/function
         search,

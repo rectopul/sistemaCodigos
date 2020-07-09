@@ -1,4 +1,5 @@
 const User = require('../../models/User')
+const Page = require('../../models/Page')
 const authUser = require('../../middlewares/auth')
 
 module.exports = {
@@ -12,6 +13,8 @@ module.exports = {
 
             const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 
+            const pages = await Page.findAll()
+
             return res.render('profile', {
                 user: user.toJSON(),
                 userName: user.name,
@@ -19,6 +22,7 @@ module.exports = {
                 pageId: `page-top`,
                 pageTitle: `Perfil de ${user.name}`,
                 token,
+                pages: pages.map((page) => page.toJSON()),
             })
         } catch (error) {
             console.log(error)

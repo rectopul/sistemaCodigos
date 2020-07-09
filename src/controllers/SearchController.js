@@ -36,13 +36,24 @@ module.exports = {
                 include: [{ association: `item` }, { association: `product` }],
             })
 
-            if (!search) return res.status(400).send({ error: `Código não existe` })
+            if (!search) return res.status(204).send({ error: `Código não existe` })
 
-            if (!name) return res.status(400).send({ error: `Please enter your name` })
-            if (!surname) return res.status(400).send({ error: `Please enter your surname` })
             if (!email) return res.status(400).send({ error: `Please enter your mail` })
 
             //insert search in data-base
+            const checkValidate = await Search.findOne({ where: { code_id: search.id } })
+
+            if (checkValidate)
+                return res.status(400).send({
+                    error: `Se você comprou um produto Bratva
+                    com a etiqueta de segurança já violada,
+                    corre risco do seu produto ser falso.<br>
+                    
+                    <p>
+                    Fale com seu vendedor ou
+                    informe ao sistema de segurança Bratva..</p>
+            `,
+                })
 
             const insertCode = await Search.create({
                 name,
@@ -111,6 +122,36 @@ module.exports = {
                 return res.status(400).send({ error: error.message })
 
             console.log(`Erro ao criar novo produto: `, error)
+
+            return res.status(500).send({ error: `Erro de servidor` })
+        }
+    },
+
+    async show(req, res) {
+        try {
+            const authHeader = req.headers.authorization
+
+            await userByToken(authHeader)
+
+            const { search_id } = req.params
+
+            const search = await Search.findByPk(search_id, { include: { association: `code` } })
+
+            if (!search_id) return res.status(400).send({ error: `This search not exist` })
+
+            return res.json(search)
+        } catch (error) {
+            //Validação de erros
+            if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
+
+            if (
+                error.name == `SequelizeValidationError` ||
+                error.name == `SequelizeUniqueConstraintError` ||
+                error.name == `userToken`
+            )
+                return res.status(400).send({ error: error.message })
+
+            console.log(`Erro ao selecionar busca: `, error)
 
             return res.status(500).send({ error: `Erro de servidor` })
         }
