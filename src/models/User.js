@@ -104,11 +104,7 @@ class User extends Model {
                 },
                 address: {
                     type: DataTypes.TEXT,
-                    allowNull: false,
                     validate: {
-                        notNull: {
-                            msg: `The address field cannot be empty`,
-                        },
                         notEmpty: {
                             msg: `The address field cannot be empty`,
                         },
@@ -116,11 +112,7 @@ class User extends Model {
                 },
                 city: {
                     type: DataTypes.TEXT,
-                    allowNull: false,
                     validate: {
-                        notNull: {
-                            msg: `The address field cannot be empty`,
-                        },
                         notEmpty: {
                             msg: `The address field cannot be empty`,
                         },
