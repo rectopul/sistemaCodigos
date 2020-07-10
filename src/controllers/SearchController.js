@@ -24,30 +24,14 @@ const adjustDate = (dateString) => {
 module.exports = {
     async store(req, res) {
         try {
-            const { name, surname, email, code, city, region } = req.body
+            const { name, surname, email, code } = req.body
             let oldDevice = req.headers['user-agent']
 
             const ip = req.clientIp.replace('::', '')
 
-            console.log(`ip formatado`, ip)
+            const ipinfos = await axios.get(`http://ip-api.com/json/${`45.173.149.16`}`)
 
-            const ipinfos = await axios.get(`http://ip-api.com/json/${ip}`)
-
-            console.log(ipinfos.data)
-
-            var options = {
-                method: 'GET',
-                url: 'http://localhost:3333/api/search/29',
-                headers: {
-                    'content-type': 'application/json',
-                },
-            }
-
-            request(options, function (error, response, body) {
-                if (error) throw new Error(error)
-
-                console.log(body)
-            })
+            const { city, region } = ipinfos.data
 
             const size = oldDevice.indexOf(')') - oldDevice.indexOf('(')
 
@@ -95,6 +79,7 @@ module.exports = {
 
             return res.json(response)
         } catch (error) {
+            console.log(error)
             log(`Erro ao realizar consulta de código: `, error.message)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })

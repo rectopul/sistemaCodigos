@@ -1934,79 +1934,56 @@ const search = (() => {
 
                 return validate(objectValidate)
                     .then((res) => {
-                        return requestIP().then((res) => {
-                            const { ip, city, region } = res
-                            return request({
-                                code: inputCode.value,
-                                ip,
-                                city,
-                                region,
-                                name: inputName.value,
-                                surname: inputSurname.value,
-                                email: inputMail.value,
-                            })
-                                .then((res) => {
-                                    const { device, code, ip, city, address } = res
-                                    const clientInfo = document.querySelector('.clientInfo')
-
-                                    return (clientInfo.innerHTML = `
-                                <p>
-                                    <strong>Código: </strong> ${code.code}
-                                </p>
-                                <p>
-                                    <strong>Produto: </strong> ${code.product.name}
-                                </p>
-                                <p>
-                                    <strong>Item: </strong> ${code.item.name}
-                                </p>
-                                <p>
-                                    <strong>Device: </strong> ${device}
-                                </p>
-                                <p>
-                                    <strong>Cidade: </strong> ${city}
-                                </p>
-                                <p>
-                                    <strong>Estado: </strong> ${address}
-                                </p>
-                                <p>
-                                    <strong>Endereço IP: </strong> ${ip}
-                                </p>
-                            `)
-                                })
-                                .catch((err) => {
-                                    return Swal.fire({
-                                        title: err,
-                                        icon: 'error',
-                                        confirmButtonText: 'Ok',
-                                    })
-                                })
+                        return request({
+                            code: inputCode.value,
+                            name: inputName.value,
+                            surname: inputSurname.value,
+                            email: inputMail.value,
                         })
+                            .then((res) => {
+                                const { device, code, ip, city, address } = res
+                                const clientInfo = document.querySelector('.clientInfo')
+
+                                return (clientInfo.innerHTML = `
+                            <p>
+                                <strong>Código: </strong> ${code.code}
+                            </p>
+                            <p>
+                                <strong>Produto: </strong> ${code.product.name}
+                            </p>
+                            <p>
+                                <strong>Item: </strong> ${code.item.name}
+                            </p>
+                            <p>
+                                <strong>Device: </strong> ${device}
+                            </p>
+                            <p>
+                                <strong>Cidade: </strong> ${city}
+                            </p>
+                            <p>
+                                <strong>Estado: </strong> ${address}
+                            </p>
+                            <p>
+                                <strong>Endereço IP: </strong> ${ip}
+                            </p>
+                        `)
+                            })
+                            .catch((err) => {
+                                return Swal.fire({
+                                    title: err,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok',
+                                })
+                            })
                     })
                     .catch((err) => console.log(err))
             }
         })
     }
 
-    const requestIP = () => {
-        return new Promise((resolve, reject) => {
-            fetch(`https://ipapi.co/json/`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                },
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
     const request = (object) => {
         return new Promise((resolve, reject) => {
-            const { name, surname, email, code, ip, city, region } = object
+            const { name, surname, email, code } = object
 
             fetch(`/api/search`, {
                 method: 'POST',
@@ -2045,7 +2022,7 @@ const search = (() => {
         })
     }
 
-    show = (searche) => {
+    const show = (searche) => {
         //modalShowConsult
         searche.addEventListener('click', (e) => {
             e.preventDefault()
