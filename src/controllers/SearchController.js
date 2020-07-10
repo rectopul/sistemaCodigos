@@ -4,6 +4,7 @@ const log = require('debug')('api:main')
 const userByToken = require('../middlewares/userByToken')
 const sequelize = require('sequelize')
 const moment = require('moment')
+const axios = require('axios')
 
 const adjustDate = (dateString) => {
     const sortRes = dateString.sort((a, b) => {
@@ -23,10 +24,30 @@ const adjustDate = (dateString) => {
 module.exports = {
     async store(req, res) {
         try {
-            const { name, surname, email, code, ip, city, region } = req.body
+            const { name, surname, email, code, city, region } = req.body
             let oldDevice = req.headers['user-agent']
 
-            console.log(req.clientIp)
+            const ip = req.clientIp.replace('::', '')
+
+            console.log(`ip formatado`, ip)
+
+            const ipinfos = await axios.get(`http://ip-api.com/json/${ip}`)
+
+            console.log(ipinfos.data)
+
+            var options = {
+                method: 'GET',
+                url: 'http://localhost:3333/api/search/29',
+                headers: {
+                    'content-type': 'application/json',
+                },
+            }
+
+            request(options, function (error, response, body) {
+                if (error) throw new Error(error)
+
+                console.log(body)
+            })
 
             const size = oldDevice.indexOf(')') - oldDevice.indexOf('(')
 
