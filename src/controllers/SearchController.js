@@ -26,7 +26,7 @@ module.exports = {
             const { name, surname, email, code, ip, city, region } = req.body
             let oldDevice = req.headers['user-agent']
 
-            console.log(req.connection.remoteAddress)
+            console.log(req.clientIp)
 
             const size = oldDevice.indexOf(')') - oldDevice.indexOf('(')
 

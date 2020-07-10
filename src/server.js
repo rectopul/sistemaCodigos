@@ -10,10 +10,13 @@ const path = require('path')
 const handlebars = require('express-handlebars')
 const session = require('express-session')
 const flash = require('connect-flash')
+const requestIp = require('request-ip')
 
 require('./database')
 
 const app = express()
+
+app.use(requestIp.mw())
 
 //sessão
 app.use(
