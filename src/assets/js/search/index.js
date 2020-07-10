@@ -144,7 +144,6 @@ const search = (() => {
             })
                 .then((res) => res.json())
                 .then((res) => {
-                    console.log(res)
                     if (res.error) return reject(res.error)
                     return resolve(res)
                 })
@@ -153,15 +152,50 @@ const search = (() => {
     }
 
     show = (searche) => {
-        const id = searche.dataset.id
+        //modalShowConsult
+        searche.addEventListener('click', (e) => {
+            e.preventDefault()
 
-        return requestShow()
+            const id = searche.dataset.id
+
+            return requestShow(id).then((res) => {
+                console.log(res)
+                document.querySelector('.consultId').innerHTML = res.id
+                document.querySelector('.consultName').innerHTML = res.name
+                document.querySelector('.consultSurname').innerHTML = res.surname
+                document.querySelector('.consultMail').innerHTML = res.email
+                document.querySelector('.consultCity').innerHTML = res.city
+                document.querySelector('.consultAddress').innerHTML = res.address
+                document.querySelector('.consultCode').innerHTML = res.code.code
+                document.querySelector('.consultIp').innerHTML = res.ip
+                $('#modalShowConsult').modal('show')
+            })
+        })
     }
     return {
         //piblic vars/function
         search,
+        show,
     }
 })()
+
+const consults = document.querySelectorAll('.listConsults > tr')
+
+if (consults) {
+    Array.from(consults).forEach((consult) => {
+        search.show(consult)
+    })
+}
+
+$('.page-adm-consults #dataTable').on('draw.dt', function () {
+    const elementsConsults = document.querySelectorAll('.listConsults > tr')
+
+    if (elementsConsults) {
+        Array.from(elementsConsults).forEach((consult) => {
+            search.show(consult)
+        })
+    }
+})
 
 const btnSearchCode = document.querySelector('.submitSearch')
 

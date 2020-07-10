@@ -7,7 +7,7 @@
         <h6 class="m-0 font-weight-bold text-primary">Lista de consultas realizadas</h6>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive page-adm-consults">
             <table class="table table-bordered table-hover stripe" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
@@ -29,7 +29,7 @@
                         <th>Data</th>
                     </tr>
                 </tfoot>
-                <tbody class="listCaregories">
+                <tbody class="listConsults">
                     {{#each searches}}
                     <tr role="row" class="odd" data-id="{{id}}">
                         <td>{{id}}</td>
@@ -46,3 +46,4 @@
         </div>
     </div>
 </div>
+{{>modalShowConsult}}

@@ -146,6 +146,422 @@ const util = (() => {
     }
 })()
 
+const category = (() => {
+    const table = $('#dataTable').DataTable()
+
+    //Private vars/functions
+    const btnClick = (btn) => {
+        const id = btn.dataset.id
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+            return removeCategory(btn, id)
+        })
+    }
+
+    const removeCategory = (element, id) => {
+        requestDestroy(id)
+            .then((res) => {
+                table
+                    .row($(element.closest('tr')))
+                    .remove()
+                    .draw()
+                /* if (element.closest('tr')) {
+                    element.closest('tr').remove()
+                } */
+
+                return Swal.fire({
+                    title: `Categoria ${res.name} removida com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) => {
+                return Swal.fire({
+                    title: err,
+                    text: `Ocorreu um erro ao remover a categoria`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            })
+    }
+
+    const requestDestroy = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/category/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao deletar categoria`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const destroy = (btn) => {
+        return btnClick(btn)
+    }
+
+    //Validate form
+    const validateForm = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //Create new category
+    const requestCreate = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, description, slug, parent } = object
+
+            fetch(`/api/category`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, description, slug, parent }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    //Create category in front
+    const createFront = (object) => {
+        const { id, name, description, createdAt } = object
+
+        let data = new Date(createdAt)
+
+        data = new Intl.DateTimeFormat('pt-BR').format(data)
+
+        const newRow = table.row
+            .add([
+                id,
+                name,
+                description,
+                0,
+                `<!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
+                <i class="far fa-trash-alt"></i>
+            </button>`,
+            ])
+            .draw()
+            .node()
+
+        newRow.classList.add(`category-${id}`)
+
+        const btnEdit = newRow.querySelector('.editCategory')
+
+        openModal(btnEdit)
+
+        const btnDestroy = newRow.querySelector('.categoryDestroy')
+
+        destroy(btnDestroy)
+
+        //document.querySelector('.listCaregories').append(tr)
+    }
+
+    const create = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const inputName = document.querySelector('.categoryName')
+            const inputDescription = document.querySelector('.categoryDescription')
+            const inputSlug = document.querySelector('.categorySlug')
+            const inputParent = document.querySelector('.categoryParent')
+
+            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
+
+            return validateForm(inputsValidate)
+                .then(() => {
+                    return requestCreate({
+                        name: inputName.value,
+                        description: inputDescription.value,
+                        slug: inputSlug.value,
+                        parent: inputParent.value || null,
+                    })
+                        .then((res) => {
+                            createFront(res)
+                            return Swal.fire({
+                                title: `Categoria ${res.name} criada com sucesso!`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((err) => {
+                            return Swal.fire({
+                                title: err,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                })
+                .catch((err) => console.log(err))
+        })
+    }
+
+    //Find category
+    const find = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+            fetch(`/api/category/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //edit
+    const edit = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { id, name, description, slug, parent } = object
+
+            fetch(`/api/category/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, description, slug, parent }),
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao criar categoria`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //Update category in front
+    const updateFront = (object) => {
+        const { id, name, description, slug, parent, createdAt } = object
+
+        const category = document.querySelector(`.category-${id}`)
+
+        if (category) {
+            const fieldName = category.querySelector('td:nth-child(2)')
+            const fieldDescription = category.querySelector('td:nth-child(3)')
+            const fieldCreate = category.querySelector('td:nth-child(5)')
+
+            let data = new Date(createdAt)
+            data = new Intl.DateTimeFormat('pt-BR').format(data)
+
+            let valuesEdit = table.row($(category)).data()
+
+            console.log(category)
+
+            valuesEdit[1] = name
+            valuesEdit[2] = description
+
+            table.row($(category)).data(valuesEdit).draw()
+
+            /* const btnEdit = category.querySelector('.editCategory')
+
+            openModal(btnEdit) */
+
+            /* const btnDestroy = category.querySelector('.categoryDestroy')
+
+            destroy(btnDestroy) */
+
+            return Swal.fire({
+                title: `Categoria ${name} editada com sucesso!`,
+                icon: 'success',
+                confirmButtonText: 'Ok',
+            })
+        }
+    }
+
+    //Functions from edit categories
+    const openModal = (btn) => {
+        btn.addEventListener('click', (e) => {
+            const id = btn.dataset.id
+            const action = `editCategory`
+            const btnModal = document.querySelector('.btnEditCategory')
+
+            return find(id)
+                .then((res) => {
+                    const inputName = document.querySelector('.editCategoryName')
+                    const inputDescription = document.querySelector('.editCategoryDescription')
+                    const inputSlug = document.querySelector('.editCategorySlug')
+                    const inputParent = document.querySelector('.editCategoryParent')
+
+                    const { id, name, description, slug, parent } = res
+
+                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
+                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
+                    }
+
+                    inputName.value = name
+                    inputDescription.value = description
+                    inputSlug.value = slug
+
+                    return btnModal.addEventListener('click', (e) => {
+                        return edit({
+                            id,
+                            name: inputName.value,
+                            description: inputDescription.value,
+                            slug: inputSlug.value,
+                            parent: inputParent.value || null,
+                        }).then((res) => {
+                            return updateFront(res)
+                        })
+                    })
+                })
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro ao editar categoria`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+        })
+    }
+
+    return {
+        destroy,
+        create,
+        edit: openModal,
+    }
+})()
+
+const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
+
+if (btnCategoryDestroy) {
+    Array.from(btnCategoryDestroy).forEach((btn) => {
+        return category.destroy(btn)
+    })
+}
+
+const btnModalEditCategory = document.querySelectorAll('.editCategory')
+
+if (btnModalEditCategory) {
+    Array.from(btnModalEditCategory).forEach((btn) => {
+        return category.edit(btn)
+    })
+}
+
+const btnCreateCategory = document.querySelector('.btnCreateCategory')
+
+if (btnCreateCategory) category.create(btnCreateCategory)
+
+const loginResource = `login`
+
+const requestLogin = (object) => {
+    return new Promise((resolve, reject) => {
+        const { email, password, gToken } = object
+
+        const reqUrl = `/api/${loginResource}`
+        fetch(reqUrl, {
+            method: `POST`,
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, gToken }),
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                if (response.error) {
+                    return reject(response.error)
+                }
+
+                resolve(response)
+                return console.log(response)
+            })
+            .catch((error) => reject(error))
+    })
+}
+
+const login = (form) => {
+    const inputMail = form.querySelector('.loginMail')
+    const inputPassword = form.querySelector('.loginPassword')
+
+    form.classList.add('was-validated')
+
+    if (!inputMail.value) {
+        return inputMail.classList.add('is-invalid')
+    } else {
+        inputMail.classList.remove('is-invalid')
+        inputMail.classList.add('is-valid')
+        //
+    }
+    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
+
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
+            // Add your logic to submit to your backend server here.
+            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
+                .then((res) => {
+                    ///dashboard
+                    window.location.href = '/dashboard'
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
+
+                    form.prepend(divAlert)
+
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
+        })
+    })
+}
+
+const btnLogin = document.querySelector('.btnLogin')
+
+if (btnLogin) {
+    btnLogin.addEventListener('click', (e) => {
+        e.preventDefault()
+
+        login(btnLogin.closest('form'))
+    })
+}
+
 const page = (() => {
     //private var/functions
     //slugkeydown
@@ -594,604 +1010,6 @@ const newsletter = (() => {
 const newsForm = document.querySelector('.newsForm')
 
 if (newsForm) newsletter.subscribe(newsForm)
-
-const category = (() => {
-    const table = $('#dataTable').DataTable()
-
-    //Private vars/functions
-    const btnClick = (btn) => {
-        const id = btn.dataset.id
-
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-            return removeCategory(btn, id)
-        })
-    }
-
-    const removeCategory = (element, id) => {
-        requestDestroy(id)
-            .then((res) => {
-                table
-                    .row($(element.closest('tr')))
-                    .remove()
-                    .draw()
-                /* if (element.closest('tr')) {
-                    element.closest('tr').remove()
-                } */
-
-                return Swal.fire({
-                    title: `Categoria ${res.name} removida com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) => {
-                return Swal.fire({
-                    title: err,
-                    text: `Ocorreu um erro ao remover a categoria`,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            })
-    }
-
-    const requestDestroy = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/category/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao deletar categoria`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const destroy = (btn) => {
-        return btnClick(btn)
-    }
-
-    //Validate form
-    const validateForm = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //Create new category
-    const requestCreate = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, description, slug, parent } = object
-
-            fetch(`/api/category`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, description, slug, parent }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-                    resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    //Create category in front
-    const createFront = (object) => {
-        const { id, name, description, createdAt } = object
-
-        let data = new Date(createdAt)
-
-        data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-        const newRow = table.row
-            .add([
-                id,
-                name,
-                description,
-                0,
-                `<!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
-                <i class="fas fa-edit"></i>
-            </button>
-            <!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
-                <i class="far fa-trash-alt"></i>
-            </button>`,
-            ])
-            .draw()
-            .node()
-
-        newRow.classList.add(`category-${id}`)
-
-        const btnEdit = newRow.querySelector('.editCategory')
-
-        openModal(btnEdit)
-
-        const btnDestroy = newRow.querySelector('.categoryDestroy')
-
-        destroy(btnDestroy)
-
-        //document.querySelector('.listCaregories').append(tr)
-    }
-
-    const create = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const inputName = document.querySelector('.categoryName')
-            const inputDescription = document.querySelector('.categoryDescription')
-            const inputSlug = document.querySelector('.categorySlug')
-            const inputParent = document.querySelector('.categoryParent')
-
-            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
-
-            return validateForm(inputsValidate)
-                .then(() => {
-                    return requestCreate({
-                        name: inputName.value,
-                        description: inputDescription.value,
-                        slug: inputSlug.value,
-                        parent: inputParent.value || null,
-                    })
-                        .then((res) => {
-                            createFront(res)
-                            return Swal.fire({
-                                title: `Categoria ${res.name} criada com sucesso!`,
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                        .catch((err) => {
-                            return Swal.fire({
-                                title: err,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                })
-                .catch((err) => console.log(err))
-        })
-    }
-
-    //Find category
-    const find = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-            fetch(`/api/category/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    //edit
-    const edit = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { id, name, description, slug, parent } = object
-
-            fetch(`/api/category/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, description, slug, parent }),
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao criar categoria`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    //Update category in front
-    const updateFront = (object) => {
-        const { id, name, description, slug, parent, createdAt } = object
-
-        const category = document.querySelector(`.category-${id}`)
-
-        if (category) {
-            const fieldName = category.querySelector('td:nth-child(2)')
-            const fieldDescription = category.querySelector('td:nth-child(3)')
-            const fieldCreate = category.querySelector('td:nth-child(5)')
-
-            let data = new Date(createdAt)
-            data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-            let valuesEdit = table.row($(category)).data()
-
-            console.log(category)
-
-            valuesEdit[1] = name
-            valuesEdit[2] = description
-
-            table.row($(category)).data(valuesEdit).draw()
-
-            /* const btnEdit = category.querySelector('.editCategory')
-
-            openModal(btnEdit) */
-
-            /* const btnDestroy = category.querySelector('.categoryDestroy')
-
-            destroy(btnDestroy) */
-
-            return Swal.fire({
-                title: `Categoria ${name} editada com sucesso!`,
-                icon: 'success',
-                confirmButtonText: 'Ok',
-            })
-        }
-    }
-
-    //Functions from edit categories
-    const openModal = (btn) => {
-        btn.addEventListener('click', (e) => {
-            const id = btn.dataset.id
-            const action = `editCategory`
-            const btnModal = document.querySelector('.btnEditCategory')
-
-            return find(id)
-                .then((res) => {
-                    const inputName = document.querySelector('.editCategoryName')
-                    const inputDescription = document.querySelector('.editCategoryDescription')
-                    const inputSlug = document.querySelector('.editCategorySlug')
-                    const inputParent = document.querySelector('.editCategoryParent')
-
-                    const { id, name, description, slug, parent } = res
-
-                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
-                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
-                    }
-
-                    inputName.value = name
-                    inputDescription.value = description
-                    inputSlug.value = slug
-
-                    return btnModal.addEventListener('click', (e) => {
-                        return edit({
-                            id,
-                            name: inputName.value,
-                            description: inputDescription.value,
-                            slug: inputSlug.value,
-                            parent: inputParent.value || null,
-                        }).then((res) => {
-                            return updateFront(res)
-                        })
-                    })
-                })
-                .catch((err) => {
-                    return Swal.fire({
-                        title: `Erro ao editar categoria`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-        })
-    }
-
-    return {
-        destroy,
-        create,
-        edit: openModal,
-    }
-})()
-
-const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
-
-if (btnCategoryDestroy) {
-    Array.from(btnCategoryDestroy).forEach((btn) => {
-        return category.destroy(btn)
-    })
-}
-
-const btnModalEditCategory = document.querySelectorAll('.editCategory')
-
-if (btnModalEditCategory) {
-    Array.from(btnModalEditCategory).forEach((btn) => {
-        return category.edit(btn)
-    })
-}
-
-const btnCreateCategory = document.querySelector('.btnCreateCategory')
-
-if (btnCreateCategory) category.create(btnCreateCategory)
-
-const profile = (() => {
-    //private functions/var
-    const request = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const reqUrl = `/api/user/image`
-
-            const form = new FormData()
-            form.append('file', file)
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestProfile = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
-
-            const reqUrl = `/api/user`
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const changeState = (input) => {
-        input.addEventListener('change', function (e) {
-            editAvatar(input)
-        })
-    }
-
-    const editAvatar = (input) => {
-        console.log(input.files)
-        return request(input.files[0])
-            .then((res) => {
-                if (res.error) return console.log(res.error)
-
-                document.querySelector('.img-profile').src = res.url
-
-                return (document.querySelector('.profile-avatar').src = res.url)
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const enableForm = (button) => {
-        if (!button) console.log(`Botão não existe`)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
-
-            const formulario = document.querySelector('.formEditUser')
-
-            if (button.classList.contains('save')) {
-                Array.from(form).forEach((input) => {
-                    input.disabled = true
-                })
-
-                button.innerHTML = `Edit profile`
-
-                if (formulario) getFields(formulario)
-
-                return button.classList.remove('save')
-            } else {
-                Array.from(form).forEach((input) => {
-                    input.disabled = false
-                })
-
-                button.innerHTML = `Salvar alterações`
-
-                return button.classList.add('save')
-            }
-        })
-    }
-
-    //get all fields
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    const getFields = (form) => {
-        if (!form) return console.log(`Formulário não existe`)
-
-        const listElements = Array.from(form.elements)
-
-        const object = {
-            name: form.querySelector('#input-username').value,
-            email: form.querySelector('#input-email').value,
-            currentPassword: form.querySelector('#input-current-password').value,
-            newPassword: form.querySelector('#input-new-password').value,
-            address: form.querySelector('#input-address').value,
-            city: form.querySelector('#input-city').value,
-            phone: form.querySelector('#input-phone').value,
-            cell: form.querySelector('#input-cell').value,
-            about: form.querySelector('#textarea-about').value,
-        }
-
-        return requestProfile(object)
-            .then((res) => {
-                if (res.error)
-                    return Swal.fire({
-                        title: `Erro ao atualizar usuário`,
-                        text: res.error,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-
-                return Swal.fire({
-                    title: `Perfil atualizado`,
-                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) =>
-                Swal.fire({
-                    title: `Erro ao atualizar usuário`,
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            )
-
-        console.log(object)
-    }
-
-    //requestSaveProfile
-
-    return {
-        //public var/functions
-        edit: changeState,
-        enableEdit: enableForm,
-        save: getFields,
-    }
-})()
-
-const inputEditAvatar = document.querySelector('.inputProfileAvatar')
-
-if (inputEditAvatar) profile.edit(inputEditAvatar)
-
-//btnEditUser
-const btnEditUser = document.querySelector('.btnEditUser')
-
-if (btnEditUser) profile.enableEdit(btnEditUser)
-
-const loginResource = `login`
-
-const requestLogin = (object) => {
-    return new Promise((resolve, reject) => {
-        const { email, password, gToken } = object
-
-        const reqUrl = `/api/${loginResource}`
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({ email, password, gToken }),
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) {
-                    return reject(response.error)
-                }
-
-                resolve(response)
-                return console.log(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const login = (form) => {
-    const inputMail = form.querySelector('.loginMail')
-    const inputPassword = form.querySelector('.loginPassword')
-
-    form.classList.add('was-validated')
-
-    if (!inputMail.value) {
-        return inputMail.classList.add('is-invalid')
-    } else {
-        inputMail.classList.remove('is-invalid')
-        inputMail.classList.add('is-valid')
-        //
-    }
-    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
-
-    grecaptcha.ready(function () {
-        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
-            // Add your logic to submit to your backend server here.
-            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
-                .then((res) => {
-                    ///dashboard
-                    window.location.href = '/dashboard'
-                })
-                .catch((error) => {
-                    const divAlert = document.createElement('div')
-                    divAlert.classList.add('alert', 'alert-danger')
-                    divAlert.setAttribute('role', 'alert')
-                    divAlert.innerHTML = error
-
-                    form.prepend(divAlert)
-
-                    setTimeout(() => {
-                        divAlert.remove()
-                    }, 4000)
-                })
-        })
-    })
-}
-
-const btnLogin = document.querySelector('.btnLogin')
-
-if (btnLogin) {
-    btnLogin.addEventListener('click', (e) => {
-        e.preventDefault()
-
-        login(btnLogin.closest('form'))
-    })
-}
 
 const btnsProduct = document.querySelectorAll('.productDelete')
 
@@ -1892,6 +1710,391 @@ const ImageProduct = document.querySelector('.productImage')
 
 if (ImageProduct) imgProduct.change(ImageProduct)
 
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const reqUrl = `/api/user/image`
+
+            const form = new FormData()
+            form.append('file', file)
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
+
+            const reqUrl = `/api/user`
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
+
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
+                })
+
+                button.innerHTML = `Edit profile`
+
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
+            }
+        })
+    }
+
+    //get all fields
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
+
+    return {
+        //public var/functions
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
+    }
+})()
+
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
+
+if (inputEditAvatar) profile.edit(inputEditAvatar)
+
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
+
+if (btnEditUser) profile.enableEdit(btnEditUser)
+
+const search = (() => {
+    //validate form
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.value) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //private vars/functions
+    const search = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            console.log()
+
+            const inputCode = document.querySelector('input.Code')
+
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
+                    .then((res) => {
+                        return requestIP().then((res) => {
+                            const { ip, city, region } = res
+                            return request({
+                                code: inputCode.value,
+                                ip,
+                                city,
+                                region,
+                                name: inputName.value,
+                                surname: inputSurname.value,
+                                email: inputMail.value,
+                            })
+                                .then((res) => {
+                                    const { device, code, ip, city, address } = res
+                                    const clientInfo = document.querySelector('.clientInfo')
+
+                                    return (clientInfo.innerHTML = `
+                                <p>
+                                    <strong>Código: </strong> ${code.code}
+                                </p>
+                                <p>
+                                    <strong>Produto: </strong> ${code.product.name}
+                                </p>
+                                <p>
+                                    <strong>Item: </strong> ${code.item.name}
+                                </p>
+                                <p>
+                                    <strong>Device: </strong> ${device}
+                                </p>
+                                <p>
+                                    <strong>Cidade: </strong> ${city}
+                                </p>
+                                <p>
+                                    <strong>Estado: </strong> ${address}
+                                </p>
+                                <p>
+                                    <strong>Endereço IP: </strong> ${ip}
+                                </p>
+                            `)
+                                })
+                                .catch((err) => {
+                                    return Swal.fire({
+                                        title: err,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok',
+                                    })
+                                })
+                        })
+                    })
+                    .catch((err) => console.log(err))
+            }
+        })
+    }
+
+    const requestIP = () => {
+        return new Promise((resolve, reject) => {
+            fetch(`https://ipapi.co/json/`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                },
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const { name, surname, email, code, ip, city, region } = object
+
+            fetch(`/api/search`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    console.log(res)
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestShow = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/search/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    show = (searche) => {
+        //modalShowConsult
+        searche.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = searche.dataset.id
+
+            return requestShow(id).then((res) => {
+                console.log(res)
+                document.querySelector('.consultId').innerHTML = res.id
+                document.querySelector('.consultName').innerHTML = res.name
+                document.querySelector('.consultSurname').innerHTML = res.surname
+                document.querySelector('.consultMail').innerHTML = res.email
+                document.querySelector('.consultCity').innerHTML = res.city
+                document.querySelector('.consultAddress').innerHTML = res.address
+                document.querySelector('.consultCode').innerHTML = res.code.code
+                document.querySelector('.consultIp').innerHTML = res.ip
+                $('#modalShowConsult').modal('show')
+            })
+        })
+    }
+    return {
+        //piblic vars/function
+        search,
+        show,
+    }
+})()
+
+const consults = document.querySelectorAll('.listConsults > tr')
+
+if (consults) {
+    Array.from(consults).forEach((consult) => {
+        search.show(consult)
+    })
+}
+
+$('.page-adm-consults #dataTable').on('draw.dt', function () {
+    const elementsConsults = document.querySelectorAll('.listConsults > tr')
+
+    if (elementsConsults) {
+        Array.from(elementsConsults).forEach((consult) => {
+            search.show(consult)
+        })
+    }
+})
+
+const btnSearchCode = document.querySelector('.submitSearch')
+
+if (btnSearchCode) search.search(btnSearchCode)
+
 const userResource = `user`
 
 const user = (() => {
@@ -2128,175 +2331,6 @@ if (btnInsertUser) {
         userCreate(btnInsertUser.closest('form'))
     })
 }
-
-const search = (() => {
-    //validate form
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                if (!input.value) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //private vars/functions
-    const search = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            console.log()
-
-            const inputCode = document.querySelector('input.Code')
-
-            const inputName = document.querySelector('input.name')
-            const inputSurname = document.querySelector('input.surname')
-            const inputMail = document.querySelector('input.mail')
-
-            if (inputName && inputSurname && inputMail) {
-                const objectValidate = [
-                    { input: inputName, msg: `Informe seu nome` },
-                    { input: inputSurname, msg: `Informe seu sobrenome` },
-                    { input: inputMail, msg: `Informe seu e-mail` },
-                ]
-
-                return validate(objectValidate)
-                    .then((res) => {
-                        return requestIP().then((res) => {
-                            const { ip, city, region } = res
-                            return request({
-                                code: inputCode.value,
-                                ip,
-                                city,
-                                region,
-                                name: inputName.value,
-                                surname: inputSurname.value,
-                                email: inputMail.value,
-                            })
-                                .then((res) => {
-                                    const { device, code, ip, city, address } = res
-                                    const clientInfo = document.querySelector('.clientInfo')
-
-                                    return (clientInfo.innerHTML = `
-                                <p>
-                                    <strong>Código: </strong> ${code.code}
-                                </p>
-                                <p>
-                                    <strong>Produto: </strong> ${code.product.name}
-                                </p>
-                                <p>
-                                    <strong>Item: </strong> ${code.item.name}
-                                </p>
-                                <p>
-                                    <strong>Device: </strong> ${device}
-                                </p>
-                                <p>
-                                    <strong>Cidade: </strong> ${city}
-                                </p>
-                                <p>
-                                    <strong>Estado: </strong> ${address}
-                                </p>
-                                <p>
-                                    <strong>Endereço IP: </strong> ${ip}
-                                </p>
-                            `)
-                                })
-                                .catch((err) => {
-                                    return Swal.fire({
-                                        title: err,
-                                        icon: 'error',
-                                        confirmButtonText: 'Ok',
-                                    })
-                                })
-                        })
-                    })
-                    .catch((err) => console.log(err))
-            }
-        })
-    }
-
-    const requestIP = () => {
-        return new Promise((resolve, reject) => {
-            fetch(`https://ipapi.co/json/`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                },
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao pesquisar codigo`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { name, surname, email, code, ip, city, region } = object
-
-            fetch(`/api/search`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestShow = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/search/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    show = (searche) => {
-        const id = searche.dataset.id
-
-        return requestShow()
-    }
-    return {
-        //piblic vars/function
-        search,
-    }
-})()
-
-const btnSearchCode = document.querySelector('.submitSearch')
-
-if (btnSearchCode) search.search(btnSearchCode)
 
 const consult = (() => {
     //private var/functions

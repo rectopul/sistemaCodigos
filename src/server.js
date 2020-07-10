@@ -10,9 +10,6 @@ const path = require('path')
 const handlebars = require('express-handlebars')
 const session = require('express-session')
 const flash = require('connect-flash')
-const cookieParser = require('cookie-parser')
-const https = require('https')
-const fs = require('fs')
 
 require('./database')
 
@@ -126,13 +123,4 @@ app.use((req, res) => {
     res.status(404).send({ url: req.originalUrl + ' not found' })
 })
 
-/* https
-    .createServer(
-        {
-            key: fs.readFileSync('src/key.pem'),
-            cert: fs.readFileSync('src/cert.pem'),
-            passphrase: '1234',
-        },
-        app
-    ) */
 app.listen(process.env.PORT || 3333)

@@ -30,11 +30,9 @@ module.exports = {
             },
             address: {
                 type: Sequelize.STRING,
-                allowNull: false,
             },
             city: {
                 type: Sequelize.STRING,
-                allowNull: false,
             },
             about: {
                 type: Sequelize.STRING,
