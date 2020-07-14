@@ -412,7 +412,19 @@ const readFile = (file) => {
 
 const requestInsertProduct = (object) => {
     return new Promise((resolve, reject) => {
-        const { name, description, weight, brand, lot, type, availability, items, image_id, categories } = object
+        const {
+            name,
+            description,
+            weight,
+            brand,
+            lot,
+            type,
+            excerpt,
+            availability,
+            items,
+            image_id,
+            categories,
+        } = object
 
         const token = document.body.dataset.token
 
@@ -454,6 +466,7 @@ const requestInsertProduct = (object) => {
 const productCreate = (form) => {
     const inputName = form.querySelector('.productName')
     const inputDescription = form.querySelector('.productDescription')
+    const inputExcerpt = form.querySelector('.productExcerpt')
     const inputWeight = form.querySelector('.productWeigth')
     const inputBrand = form.querySelector('.productBrand')
     const inputLot = form.querySelector('.productLot')
@@ -531,6 +544,7 @@ const productCreate = (form) => {
                 return requestInsertProduct({
                     name: inputName.value,
                     description: inputDescription.value,
+                    excerpt: inputExcerpt.value,
                     weight: inputWeight.value,
                     brand: inputBrand.value,
                     lot: inputLot.value,

@@ -24,6 +24,14 @@ class Product extends Model {
                         },
                     },
                 },
+                excerpt: {
+                    type: DataTypes.TEXT,
+                    validate: {
+                        notEmpty: {
+                            msg: `The excerpt field cannot be empty`,
+                        },
+                    },
+                },
                 weight: {
                     type: DataTypes.DECIMAL,
                     allowNull: false,

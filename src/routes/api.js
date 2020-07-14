@@ -26,9 +26,18 @@ const PageController = require('../controllers/PageController')
 //Newsletter
 const Subscriber = require('../controllers/SubscriberController')
 
+//Images
+const ImageController = require('../controllers/ImageController')
+
+//Partner
+const PartnerController = require('../controllers/PartnerController')
+
 //Banners
 const BannerController = require('../controllers/BannerController')
 const BannerImageController = require('../controllers/BannerImageController')
+
+//Contato
+const ContactController = require('../controllers/ContactController')
 
 //API
 //Product
@@ -76,6 +85,17 @@ routes.post(`/api/subscriber`, Subscriber.store)
 routes.post(`/api/banner/:page_id`, BannerController.store)
 routes.put(`/api/banner/:banner_id`, BannerController.update)
 routes.post(`/api/banner-image`, multer(multerConfig).single('file'), BannerImageController.store)
+//images
+routes.post(`/api/image`, multer(multerConfig).single('file'), ImageController.store)
+//parceiro
+routes.post(`/api/partner`, PartnerController.store)
+routes.delete(`/api/partner/:partner_id`, PartnerController.destroy)
+//Contact
+routes.delete(`/api/contact/:contact_id`, ContactController.destroy)
+routes.put(`/api/contact/:contact_id`, ContactController.update)
+routes.get(`/api/contact/:contact_id`, ContactController.show)
+routes.get(`/api/contact`, ContactController.index)
+routes.post(`/api/contact`, ContactController.store)
 
 //session
 routes.post(`/api/login`, SessionController.store)

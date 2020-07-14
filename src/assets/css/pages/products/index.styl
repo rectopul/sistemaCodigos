@@ -18,15 +18,20 @@
         padding-right 0
         padding-top 10px
         padding-bottom 10px
+        @media screen and (max-width: 995px)
+            padding-left 0
         & .product-thumbnail
             order 1
-        & .product-media
-            transform translateY(10px)
+            @media screen and (max-width: 995px)
+                order 0
         &:nth-child(odd)
             padding-right 15px
             padding-left 0
+            @media screen and (max-width: 995px)
+                padding-right 0
             & .product-media
-                margin-left auto
+                @media screen and (min-width: 1024px)
+                    margin-left auto
             & .product-thumbnail
                 order 0
             & .product-title
@@ -35,6 +40,8 @@
             & > div
                 background-color #bbbbbb
                 color #000000
+                & h1
+                    color #000000
         & > div
             color #ffffff
             padding-top 80px
@@ -42,4 +49,6 @@
             padding 80px 43px
             padding-bottom 0
             min-height 490px
+            & h1
+                color #ffffff
             

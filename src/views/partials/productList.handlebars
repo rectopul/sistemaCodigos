@@ -1,0 +1,32 @@
+<div class="row m-0 page-product-list">
+    {{#each listProducts}}
+    <div class="col-md-6">
+        <div class="col-12 d-flex flex-column justify-content-end">
+            <div class="row">
+                <div class="col-md-7 product-title">
+                    <h1>{{name}}</h1>
+                    <p>{{description}}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-7 product-media mt-5">
+                    <div class="row">
+                        <div class="col-7 product-thumbnail">
+                            {{#each image}}
+                            <img src="{{url}}" width="207" alt="">
+                            {{/each}}
+                        </div>
+
+                        <div class="col-auto d-flex align-items-center product-link my-5 my-md-0">
+                            <a class="btn btn-light" href="/product/{{id}}" role="button">ver detalhes</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{#each products}}
+
+    {{/each}}
+    {{/each}}
+</div>

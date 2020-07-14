@@ -136,7 +136,7 @@ const search = (() => {
             const id = searche.dataset.id
 
             return requestShow(id).then((res) => {
-                console.log(res)
+                const date = new Intl.DateTimeFormat('pt-BR').format(new Date(res.createdAt))
                 document.querySelector('.consultId').innerHTML = res.id
                 document.querySelector('.consultName').innerHTML = res.name
                 document.querySelector('.consultSurname').innerHTML = res.surname
@@ -145,6 +145,7 @@ const search = (() => {
                 document.querySelector('.consultAddress').innerHTML = res.address
                 document.querySelector('.consultCode').innerHTML = res.code.code
                 document.querySelector('.consultIp').innerHTML = res.ip
+                document.querySelector('.constData').innerHTML = date
                 $('#modalShowConsult').modal('show')
             })
         })

@@ -4,7 +4,6 @@ const UserByToken = require('../middlewares/userByToken')
 module.exports = {
     async index(req, res) {
         const { id_product: product_id } = req.params
-        console.log(product_id)
         const images = await ImgProducts.findAll({ where: { product_id } })
 
         return res.json(images)
@@ -26,9 +25,7 @@ module.exports = {
             .then(() => {
                 return res.send()
             })
-            .catch((err) => {
-                console.log(err)
-            })
+            .catch((err) => {})
     },
 
     async store(req, res) {

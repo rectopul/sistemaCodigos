@@ -1,0 +1,28 @@
+{{>header}}
+<!-- Header // -->
+<div class="container-fluid page-name background-black mb-5">
+    <div class="container">
+        <h1>Distribuidores</h1>
+    </div>
+</div>
+
+<!-- Content // -->
+<div class="container">
+    <div class="row distributors">
+        {{#each partners}}
+        <div class="col-md-4 my-5">
+            <h3>
+                {{title}} <br>
+                <i>{{company}}</i>
+            </h3>
+
+            <p>
+                {{{content}}}
+
+            </p>
+        </div>
+        {{/each}}
+    </div>
+</div>
+<!-- Content // -->
+{{>footer}}

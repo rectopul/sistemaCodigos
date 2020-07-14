@@ -11,7 +11,91 @@
     // Text style for "Início"
     color #000000
     & .navbar-brand
-        margin-right 75px
+        @media screen and (min-width: 481px)
+            margin-right 75px
+    & .mobile-back
+        position fixed
+        z-index 90
+        background-color rgba(0,0,0,0.7)
+        top 0
+        left 0
+        width 100%
+        height 100%
+        display none
+    @media screen and (max-width: 480px)
+        &  .page-menu
+            position fixed
+            z-index 99
+            position fixed
+            background-color rgba(0,0,0,0.7)
+            top 0
+            left 0
+            width 100%
+            height 100%
+            &.collapsing
+                transition none !important
+            &.show
+                & .mobile-back
+                    display block
+                & > ul
+                    transform translateX(0)
+            & a
+                &.nav-link, &.active
+                    color #fff !important
+            & > ul
+                width calc(100% - 30px)
+                overflow-y auto
+                height 100%
+                transition transform 300ms linear
+                transform translateX(100%)
+                background-color #000
+                right 0
+                top 0
+                margin 0
+                margin-left auto
+                margin-right 0 !important
+                position relative
+            & ul
+                text-align center
+                max-width 100%
+                z-index 99
+                &.dropdown-menu
+                    min-width 100% !important
+                    background-color #c0c0c0
+                    & ul
+                        border 0
+                    & li
+                        max-height initial
+                        padding 0
+                        &:hover
+                            background-color #c0c0c0
+                    & a
+                        display flex
+                        align-items center
+                        justify-content center
+                        position relative
+                        padding 15px
+                        &:after
+                            content none
+                    & i.arrow
+                        display flex
+                        width: 0; 
+                        height: 0; 
+                        border-top: 10px solid transparent;
+                        border-bottom: 10px solid transparent;
+                        border-left: 10px solid #000;
+                        position absolute
+                        right 15px
+                        top 50%
+                        margin-top -10px
+                & li
+                    margin 10px 0 !important
+            & .btn-dark
+                margin-right 0
+                margin-top 30px
+                width 100%
+                z-index 98
+                position relative
 
 body
     .btn-dark

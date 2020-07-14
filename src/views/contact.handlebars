@@ -1,0 +1,49 @@
+{{>header}}
+<!-- Header // -->
+<div class="container-fluid page-name background-black mb-5">
+    <div class="container">
+        <h1>Contato</h1>
+    </div>
+</div>
+
+<!-- Content // -->
+<div class="container">
+    <div class="row">
+        <div class="col-12 page-description">
+
+            <h5>
+                Nosso suporte e atendimento funciona diariamente entre as 8h e 15h,<br>
+                (horário de Asunção - exceto fins de semana e feriados).
+            </h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 mt-5">
+            <form class="form-contact needs-validation" novalidate>
+                <div class="form-group">
+                    <input type="text" class="form-control contactFullName" id="contactFullName"
+                        aria-describedby="fullnameHelp" placeholder="Nome completo" required>
+                    {{>validate}}
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-control contactMail" id="contactMail" aria-describedby="emailHelp"
+                        placeholder="Seu e-mail" required>
+                    {{>validate}}
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control contactSubject" id="contactSubject"
+                        placeholder="Assunto da mensagem" required>
+                    {{>validate}}
+                </div>
+                <div class="form-group">
+                    <textarea class="form-control contactMessage" id="contactMessage" rows="3" placeholder="Mensagem"
+                        required></textarea>
+                    {{>validate}}
+                </div>
+                <button type="submit" class="btn btn-primary">enviar mensagem</button>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Content // -->
+{{>footer}}

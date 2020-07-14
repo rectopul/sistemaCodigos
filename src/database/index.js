@@ -16,6 +16,9 @@ const Page = require('../models/Page')
 const Subscriber = require('../models/Subscriber')
 const Banner = require('../models/Banner')
 const BannerImage = require('../models/BannerImage')
+const Image = require('../models/Image')
+const Partner = require('../models/Partner')
+const Contact = require('../models/Contact')
 
 //user
 User.init(connection)
@@ -31,6 +34,9 @@ Page.init(connection)
 Subscriber.init(connection)
 Banner.init(connection)
 BannerImage.init(connection)
+Image.init(connection)
+Partner.init(connection)
+Contact.init(connection)
 
 //associations
 Product.associate(connection.models)
@@ -45,5 +51,7 @@ Search.associate(connection.models)
 Page.associate(connection.models)
 Banner.associate(connection.models)
 BannerImage.associate(connection.models)
+Image.associate(connection.models)
+Partner.associate(connection.models)
 
 module.exports = connection

@@ -77,7 +77,19 @@ module.exports = {
             if (Object.keys(req.body).length === 0)
                 return res.status(400).send({ error: `Por favor envie as infomações` })
 
-            const { name, description, weight, brand, lot, type, categories, availability, items, image_id } = req.body
+            const {
+                name,
+                description,
+                weight,
+                brand,
+                lot,
+                type,
+                excerpt,
+                categories,
+                availability,
+                items,
+                image_id,
+            } = req.body
 
             if (!categories) return res.status(400).send({ error: `Please enter a category` })
 
@@ -102,6 +114,7 @@ module.exports = {
             const product = await Product.create({
                 name,
                 description,
+                excerpt,
                 weight,
                 brand,
                 lot,

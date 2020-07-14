@@ -28,11 +28,25 @@ const Subscribers = require('../models/Subscriber')
 const SubscribersView = require('../controllers/views/EmailViews')
 
 const PageProducts = require('../controllers/views/ProductsView')
+//Produtos
+const ProductView = require('../controllers/views/ProductView')
 const NewPageView = require('../controllers/views/newPageView')
 const EditPageView = require('../controllers/views/EditPageView')
 
+//Parceiros
+const PartnersViews = require('../controllers/views/PartnerViews')
+
+//Distribuidores
+const DistributorsView = require('../controllers/views/DistribuitorsViews')
+
 //Consultas
 const SearchesController = require('../controllers/views/ConsultsView')
+
+//Contato
+const ContactView = require('../controllers/views/ContactViews')
+const RequestView = require('../controllers/views/RequestViews')
+
+const Contact = require('../models/Contact')
 
 //Dashboard
 routes.get(`/dashboard`, async (req, res) => {
@@ -53,6 +67,10 @@ routes.get(`/dashboard`, async (req, res) => {
 
         const pages = await Page.findAll()
 
+        const contacts = await Contact.count()
+
+        const contactsAlert = await Contact.findAll()
+
         //userName
 
         return res.render('dashboard', {
@@ -62,12 +80,26 @@ routes.get(`/dashboard`, async (req, res) => {
             pageId: `page-top`,
             pageTitle: `Dashboard`,
             totalSearchs,
+            messagesCount: contactsAlert.length,
+            messages: contactsAlert.map((cliente) => {
+                const client = cliente.toJSON()
+                const { createdAt, fullname } = client
+
+                const [name, surname] = fullname.split(' ')
+
+                const data = new Intl.DateTimeFormat('pt-BR').format(createdAt)
+
+                client.date = data
+                client.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+
+                return client
+            }),
+            requestContact: contacts,
             token,
             pages: pages.map((page) => page.toJSON()),
             subscribers,
         })
     } catch (error) {
-        console.log(error)
         return res.redirect('/login')
     }
 })
@@ -78,6 +110,12 @@ routes.get(`/subscribers`, SubscribersView.view)
 
 routes.get(`/new-page`, NewPageView.view)
 routes.get(`/edit-page/:page_slug`, EditPageView.view)
+
+routes.get('/partner', PartnersViews.view)
+
+routes.get('/contact', ContactView.view)
+routes.get('/reques-contact', RequestView.view)
+routes.get('/distributors', DistributorsView.view)
 
 //search
 routes.get(`/search`, SearchView.view)
@@ -102,12 +140,28 @@ routes.get(`/products`, async (req, res) => {
 
         const pages = await Page.findAll()
 
+        const contacts = await Contact.findAll()
+
         return res.render('products', {
             userName: user.name,
             avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
             pageId: `page-top`,
             pageTitle: `Lista de Produtos`,
             token,
+            messagesCount: contacts.length,
+            messages: contacts.map((cliente) => {
+                const client = cliente.toJSON()
+                const { createdAt, fullname } = client
+
+                const [name, surname] = fullname.split(' ')
+
+                const data = new Intl.DateTimeFormat('pt-BR').format(createdAt)
+
+                client.date = data
+                client.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+
+                return client
+            }),
             products: products.map((product) => product.toJSON()),
             pages: pages.map((page) => page.toJSON()),
         })
@@ -116,6 +170,8 @@ routes.get(`/products`, async (req, res) => {
         return res.redirect('/login')
     }
 })
+routes.get('/product/:product_id', ProductView.view)
+
 routes.get(`/products/:category_slug`, PageProducts.view)
 //Categories
 routes.get(`/category`, CategoryView.view)
@@ -141,12 +197,28 @@ routes.get(`/product_insert`, async (req, res) => {
         })
         const pages = await Page.findAll()
 
+        const contacts = await Contact.findAll()
+
         return res.render('insertProduct', {
             userName: user.name,
             avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
             pageId: `page-top`,
             pageTitle: `Cadastro de Produtos`,
             token,
+            messagesCount: contacts.length,
+            messages: contacts.map((cliente) => {
+                const client = cliente.toJSON()
+                const { createdAt, fullname } = client
+
+                const [name, surname] = fullname.split(' ')
+
+                const data = new Intl.DateTimeFormat('pt-BR').format(createdAt)
+
+                client.date = data
+                client.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+
+                return client
+            }),
             categories: categories.map((category) => category.toJSON()),
             pages: pages.map((page) => page.toJSON()),
         })
@@ -163,7 +235,6 @@ routes.get(`/profile`, ProfileView.view)
 routes.get(`/login`, (req, res) => {
     const rcSiteKey = process.env.RECAPTCHA_SITE_KEY
     const secretKey = process.env.RECAPTCHA_SITE_KEY
-    console.log(req.ips)
     return res.render('login', { pageClasses: `bg-gradient-primary`, pageTitle: `Login`, rcSiteKey, secretKey })
 })
 

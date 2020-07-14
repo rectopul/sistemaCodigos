@@ -40,6 +40,12 @@ app.engine(
                 }
                 return options.inverse(this)
             },
+            first: (list, index, options) => {
+                if (list.length) {
+                    if (list[0][index]) return list[0][index]
+                }
+                return options.inverse(this)
+            },
             contains: (list, string, options) => {
                 if (list === string) {
                     return options.fn(this)
@@ -60,7 +66,10 @@ app.engine(
                         <li ${arr[i].child.length ? `class="dropdown-submenu"` : ``}>
                             <a href="/products/${arr[i].slug}" ${
                             arr[i].child.length ? `class="dropdown-toggle" data-toggle="dropdown"` : ``
-                        }>${arr[i].name}</a>`
+                        }>${arr[i].name}
+                        ${arr[i].child.length ? `<i class="arrow"></i>` : ``}
+                        </a>
+                        `
 
                         if (arr[i].child.length) {
                             text += `<ul class="dropdown-menu">`
@@ -69,7 +78,10 @@ app.engine(
                                 <li ${arr[i].child[b].child.length ? `class="dropdown-submenu"` : ``} >
                                     <a href="/products/${arr[i].child[b].slug}" ${
                                     arr[i].child[b].child.length ? `class="dropdown-toggle" data-toggle="dropdown"` : ``
-                                }>${arr[i].child[b].name}</a>`
+                                }>${arr[i].child[b].name}
+                                ${arr[i].child[b].child.length ? `<i class="arrow"></i>` : ``}
+                                </a>
+                                `
 
                                 if (arr[i].child[b].child.length) {
                                     text += `<ul class="dropdown-menu">`

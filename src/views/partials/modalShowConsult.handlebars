@@ -11,44 +11,73 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-6">
-                        <strong>Nome: </strong> <span class="consultName"></span>
-                    </div>
-                    <div class="col-6">
-                        <strong>Sobrenome: </strong> <span class="consultSurname"></span>
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-body d-flex align-items-center justify-content-center">
+                                <h5 class="card-title">
+                                    <i class="fas fa-user"></i>
+                                    <span class="ml-3 consultName"></span>
+                                    <span class="consultSurname"></span>
+                                </h5>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-
-                <hr>
 
                 <div class="row">
                     <div class="col-12">
-                        <strong>E-mail: </strong> <span class="consultMail"></span>
+                        <div class="card shadow mt-2">
+                            <div class="card-body text-center">
+                                <div class="row">
+                                    <div class="col-12 d-flex align-items-center justify-content-center">
+                                        <i class="far fa-envelope fa-1x"></i> <span class="ml-3 consultMail"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-
-                <hr>
 
                 <div class="row">
-                    <div class="col-6">
-                        <strong>Cidade: </strong> <span class="consultCity"></span>
-                    </div>
-                    <div class="col-6">
-                        <strong>Estado: </strong> <span class="consultAddress"></span>
+                    <div class="col-12">
+                        <div class="card shadow mt-2">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <i class="fas fa-home"></i> <span class="ml-2 consultCity"></span>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fas fa-globe-asia"></i> <span class="ml-2 consultAddress"></span>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <i class="fas fa-network-wired"></i> <span class="ml-2 consultIp"></span>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fas fa-barcode"></i>
+                                        <span class="ml-2 consultCode"></span>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="row">
+                                    <div class="col-12 text-center">
+                                        <i class="far fa-calendar-alt"></i> <span class="ml-2 constData"></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <hr>
-
-                <div class="row">
-                    <div class="col-6">
-                        <strong>IP: </strong> <span class="consultIp"></span>
-                    </div>
-                    <div class="col-6">
-                        <strong>Código: </strong>
-                        <h3><span class="consultCode"></span></h3>
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

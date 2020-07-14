@@ -126,6 +126,39 @@ const consult = (() => {
     }
 })()
 
+const mobileMenu = (() => {
+    //private var/functions
+    const dropdown = (button) => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault()
+            console.log('cliquei')
+            button.closest('li').querySelector('.dropdown-menu').classList.toggle('show')
+        })
+    }
+
+    return {
+        //public var/functions
+        dropdown,
+    }
+})()
+
+const mobilteToggle = document.querySelectorAll('li > a.dropdown-toggle')
+
+Array.from(mobilteToggle).forEach((button) => {
+    if (button) mobileMenu.dropdown(button)
+})
+
+const overlay = document.querySelector('.mobile-back')
+
+if (overlay) {
+    overlay.addEventListener('click', function (e) {
+        const allShow = document.querySelectorAll('.show')
+        Array.from(allShow).forEach((show) => {
+            show.classList.remove('show')
+        })
+    })
+}
+
 const formConsultCode = document.querySelector('.formValidateCode')
 
 if (formConsultCode) consult.consult(formConsultCode)

@@ -9,7 +9,6 @@ module.exports = {
     async read(req, res, err) {
         try {
             let { originalname: name, size, key, location: url = '' } = req.file
-            console.log('File: ', req.file)
             let lineReader = readline.createInterface({
                 input: fs.createReadStream(req.file.path || req.file.location),
             })

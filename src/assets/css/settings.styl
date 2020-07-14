@@ -67,6 +67,20 @@ body
             line-height 36px
             // Text style for "Conheça a"
             letter-spacing 0.3px
+    & .btn-gold
+        // Style for "Retângulo"
+        display flex
+        justify-content center
+        align-items center
+        width 199px
+        height 50px
+        border-radius 5px
+        background-color #d0b58b
+        // Style for "Ver Bula"
+        color #000000
+        font-family "Futura Std"
+        font-size 16px
+        font-weight 700
     & .btn-gray
         width 100%
         // Style for "Retângulo"
@@ -101,13 +115,23 @@ body
         height 490px
         background-color #000000
         color #fff
-        padding-right 80px !important
+        @media screen and (min-width: 1024px)
+            padding-right 80px !important
+        @media screen and (max-width: 995px)
+            text-align: center !important
+            & .newsForm
+                margin 30px auto !important
     & .bg-gray
         // Style for "Retângulo"
         height 490px
         background-color rgba(0,0,0,0.25)
-        padding-left 80px !important
         color #000000
+        @media screen and (min-width: 1024px)
+            padding-left 80px !important
+        @media screen and (max-width: 995px)
+            text-align: center !important
+            & form
+                margin 30px auto !important
     .miniforms
         // Style for "BratvaClub"
         font-size 20px
@@ -115,6 +139,7 @@ body
         line-height 26px
         // Text style for "Faça parte"
         letter-spacing 0.2px
+        
         & h1
             font-size 32px
             font-weight 700

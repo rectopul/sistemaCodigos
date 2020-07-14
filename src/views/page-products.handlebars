@@ -9,7 +9,7 @@
 <div class="row m-0 page-product-list">
     {{#each listProducts.products}}
     <div class="col-md-6">
-        <div class="col-12">
+        <div class="col-12 d-flex flex-column justify-content-end">
             <div class="row">
                 <div class="col-md-7 product-title">
                     <h1>{{product.name}}</h1>
@@ -25,8 +25,8 @@
                             {{/each}}
                         </div>
 
-                        <div class="col-auto d-flex align-items-center product-link">
-                            <a class="btn btn-light" href="#" role="button">ver detalhes</a>
+                        <div class="col-auto d-flex align-items-center product-link my-5 my-md-0">
+                            <a class="btn btn-light" href="/product/{{product.id}}" role="button">ver detalhes</a>
                         </div>
                     </div>
                 </div>
