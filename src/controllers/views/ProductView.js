@@ -55,7 +55,15 @@ module.exports = {
             const productSend = products.map((prod) => {
                 const produto = prod.toJSON()
 
-                const productInfo = produto.products.map((product) => product.product)
+                const productInfo = produto.products.map((product) => {
+                    const imageDefault = product.product.image[0]
+
+                    product.product.imageDefault = imageDefault
+
+                    return product.product
+                })
+
+                productInfo
 
                 return productInfo
             })
