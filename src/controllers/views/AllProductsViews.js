@@ -20,10 +20,6 @@ module.exports = {
 
             const products = await Product.findAll({ include: { association: `image`, where: { default: true } } })
 
-            products.map((product) => {
-                console.log(`Image produto: `, product.toJSON().image)
-            })
-
             const pages = await Page.findAll()
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })

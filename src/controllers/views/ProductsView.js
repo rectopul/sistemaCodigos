@@ -32,8 +32,6 @@ module.exports = {
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
-            console.log(products.toJSON().products.map((product) => product.product))
-
             return res.render('page-products', {
                 pageTitle: `Bratva`,
                 categories,
