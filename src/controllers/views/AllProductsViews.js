@@ -1,5 +1,3 @@
-const User = require('../../models/User')
-const authUser = require('../../middlewares/auth')
 const Category = require('../../models/Category')
 const Product = require('../../models/Product')
 const Page = require('../../models/Page')
@@ -20,24 +18,20 @@ module.exports = {
 
             const { category_slug } = req.params
 
-            const products = await Category.findOne({
-                where: { slug: category_slug },
-                include: {
-                    association: `products`,
-                    include: { association: `product`, include: { association: `image`, where: { default: true } } },
-                },
+            const products = await Product.findAll({ include: { association: `image`, where: { default: true } } })
+
+            products.map((product) => {
+                console.log(`Image produto: `, product.toJSON().image)
             })
 
             const pages = await Page.findAll()
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
-            console.log(products.toJSON().products.map((product) => product.product))
-
             return res.render('page-products', {
-                pageTitle: `Bratva`,
+                pageTitle: `Todos o produtos`,
                 categories,
-                listProducts: products.toJSON().products.map((product) => product.product),
+                listProducts: products.map((product) => product.toJSON()),
                 pageType: 'site',
                 pageClasses: `page-product`,
                 pages: pages.map((page) => page.toJSON()),

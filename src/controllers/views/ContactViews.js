@@ -19,6 +19,7 @@ module.exports = {
             return res.render('contact', {
                 pageTitle: `Contato`,
                 categories,
+                pageType: `site`,
                 home: home.toJSON(),
             })
         } catch (error) {

@@ -25,6 +25,7 @@ module.exports = {
             return res.render('distributors', {
                 pageTitle: `Distribuidores`,
                 categories,
+                pageType: `site`,
                 messagesCount: contacts.length,
                 messages: contacts.map((cliente) => {
                     const client = cliente.toJSON()

@@ -32,6 +32,7 @@ const PageProducts = require('../controllers/views/ProductsView')
 const ProductView = require('../controllers/views/ProductView')
 const NewPageView = require('../controllers/views/newPageView')
 const EditPageView = require('../controllers/views/EditPageView')
+const AllProductsViews = require('../controllers/views/AllProductsViews')
 
 //Parceiros
 const PartnersViews = require('../controllers/views/PartnerViews')
@@ -170,6 +171,9 @@ routes.get(`/products`, async (req, res) => {
         return res.redirect('/login')
     }
 })
+
+routes.get('/all-products', AllProductsViews.view)
+
 routes.get('/product/:product_id', ProductView.view)
 
 routes.get(`/products/:category_slug`, PageProducts.view)
