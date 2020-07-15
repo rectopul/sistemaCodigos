@@ -48,7 +48,7 @@ module.exports = {
                 },
                 include: {
                     association: `products`,
-                    include: { association: `product`, include: { association: `image` } },
+                    include: { association: `product`, include: { association: `image`, where: { default: true } } },
                 },
             })
 
