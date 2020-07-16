@@ -47,6 +47,9 @@ const SearchesController = require('../controllers/views/ConsultsView')
 const ContactView = require('../controllers/views/ContactViews')
 const RequestView = require('../controllers/views/RequestViews')
 
+//Carousel
+const CarouselView = require('../controllers/views/CarouselViews')
+
 const Contact = require('../models/Contact')
 
 //Dashboard
@@ -108,6 +111,8 @@ routes.get(`/dashboard`, async (req, res) => {
 routes.get(`/seachs`, SearchesController.view)
 
 routes.get(`/subscribers`, SubscribersView.view)
+
+routes.get(`/carousels`, CarouselView.view)
 
 routes.get(`/new-page`, NewPageView.view)
 routes.get(`/edit-page/:page_slug`, EditPageView.view)

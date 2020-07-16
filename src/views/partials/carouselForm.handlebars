@@ -1,0 +1,50 @@
+<!-- Modal -->
+<div class="modal fade modalCarousel" id="modalCarousel" tabindex="-1" role="dialog" aria-labelledby="modalCarousel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Cadastro de imagens</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card shadow mb-4 border-bottom-primary">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Preencha o formulário abaixo</h6>
+                    </div>
+                    <div class="card-body">
+                        <form class="carouselForm needs-validation" novalidate>
+                            <div class="form-group">
+                                <label for="carouselName">Nome</label>
+                                <input type="text" class="form-control carouselName" id="carouselName"
+                                    placeholder="Titulo / Nome da imagem" required>
+                                {{>validate}}
+                            </div>
+
+                            <div class="form-group">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input carouselImage" id="carouselImage"
+                                        required>
+                                    <label class="custom-file-label" for="carouselImage">Choose file</label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </form>
+
+                        <hr>
+
+                        <div class="row carouselImageContainer">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

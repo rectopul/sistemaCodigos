@@ -57,6 +57,21 @@ app.engine(
                     console.log(arr[i])
                 }
             },
+            carousel: (arr) => {
+                if (arr.length) {
+                    return arr.map((item, key) => {
+                        if (key < 1) {
+                            return `<div class="carousel-item active">
+                            <img src="${item.url}" class="d-block w-100" alt="...">
+                        </div>`
+                        } else {
+                            return `<div class="carousel-item">
+                            <img src="${item.url}" class="d-block w-100" alt="...">
+                        </div>`
+                        }
+                    })
+                }
+            },
             dropDown: (arr) => {
                 let ul = `<ul class="dropdown-menu">`
                 var text = ``

@@ -38,6 +38,8 @@ const BannerImageController = require('../controllers/BannerImageController')
 
 //Contato
 const ContactController = require('../controllers/ContactController')
+//Carousel
+const CarouselController = require('../controllers/CarouselController')
 
 //API
 //Product
@@ -96,7 +98,10 @@ routes.put(`/api/contact/:contact_id`, ContactController.update)
 routes.get(`/api/contact/:contact_id`, ContactController.show)
 routes.get(`/api/contact`, ContactController.index)
 routes.post(`/api/contact`, ContactController.store)
-
+//Carousel
+routes.post(`/api/carousel/image`, multer(multerConfig).single('file'), ImageController.store)
+routes.post(`/api/carousel`, CarouselController.store)
+routes.delete(`/api/carousel/:carousel_id`, CarouselController.destroy)
 //session
 routes.post(`/api/login`, SessionController.store)
 

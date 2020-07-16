@@ -1,6 +1,7 @@
 const Category = require('../../models/Category')
 const { Op } = require('sequelize')
 const Page = require('../../models/Page')
+const Carousel = require('../../models/Carousel')
 
 module.exports = {
     async view(req, res) {
@@ -19,11 +20,16 @@ module.exports = {
                 include: { association: `banner`, include: { association: `image` } },
             })
 
+            const carousel = await Carousel.findAll({ include: { association: `image` } })
+
             console.log(home.toJSON().banner)
 
             return res.render('index', {
                 pageTitle: `Bratva`,
                 categories,
+                banners: carousel.map((carr) => {
+                    return carr.toJSON().image
+                }),
                 bannerPape: home.toJSON().banner.image,
                 home: home.toJSON(),
             })
