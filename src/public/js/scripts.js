@@ -1529,7 +1529,11 @@ const imgProduct = (() => {
 
             const result = await Promise.all(imagesUploaded)
 
-            result[imageDefault].default = true
+            /* console.log(`Resultado`, result)
+
+            if (result) {
+                result[imageDefault].default = true
+            } */
 
             console.log(`Resultado retornado: `, result)
 
@@ -1988,6 +1992,9 @@ const productCreate = (form) => {
                         //limpar formulário
                         const allInputs = form.querySelectorAll('input, textarea, .is-valid')
 
+                        //limpar imagens
+                        document.querySelector('.imagesProductContainer').innerHTML = ``
+
                         form.classList.remove('was-validated')
 
                         Array.from(allInputs).forEach((input) => {
@@ -2020,6 +2027,7 @@ const productCreate = (form) => {
             })
         })
         .catch((err) => {
+            putSpinnet(form.closest('form'), `remove`)
             console.log(err)
         })
 }

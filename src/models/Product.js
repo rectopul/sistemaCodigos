@@ -18,11 +18,6 @@ class Product extends Model {
                 },
                 description: {
                     type: DataTypes.STRING,
-                    validate: {
-                        notEmpty: {
-                            msg: `The description field cannot be empty`,
-                        },
-                    },
                 },
                 excerpt: {
                     type: DataTypes.TEXT,

@@ -14,11 +14,17 @@ module.exports = {
                 include: { association: `child`, include: { association: `child` } },
             })
 
-            const home = await Page.findOne({ where: { slug: 'home' } })
+            const home = await Page.findOne({
+                where: { slug: 'home' },
+                include: { association: `banner`, include: { association: `image` } },
+            })
+
+            console.log(home.toJSON().banner)
 
             return res.render('index', {
                 pageTitle: `Bratva`,
                 categories,
+                bannerPape: home.toJSON().banner.image,
                 home: home.toJSON(),
             })
         } catch (error) {

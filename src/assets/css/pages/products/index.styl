@@ -2,11 +2,8 @@
     & .banner-bottom
         margin-top 0
 
-body
-    & .page-product-list
-        margin-top 10px !important
 .page-product-list
-    
+    margin-top 54px
     & .btn
         // Style for "ver detalh"
         // Style for "Retângulo"
@@ -19,6 +16,13 @@ body
         font-size 16px
         padding 17px 30px
         font-weight 400
+        display none
+        position absolute
+        top 50%
+        left 50%
+        margin-top -25px
+        margin-left -73px
+        z-index 9
         &:hover
             background-color: #d0b58b
             color: #000
@@ -29,82 +33,32 @@ body
         padding-top 10px
         padding-bottom 10px
         margin-top 10px !important
-        & .product-thumbnail
-            flex 0 0 207px
-        & > div
-            overflow hidden
-            & > .row
-                max-width 100%
-                width 440px
-
-        @media screen and (max-width: 995px)
-            padding-left 0
-            & .productLink
-                order 0 !important
-        & .product-thumbnail
-            order 1
-            margin-left 46px
-            padding 0
-            margin-bottom -10px
-            @media screen and (max-width: 995px)
-                order 1
-                margin-left 0
+    & .product-title
+        & h4
+            // Style for "Stanozolol"
+            color #000000
+            font-family "Futura Std"
+            font-size 22px
+            font-weight 600
+    & .pageProductItem
+        margin-bottom 99px
+        position relative
+        &:hover
+            &:before
+                content ''
                 width 100%
-                flex 0 0 100%
-                text-align center !important
-                & img
-                    width 90%
-        & .product-media
-            text-align right 
-            justify-content flex-start
-            & > div
-                justify-content flex-start
-                @media screen and (max-width: 995px)
-                    justify-content flex-start !important
-        &:nth-child(odd)
-            padding-right 15px
-            padding-left 0
-            & > div
-                & .row
-                    text-align left 
-                    margin-left auto
-            @media screen and (max-width: 995px)
-                padding-right 0
-                margin-left 0
-                & > div
-                    & .row
-                        margin-left initial
-            & .product-media
-                text-align right 
-                justify-content flex-end
-                & > div
-                    justify-content flex-end
-                @media screen and (min-width: 1024px)
-                    margin-left auto
-                @media screen and (max-width: 995px)
-                    & > div
-                        justify-content flex-start !important
-            & .product-thumbnail
-                order 0
-                margin-right 46px
-                margin-left 0
-                padding 0
-                @media screen and (max-width: 995px)
-                    margin-right 0
-                    order 1
-        &:nth-child(3n+1)
-            & > div
-                background-color #bbbbbb
-                color #000000
-                & h1
-                    color #000000
-        & > div
-            color #ffffff
-            padding-top 80px
-            background-color #000000
-            padding 80px 43px
-            padding-bottom 0
-            min-height 490px
-            & h1
-                color #ffffff
+                height 100%
+                position absolute
+                top 0
+                left 0
+                background-color rgba(0,0,0,0.25)
+                z-index 7
+            & .btn
+                display flex
+    & .product-media
+        margin-bottom 25px
+        & img
+            max-width 100%
+            margin 0 auto
+            height 190px
             
