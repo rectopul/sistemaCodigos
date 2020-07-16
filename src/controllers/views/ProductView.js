@@ -56,11 +56,20 @@ module.exports = {
                 const produto = prod.toJSON()
 
                 const productInfo = produto.products.map((product) => {
-                    const imageDefault = product.product.image[0]
+                    if (product.product.image[0]) {
+                        const imageDefault = product.product.image[0]
 
-                    product.product.imageDefault = imageDefault
+                        product.product.imageDefault = imageDefault
 
-                    return product.product
+                        return product.product
+                    } else {
+                        product.product.imageDefault = {
+                            url: `https://via.placeholder.com/500`,
+                            name: `Image default`,
+                        }
+
+                        return product.product
+                    }
                 })
 
                 productInfo
