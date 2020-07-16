@@ -185,15 +185,17 @@ if (hoverMenu) {
     }
 }
 
-allprods.addEventListener('click', function (e) {
-    e.preventDefault()
+if (allprods) {
+    allprods.addEventListener('click', function (e) {
+        e.preventDefault()
 
-    url = allprods.getAttribute('href')
+        url = allprods.getAttribute('href')
 
-    if (window.matchMedia('(min-width:800px)').matches) {
-        window.location.href = url
-    }
-})
+        if (window.matchMedia('(min-width:800px)').matches) {
+            window.location.href = url
+        }
+    })
+}
 
 const btnValidat = document.querySelector('.btn-validateProd')
 
