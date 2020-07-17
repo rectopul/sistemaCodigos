@@ -54,7 +54,7 @@ module.exports = {
             }
 
             const options = {
-                url: `https://us3.api.mailchimp.com/3.0/lists/ea0549f8d6/members/`,
+                url: `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members/`,
                 method: `POST`,
                 headers: {
                     'content-type': 'application/json',

@@ -14,6 +14,9 @@ module.exports = {
                     parent: {
                         [Op.eq]: null,
                     },
+                    slug: {
+                        [Op.not]: `oculto`,
+                    },
                 },
                 include: { association: `child`, include: { association: `child` } },
             })
@@ -33,7 +36,7 @@ module.exports = {
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
             return res.render('page-products', {
-                pageTitle: `Bratva`,
+                pageTitle: `Produtos`,
                 categories,
                 listProducts: products.toJSON().products.map((product) => product.product),
                 pageType: 'site',

@@ -53,7 +53,9 @@
                     <a class="nav-link" href="/contact">Contato</a>
                 </li>
             </ul>
-            <a class="btn btn-dark btn-validateProd" href="#validateProduct" role="button">Autenticar produto</a>
+            <a class="btn btn-dark btn-validateProd {{#ifCond pageTitle 'Bratva'}}btnAnchor{{/ifCond}}"
+                href="{{#ifCond pageTitle 'Bratva'}}#validateProduct{{else}}/#validateProduct{{/ifCond}}"
+                role="button">Autenticar produto</a>
         </div>
     </nav>
 </div>
