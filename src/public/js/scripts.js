@@ -144,6 +144,7 @@ const util = (() => {
 
             document.querySelector(this.getAttribute('href')).scrollIntoView({
                 behavior: 'smooth',
+                block: `start`,
             })
         })
     }
