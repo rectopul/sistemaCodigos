@@ -1,7 +1,8 @@
 const Category = require('../../models/Category')
 const Product = require('../../models/Product')
 const Page = require('../../models/Page')
-ProductCategory = require('../../models/ProductCategory')
+const ProductCategory = require('../../models/ProductCategory')
+const ImageProduct = require('../../models/ImageProduct')
 const { Op } = require('sequelize')
 
 function doTruncarStr(str, size) {
@@ -23,6 +24,9 @@ module.exports = {
                 where: {
                     parent: {
                         [Op.eq]: null,
+                    },
+                    slug: {
+                        [Op.not]: `oculto`,
                     },
                 },
                 include: { association: `child`, include: { association: `child` } },
@@ -52,24 +56,18 @@ module.exports = {
                 },
             })
 
+            const imageDef = await ImageProduct.findOne({ where: { product_id, default: true } })
+
             const productSend = products.map((prod) => {
                 const produto = prod.toJSON()
 
                 const productInfo = produto.products.map((product) => {
-                    if (product.product.image.length) {
-                        const imageDefault = product.product.image[0]
-
-                        product.product.imageDefault = imageDefault
-
-                        return product.product
-                    } else {
-                        product.product.imageDefault = {
-                            url: `https://via.placeholder.com/500`,
-                            name: `Image default`,
+                    if (product.product) {
+                        if (product.product.image.length) {
+                            product.product.image = [product.product.image[0]]
                         }
-
-                        return product.product
                     }
+                    return product.product
                 })
 
                 productInfo
@@ -83,6 +81,7 @@ module.exports = {
                 pageTitle: `Produto`,
                 categories,
                 pageType: 'site',
+                imageDef: imageDef.toJSON(),
                 product: productInfos.toJSON(),
                 listProducts: productSend[0],
                 pageClasses: `page-product`,
