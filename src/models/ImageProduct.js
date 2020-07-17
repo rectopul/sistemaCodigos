@@ -38,8 +38,6 @@ class ProductImages extends Model {
                     },
                     beforeDestroy: async (file) => {
                         if (process.env.STORAGE_TYPE === 's3') {
-                            console.log('S3 Storage')
-
                             return s3
                                 .deleteObject({
                                     Bucket: 'uploadwecheckout',

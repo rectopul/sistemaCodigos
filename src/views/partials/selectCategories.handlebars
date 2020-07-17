@@ -10,7 +10,7 @@
                 {{#each categories}}
                 <div class="form-check">
                     <input class="form-check-input productCategory" type="checkbox" name="productCategory"
-                        id="categori{{id}}" value="{{id}}">
+                        id="categori{{id}}" value="{{id}}" {{#check selected}}checked{{/check}}>
                     <label class="form-check-label" for="categori{{id}}">
                         {{name}}
                     </label>

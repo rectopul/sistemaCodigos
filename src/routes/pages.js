@@ -33,12 +33,14 @@ const ProductView = require('../controllers/views/ProductView')
 const NewPageView = require('../controllers/views/newPageView')
 const EditPageView = require('../controllers/views/EditPageView')
 const AllProductsViews = require('../controllers/views/AllProductsViews')
+const ProductEditView = require('../controllers/views/ProductEditViews')
 
 //Parceiros
 const PartnersViews = require('../controllers/views/PartnerViews')
 
 //Distribuidores
 const DistributorsView = require('../controllers/views/DistribuitorsViews')
+const CodesView = require('../controllers/views/CodeListViews')
 
 //Consultas
 const SearchesController = require('../controllers/views/ConsultsView')
@@ -122,6 +124,7 @@ routes.get('/partner', PartnersViews.view)
 routes.get('/contact', ContactView.view)
 routes.get('/reques-contact', RequestView.view)
 routes.get('/distributors', DistributorsView.view)
+routes.get('/codes', CodesView.view)
 
 //search
 routes.get(`/search`, SearchView.view)
@@ -176,6 +179,8 @@ routes.get(`/products`, async (req, res) => {
         return res.redirect('/login')
     }
 })
+
+routes.get(`/products-edit/:product_id`, ProductEditView.view)
 
 routes.get('/all-products', AllProductsViews.view)
 

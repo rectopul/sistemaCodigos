@@ -129,6 +129,7 @@ module.exports = {
             //imagem do produto
             if (image_id) {
                 const productImages = image_id.map(async (image) => {
+                    console.log(`imagem do produto`, image)
                     await ImageProduct.update(
                         { product_id: product.id, default: image.default },
                         { where: { id: image.id } }
@@ -159,6 +160,7 @@ module.exports = {
 
             return res.json(response)
         } catch (error) {
+            console.log(`Erro ao criar novo produto: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 
@@ -168,8 +170,6 @@ module.exports = {
                 error.name == `userToken`
             )
                 return res.status(400).send({ error: error.message })
-
-            console.log(`Erro ao criar novo produto: `, error)
 
             return res.status(500).send({ error: `Erro de servidor` })
         }
@@ -203,6 +203,54 @@ module.exports = {
             console.log(`Erro ao deletar produto: `, error)
 
             return res.status(500).send({ error: `Erro de servidor` })
+        }
+    },
+    async update(req, res) {
+        try {
+            const authHeader = req.headers.authorization
+
+            const { user_id } = await UserByToken(authHeader)
+
+            const { product_id } = req.params
+
+            const product = await Product.findByPk(product_id)
+
+            if (!product) return res.status(400).send({ error: `This product not exist` })
+
+            const { name, description, weight, lot, type, availability, brand, excerpt, category } = req.body
+
+            await product.update({
+                name,
+                description,
+                weight,
+                lot,
+                type,
+                availability,
+                brand,
+                excerpt,
+                category,
+            })
+
+            if (category) {
+                await ProductCategory.destroy({ where: { product_id } })
+
+                await Promise.all(
+                    category.map(async (categ) => {
+                        await ProductCategory.create({
+                            category_id: categ,
+                            product_id,
+                        })
+                    })
+                )
+            }
+
+            const response = await Product.findByPk(product.id, {
+                include: [{ association: `image` }, { association: `codes` }, { association: `category` }],
+            })
+
+            return res.json(response)
+        } catch (error) {
+            console.log(error)
         }
     },
 }

@@ -1,0 +1,124 @@
+<div class="col-xl-6">
+    <div class="card shadow mb-4">
+        <!-- Card Header - Dropdown -->
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Informações sobre o produto</h6>
+        </div>
+        <!-- Card Body -->
+        <div class="card-body">
+            <form class="needs-validation editProduct" data-id="{{product.id}}" novalidate>
+                <div class="form-row">
+                    <!-- Name product -->
+                    <div class="col-12 mb-3">
+                        <label for="productName">Nome do produto</label>
+                        <input type="text" class="form-control productName" id="productName" value="{{product.name}}"
+                            required>
+                        <div class="valid-feedback">
+                            Looks good!
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <!-- Peso product -->
+                        <label for="productWeight">Peso do produto</label>
+                        <input type="text" class="form-control productWeight" id="productWeight"
+                            value="{{product.weight}}" required>
+                        <div class="valid-feedback">
+                            Looks good!
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <!-- Peso product -->
+                        <label for="productBrand">Marca do produto</label>
+                        <input type="text" class="form-control productBrand" id="productBrand" value="{{product.brand}}"
+                            required>
+                        <div class="valid-feedback">
+                            Looks good!
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-12 mb-3">
+                        <!-- Lote product -->
+                        <label for="productLot">Lote do produto</label>
+                        <input type="text" class="form-control productLot" id="productLot" value="{{product.lot}}"
+                            required>
+                        <div class="valid-feedback">
+                            Looks good!
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <!-- Tipo de produto product -->
+                        <label for="productType">Tipo de produto</label>
+                        <select class="custom-select productType" name="product_type" id="productType" required>
+                            <option value="unit" {{#ifCond product.type 'unit'}}selected{{/ifCond}}>
+                                Unitário
+                            </option>
+
+                            <option value="package" {{#ifCond product.type 'package'}}selected{{/ifCond}}>
+                                Pacote
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a valid state.
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <!-- Disponibilidade do produto -->
+                        <label for="productAvailability">Disponibilidade</label>
+                        <select class="custom-select productAvailability" name="product_availability"
+                            id="productAvailability" required>
+                            <option {{#ifCond product.availability 'available'}}selected{{/ifCond}} value="available">
+                                Disponível
+                            </option>
+
+                            <option {{#ifCond product.availability 'unavailable'}}selected{{/ifCond}}
+                                value="unavailable">
+                                Indisponível
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a valid state.
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <!-- Tipo de produto product -->
+                    <label for="productExcerpt">Breve descrição</label>
+                    <textarea class="form-control productExcerpt" id="productExcerpt" rows="4">
+                        {{product.excerpt}}
+                    </textarea>
+                </div>
+                <div class="form-group">
+                    <!-- Tipo de produto product -->
+                    <label for="productDescription">Descrição do produto</label>
+                    <textarea class="form-control productDescription" id="productDescription" rows="4">
+                    {{product.description}}
+                    </textarea>
+                </div>
+                <div class="form-row">
+                    <div class="col-xl-12">
+                        <!-- Tipo de produto product -->
+                        <label for="productImages">Imagens do produto</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input productImages" name="file" id="productImages"
+                                multiple>
+                            <label class="custom-file-label" for="customFile">Selecionar imagem</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row imagesProductContainer my-3">
+                    {{#each product.image}}
+                    <div class="mb-2 col-sm-3">
+                        <button class="btn btn-danger btn-sm" data-id="{{id}}" data-product="{{product_id}}">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                        <img class="img-thumbnail {{#check default}}active{{/check}}" src="{{url}}" data-index="0">
+                    </div>
+                    {{/each}}
+                </div>
+                <button class="btn btn-primary" type="submit">Atualizar produto produto</button>
+            </form>
+        </div>
+    </div>
+</div>

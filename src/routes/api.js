@@ -41,12 +41,17 @@ const ContactController = require('../controllers/ContactController')
 //Carousel
 const CarouselController = require('../controllers/CarouselController')
 
+const ProductCodeController = require('../controllers/ProductCodeController')
+
 //API
 //Product
 routes.post(`/api/product`, ProductController.store)
 routes.get(`/api/product`, ProductController.index)
 routes.delete(`/api/product/:product_id`, ProductController.destroy)
 routes.get(`/api/product/:product_id`, ProductController.show)
+routes.put(`/api/product/:product_id`, ProductController.update)
+//codes
+routes.delete(`/api/code/:code_id`, ProductCodeController.destroy)
 //File
 routes.post(`/api/file`, multer(multerText).single('file'), FileController.read)
 /* Forgot e Recuperação de senha */
@@ -54,7 +59,7 @@ routes.post('/api/forgot', UserController.forgot)
 routes.post('/api/reset_password', UserController.reset)
 
 /* Images Products */
-routes.post('/api/image/product', multer(multerConfig).single('file'), ImageProductController.store)
+routes.post('/api/image/product/:product_id?', multer(multerConfig).array('file', 12), ImageProductController.store)
 routes.get('/api/image/product/:id_product', ImageProductController.index)
 routes.delete('/api/image/product/:id', ImageProductController.delete)
 

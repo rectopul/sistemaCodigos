@@ -108,7 +108,7 @@ const imgProduct = (() => {
                     })
                     .catch((error) => reject(error))
 
-                return await image
+                return await image[0]
             })
 
             const result = await Promise.all(imagesUploaded)
@@ -133,8 +133,367 @@ const imgProduct = (() => {
     }
 })()
 
+const product = (() => {
+    //private var/functions
+    let codes = []
+
+    const codesClear = () => {
+        codes = []
+    }
+
+    const codeRemove = (code) => {
+        const obj = codesInsert.find((x) => x.code === code)
+
+        //pega o indice
+        let index = codes.indexOf(obj)
+
+        //Remove o objeto
+        codes.splice(index, 1)
+    }
+
+    const codeDestroy = (button) => {
+        button.addEventListener('click', async (e) => {
+            try {
+                if (button.classList.contains('raiz')) {
+                    const id = button.dataset.id
+                    const code = await request({
+                        url: `/api/code/${id}`,
+                        method: `DELETE`,
+                    })
+
+                    button.closest('.col-12.mb-3').remove()
+
+                    console.log(codes)
+                } else {
+                    const cod = button.dataset.code
+
+                    const obj = codesInsert.find((x) => x.code === cod)
+
+                    //pega o indice
+                    let index = codes.indexOf(obj)
+
+                    //Remove o objeto
+                    codes.splice(index, 1)
+
+                    button.closest('.col-12.mb-3').remove()
+
+                    console.log(codes)
+                }
+            } catch (error) {}
+        })
+    }
+
+    const putcodes = (list, name, output) => {
+        list.map((code) => {
+            const cod = document.createElement('div')
+
+            /* cod.classList.add('col-12', 'mb-3')
+
+            cod.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    ${name}
+                    <button type="button" class="float-right btn btn-danger btn-sm" data-code="${code.text}"><i class="fas fa-trash-alt"></i></button>
+                </div>
+                <div class="card-body">
+                    ${code.text}
+                </div>
+            </div>
+            `
+
+            codeDestroy(cod.querySelector('button')) */
+            codes.push({ name, code: code.text })
+
+            //output.append(cod)
+        })
+    }
+
+    const fileChange = (input) => {
+        const form = input.closest('form')
+        input.addEventListener('change', async (e) => {
+            const file = input.files[0]
+
+            e.preventDefault()
+
+            console.log(file)
+
+            if (form.querySelector('.productItemName').value) {
+                try {
+                    if (file.type != `text/plain`)
+                        return Swal.fire({
+                            title: `Tipo inválido`,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+
+                    const check = await readFile(file)
+
+                    putcodes(
+                        check,
+                        form.querySelector('.productItemName').value,
+                        document.querySelector('.listItensProduct')
+                    )
+
+                    console.log(codes)
+                } catch (error) {
+                    console.log(error)
+                }
+            } else {
+                input.value = ``
+                return Swal.fire({
+                    title: `Informe um nome para os itens`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            }
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { url, method, body, headers } = object
+
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
+
+            if (headers) options.headers['content-type'] = headers['content-type']
+
+            if (body) options.body = body
+
+            fetch(url, options)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const codescheck = (list) => {
+        return new Promise(async (resolve, reject) => {
+            const lista = [...list]
+
+            if (!lista.length) {
+                return reject('Nenhum item selecionado')
+            } else {
+                return resolve(list)
+            }
+        })
+    }
+
+    const update = (form) => {
+        form.addEventListener('submit', async (e) => {
+            // body
+            e.preventDefault()
+            if (form.checkValidity()) {
+                try {
+                    const product_id = form.dataset.id
+                    const name = form.querySelector('.productName').value
+                    const description = form.querySelector('.productDescription').value
+                    const weight = form.querySelector('.productWeight').value
+                    const lot = form.querySelector('.productLot').value
+                    const type = form.querySelector('.productType').value
+                    const availability = form.querySelector('.productAvailability').value
+                    const brand = form.querySelector('.productBrand').value
+                    const excerpt = form.querySelector('.productExcerpt').value
+                    const category = document.querySelectorAll('.productCategory:checked')
+                    const images = form.querySelector('.productImages')
+
+                    const listCodes = document.querySelectorAll('.listItensProduct > div')
+
+                    const categories = [...category]
+
+                    //Validar categorias
+                    if (!categories.length)
+                        return Swal.fire({
+                            title: `Selecione uma categoria`,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+
+                    //Images product
+                    if (images.value) {
+                        const productImages = await Images(product_id, images)
+
+                        const imagesContainer = document.querySelector('.imagesProductContainer')
+
+                        if (productImages) {
+                            productImages.map((image) => {
+                                const img = document.createElement('div')
+
+                                img.classList.add('mb-2', 'col-sm-3')
+
+                                img.innerHTML = `
+                                <button class="btn btn-danger btn-sm" data-id="${image.id}" data-product="${
+                                    image.product_id
+                                }">
+                                    <i class="far fa-trash-alt"></i>
+                                </button>
+                                <img class="img-thumbnail ${image.default ? `active` : ``}" src="${
+                                    image.url
+                                }" data-index="0">
+                                `
+
+                                imgDestroy(img.querySelector('button'))
+
+                                imagesContainer.append(img)
+                            })
+                        }
+                    }
+
+                    //Codes
+                    const codesExist = await codescheck(listCodes)
+
+                    //Product Infos
+                    const product = await request({
+                        url: `/api/product/${product_id}`,
+                        method: `PUT`,
+                        headers: {
+                            'content-type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name,
+                            description,
+                            weight,
+                            lot,
+                            type,
+                            availability,
+                            brand,
+                            excerpt,
+                            items: codes,
+                            category: categories.map((input) => parseInt(input.value)),
+                        }),
+                    })
+
+                    return Swal.fire({
+                        title: `Produto atualizado com sucesso`,
+                        text: `O produto ${product.name} foi atualizado com sucesso!`,
+                        icon: 'success',
+                        confirmButtonText: 'Ok',
+                    })
+                } catch (error) {
+                    return Swal.fire({
+                        title: error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                    console.log(error)
+                }
+            }
+        })
+    }
+
+    //image
+    const Images = (id, input) => {
+        return new Promise(async (resolve, reject) => {
+            if (input.value) {
+                const images = [...input.files]
+
+                const form = new FormData()
+
+                images.map((image) => form.append('file', image))
+
+                try {
+                    const imagesProduct = await request({
+                        url: `/api/image/product/${id}`,
+                        method: `POST`,
+                        body: form,
+                    })
+
+                    return resolve(imagesProduct)
+                } catch (error) {
+                    return reject(error)
+                }
+            } else {
+                return reject('Nenhuma imagem selecionada')
+            }
+        })
+    }
+
+    const imgDestroy = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            button.closest('div').style.display = `none`
+
+            return imageDestroy(button)
+                .then((res) => {
+                    button.closest('.mb-2.col-sm-3').remove()
+                })
+                .catch((err) => {
+                    button.closest('div').style.display = `none`
+                    console.log(err)
+                })
+        })
+    }
+
+    const imageDestroy = (image) => {
+        return new Promise(async (resolve, reject) => {
+            const id = image.dataset.id
+
+            if (id) {
+                try {
+                    const imagem = await request({
+                        url: `/api/image/product/${id}`,
+                        method: `DELETE`,
+                    })
+
+                    return resolve(imagem)
+                } catch (error) {
+                    return reject(error)
+                }
+            } else {
+                return reject('Faltam parametros na imagem')
+            }
+        })
+    }
+
+    return {
+        //public var/functions
+        update,
+        imgDestroy,
+        fileChange,
+        codesClear,
+        codeDestroy,
+        codeRemove,
+    }
+})()
+
+//get all codes
+const listCodes = document.querySelectorAll('.listItensProduct > div button')
+
+if (listCodes) {
+    Array.from(listCodes).forEach((btn) => product.codeDestroy(btn))
+}
+
+//fileChange
+const fileToRead = document.querySelector('.form-edit-product-codes .fileToRead')
+
+if (fileToRead) product.fileChange(fileToRead)
+
+//Edit product
+const formEditProduct = document.querySelector('.editProduct')
+
+//Remove images
+const imagesProduct = document.querySelectorAll('.editProduct .imagesProductContainer > div button')
+
+if (imagesProduct) {
+    Array.from(imagesProduct).forEach((image) => product.imgDestroy(image))
+}
+
+if (formEditProduct) product.update(formEditProduct)
+
 const clearListItems = () => {
     codesInsert = []
+    product.codesClear()
 
     const Codes = document.querySelectorAll('.colapseCodes > div > .row > div')
 
@@ -180,6 +539,8 @@ const removeCodeForm = (btn) => {
 
         //check if code exist
         const obj = codesInsert.find((x) => x.code === code)
+
+        product.codeRemove(code)
 
         if (obj) {
             //pega o indice
@@ -434,7 +795,7 @@ const requestInsertProduct = (object) => {
 
         if (!categories.length) return reject(`Selecione ao menos 1 categoria`)
 
-        const reqUrl = `/api/${productResource}`
+        const reqUrl = `/api/product`
         fetch(reqUrl, {
             method: `POST`,
             headers: {

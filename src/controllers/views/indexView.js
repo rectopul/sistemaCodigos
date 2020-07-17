@@ -11,6 +11,9 @@ module.exports = {
                     parent: {
                         [Op.eq]: null,
                     },
+                    slug: {
+                        [Op.not]: `oculto`,
+                    },
                 },
                 include: { association: `child`, include: { association: `child` } },
             })

@@ -7,6 +7,16 @@
         &.hide
             display none !important
 .imagesProductContainer
+    & > div
+        position relative
+        & button
+            position absolute
+            right 10px
+            top 10px
+            display none
+        &:hover
+            & button
+                display block
     & img
         height auto !important
 .headerListItem

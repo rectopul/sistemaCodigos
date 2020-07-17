@@ -56,7 +56,7 @@ module.exports = {
                 const produto = prod.toJSON()
 
                 const productInfo = produto.products.map((product) => {
-                    if (product.product.image[0]) {
+                    if (product.product.image.length) {
                         const imageDefault = product.product.image[0]
 
                         product.product.imageDefault = imageDefault

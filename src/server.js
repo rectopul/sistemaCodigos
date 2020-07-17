@@ -57,6 +57,12 @@ app.engine(
                     console.log(arr[i])
                 }
             },
+            check: (v1, options) => {
+                if (v1 === true) {
+                    return options.fn(this)
+                }
+                return options.inverse(this)
+            },
             carousel: (arr) => {
                 if (arr.length) {
                     return arr.map((item, key) => {

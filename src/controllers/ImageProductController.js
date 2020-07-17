@@ -1,4 +1,5 @@
 const ImgProducts = require('../models/ImageProduct')
+const Product = require('../models/Product')
 const UserByToken = require('../middlewares/userByToken')
 
 module.exports = {
@@ -10,22 +11,36 @@ module.exports = {
     },
 
     async delete(req, res) {
-        const image = await ImgProducts.findByPk(req.params.id)
+        try {
+            const authHeader = req.headers.authorization
 
-        if (!image) {
-            return res.status(200).json({ message: 'Image not exist ' })
+            const { user_id } = await UserByToken(authHeader)
+
+            const image = await ImgProducts.findByPk(req.params.id)
+
+            if (!image) return res.status(200).json({ message: 'Image not exist ' })
+
+            //check exist images
+            const productImages = await Product.findByPk(image.product_id, { include: { association: `image` } })
+
+            await image.destroy()
+
+            if (productImages.image.length) {
+                const defaultImg = productImages.image.map((img) => {
+                    if (img.default == true) return img.toJSON()
+                })
+
+                if (!defaultImg[0]) {
+                    imageDefault = await ImgProducts.findOne({ where: { product_id: productImages.id } })
+
+                    imageDefault.update({ default: true })
+                }
+            }
+
+            return res.json(image)
+        } catch (error) {
+            console.log(error)
         }
-
-        await ImgProducts.destroy({
-            where: {
-                id: req.params.id,
-            },
-            individualHooks: true,
-        })
-            .then(() => {
-                return res.send()
-            })
-            .catch((err) => {})
     },
 
     async store(req, res) {
@@ -34,17 +49,49 @@ module.exports = {
 
             const { user_id } = await UserByToken(authHeader)
 
-            let { originalname: name, size, key, location: url = '' } = req.file
+            const { product_id } = req.params
 
-            const image = await ImgProducts.create({
-                name,
-                size,
-                key,
-                url,
-                default: false,
+            const files = [...req.files]
+
+            const save = files.map(async (file, i) => {
+                let { originalname: name, size, key, location: url = '' } = file
+
+                let image
+
+                if (product_id) {
+                    //check if has img default
+                    const imageDefault = ImgProducts.findAll({ where: { product_id, default: true } })
+
+                    let paramDefault = false
+
+                    if (!imageDefault.length) {
+                        if (i === 0) paramDefault = true
+                    }
+
+                    image = await ImgProducts.create({
+                        name,
+                        size,
+                        key,
+                        product_id,
+                        url,
+                        default: paramDefault,
+                    })
+                } else {
+                    image = await ImgProducts.create({
+                        name,
+                        size,
+                        key,
+                        url,
+                        default: i === 0 ? true : false,
+                    })
+                }
+
+                return image
             })
 
-            return res.json(image)
+            const response = await Promise.all(save)
+
+            return res.json(response)
         } catch (error) {
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
