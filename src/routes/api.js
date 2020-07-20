@@ -43,6 +43,8 @@ const CarouselController = require('../controllers/CarouselController')
 
 const ProductCodeController = require('../controllers/ProductCodeController')
 
+const BullController = require('../controllers/BullController')
+
 //API
 //Product
 routes.post(`/api/product`, ProductController.store)
@@ -50,6 +52,9 @@ routes.get(`/api/product`, ProductController.index)
 routes.delete(`/api/product/:product_id`, ProductController.destroy)
 routes.get(`/api/product/:product_id`, ProductController.show)
 routes.put(`/api/product/:product_id`, ProductController.update)
+routes.post(`/api/product-item/:product_id`, ProductCodeController.store)
+//Bula
+routes.post(`/api/bull`, multer(multerText).single('file'), BullController.store)
 //codes
 routes.delete(`/api/code/:code_id`, ProductCodeController.destroy)
 //File

@@ -117,6 +117,25 @@ const util = (() => {
 
     const request = (url, method, useToken, object, contentType) => {
         return new Promise((resolve, reject) => {
+            /* const { headers, method, url } = object
+
+            var myHeaders = new Headers()
+
+            if (headers['Content-Type']) myHeaders.append('Content-Type', headers['Content-Type'])
+            if (headers['authorization']) myHeaders.append('authorization', headers.authorization)
+
+            var myInit = { method, headers: myHeaders }
+
+            var myRequest = new Request(url, myInit)
+
+            fetch(myRequest)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error)) */
             const token = `Bearer ${document.body.dataset.token}`
 
             const headers = {}
@@ -1587,6 +1606,7 @@ const imgProduct = (() => {
     const imagesId = []
     let imageDefault = 0
     //.imagesProductContainer
+
     const setImageDefault = (image) => {
         image.addEventListener('click', (e) => {
             const index = image.dataset.index
@@ -1719,6 +1739,94 @@ const product = (() => {
         codes = []
     }
 
+    const filePDF = (input) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const file = input.files[0]
+
+                //check data type
+
+                if (input.value) {
+                    //request insert pdf
+                    if (file.type != `application/pdf`) return reject(`Selecione um arquivo do tipo PDF`)
+
+                    const form = new FormData()
+
+                    form.append('file', file)
+
+                    const bull = await request({
+                        url: `/api/bull`,
+                        method: `POST`,
+                        body: form,
+                    })
+
+                    document.querySelector('.idBullProduct').value = bull.id
+
+                    return resolve(bull)
+                } else {
+                    return reject(`O campo de bula está vazío`)
+                }
+            } catch (error) {
+                return reject(error)
+            }
+        })
+    }
+
+    const insertSingleCode = (btn) => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault()
+
+            const product_id = btn.dataset.id
+
+            const form = btn.closest('form')
+
+            if (form.checkValidity()) {
+                const name = document.querySelector('.productItemName').value
+                const code = document.querySelector('.productCode').value
+
+                const container = document.querySelector('.listItensProduct')
+
+                if (name && code) {
+                    try {
+                        const codeCreat = await request({
+                            url: `/api/product-item/${product_id}`,
+                            method: `POST`,
+                            headers: {
+                                'content-type': `application/json`,
+                            },
+                            body: JSON.stringify({ name, code }),
+                        })
+
+                        const codigo = document.createElement('div')
+
+                        codigo.classList.add('col-12', 'mb-3')
+
+                        codigo.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                ${codeCreat.name}
+                                <button type="button" class="float-right raiz btn btn-danger btn-sm" data-code="${codeCreat.code.code}" data-id="68"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                            <div class="card-body">
+                                ${codeCreat.code.code}
+                            </div>
+                        </div>
+                        `
+
+                        container.append(codigo)
+                    } catch (error) {
+                        return Swal.fire({
+                            title: error,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                        console.log(error)
+                    }
+                }
+            }
+        })
+    }
+
     const codeRemove = (code) => {
         const obj = codesInsert.find((x) => x.code === code)
 
@@ -1765,7 +1873,7 @@ const product = (() => {
         list.map((code) => {
             const cod = document.createElement('div')
 
-            /* cod.classList.add('col-12', 'mb-3')
+            cod.classList.add('col-12', 'mb-3')
 
             cod.innerHTML = `
             <div class="card">
@@ -1779,10 +1887,10 @@ const product = (() => {
             </div>
             `
 
-            codeDestroy(cod.querySelector('button')) */
+            codeDestroy(cod.querySelector('button'))
             codes.push({ name, code: code.text })
 
-            //output.append(cod)
+            output.append(cod)
         })
     }
 
@@ -1792,8 +1900,6 @@ const product = (() => {
             const file = input.files[0]
 
             e.preventDefault()
-
-            console.log(file)
 
             if (form.querySelector('.productItemName').value) {
                 try {
@@ -1811,8 +1917,6 @@ const product = (() => {
                         form.querySelector('.productItemName').value,
                         document.querySelector('.listItensProduct')
                     )
-
-                    console.log(codes)
                 } catch (error) {
                     console.log(error)
                 }
@@ -1951,6 +2055,8 @@ const product = (() => {
                         }),
                     })
 
+                    codesClear()
+
                     return Swal.fire({
                         title: `Produto atualizado com sucesso`,
                         text: `O produto ${product.name} foi atualizado com sucesso!`,
@@ -2042,8 +2148,16 @@ const product = (() => {
         codesClear,
         codeDestroy,
         codeRemove,
+        singleCode: insertSingleCode,
+        filePDF,
     }
 })()
+
+const btnSingleCode = document.querySelector(
+    '.editProductsCodes .form-edit-product-codes > button.btn.btn-primary.mb-2'
+)
+
+if (btnSingleCode) product.singleCode(btnSingleCode)
 
 //get all codes
 const listCodes = document.querySelectorAll('.listItensProduct > div button')
@@ -2367,6 +2481,7 @@ const requestInsertProduct = (object) => {
             items,
             image_id,
             categories,
+            pdf,
         } = object
 
         const token = document.body.dataset.token
@@ -2391,6 +2506,8 @@ const requestInsertProduct = (object) => {
                 availability,
                 items,
                 image_id,
+                excerpt,
+                pdf,
             }),
         })
             .then((res) => res.json())
@@ -2421,6 +2538,8 @@ const productCreate = (form) => {
     const fileToRead = document.querySelector('.fileToRead')
     const imageId = imgProduct.images
     const productCategory = document.querySelectorAll('.productCategory')
+    const inputPDF = document.querySelector('.productBull')
+    const codePDF = document.querySelector('.idBullProduct')
     let categories = []
 
     //validate categories
@@ -2444,7 +2563,16 @@ const productCreate = (form) => {
 
     putSpinnet(form.closest('form'), `insert`)
 
-    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
+    const itensValidate = [
+        inputName,
+        inputWeight,
+        inputBrand,
+        inputLot,
+        inputType,
+        inputAvailability,
+        inputPrefix,
+        inputPDF,
+    ]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
@@ -2483,71 +2611,88 @@ const productCreate = (form) => {
                 input.classList.add('is-valid')
             })
 
-            return imgProduct.create().then((res) => {
-                return requestInsertProduct({
-                    name: inputName.value,
-                    description: inputDescription.value,
-                    excerpt: inputExcerpt.value,
-                    weight: inputWeight.value,
-                    brand: inputBrand.value,
-                    lot: inputLot.value,
-                    type: inputType.value,
-                    availability: inputAvailability.value,
-                    items: codesInsert,
-                    categories,
-                    image_id: res,
-                })
-                    .then((res) => {
-                        //erro
-                        if (res.error) {
+            //Criar bula
+            return product
+                .filePDF(inputPDF)
+                .then(imgProduct.create)
+                .then((res) => {
+                    return requestInsertProduct({
+                        name: inputName.value,
+                        description: inputDescription.value,
+                        excerpt: inputExcerpt.value,
+                        weight: inputWeight.value,
+                        brand: inputBrand.value,
+                        lot: inputLot.value,
+                        type: inputType.value,
+                        availability: inputAvailability.value,
+                        items: codesInsert,
+                        categories,
+                        image_id: res,
+                        pdf: codePDF.value,
+                    })
+                        .then((res) => {
+                            //erro
+                            if (res.error) {
+                                const divAlert = document.createElement('div')
+                                divAlert.classList.add('alert', 'alert-danger')
+                                divAlert.setAttribute('role', 'alert')
+                                divAlert.innerHTML = res.error
+
+                                form.prepend(divAlert)
+
+                                setTimeout(() => {
+                                    divAlert.remove()
+                                }, 4000)
+                            }
+                            ///dashboard
+                            //limpar formulário
+                            const allInputs = form.querySelectorAll('input, textarea, .is-valid')
+
+                            //limpar imagens
+                            document.querySelector('.imagesProductContainer').innerHTML = ``
+
+                            form.classList.remove('was-validated')
+
+                            Array.from(allInputs).forEach((input) => {
+                                input.value = ``
+                                return input.classList.remove('is-valid')
+                            })
+
+                            clearListItems()
+
+                            putSpinnet(form.closest('form'), `remove`)
+                            return Swal.fire({
+                                title: `Produto cadastrado`,
+                                text: `O produto ${res.name} foi cadastrado com sucesso`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((error) => {
                             const divAlert = document.createElement('div')
                             divAlert.classList.add('alert', 'alert-danger')
                             divAlert.setAttribute('role', 'alert')
-                            divAlert.innerHTML = res.error
+                            divAlert.innerHTML = error
 
                             form.prepend(divAlert)
+
+                            putSpinnet(form.closest('form'), `remove`)
 
                             setTimeout(() => {
                                 divAlert.remove()
                             }, 4000)
-                        }
-                        ///dashboard
-                        //limpar formulário
-                        const allInputs = form.querySelectorAll('input, textarea, .is-valid')
-
-                        //limpar imagens
-                        document.querySelector('.imagesProductContainer').innerHTML = ``
-
-                        form.classList.remove('was-validated')
-
-                        Array.from(allInputs).forEach((input) => {
-                            input.value = ``
-                            return input.classList.remove('is-valid')
                         })
-
-                        putSpinnet(form.closest('form'), `remove`)
-                        return Swal.fire({
-                            title: `Produto cadastrado`,
-                            text: `O produto ${res.name} foi cadastrado com sucesso`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
+                })
+                .catch((error) => {
+                    return Swal.fire({
+                        title: `Erro ao criar bula`,
+                        text: error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
                     })
-                    .catch((error) => {
-                        const divAlert = document.createElement('div')
-                        divAlert.classList.add('alert', 'alert-danger')
-                        divAlert.setAttribute('role', 'alert')
-                        divAlert.innerHTML = error
+                })
 
-                        form.prepend(divAlert)
-
-                        putSpinnet(form.closest('form'), `remove`)
-
-                        setTimeout(() => {
-                            divAlert.remove()
-                        }, 4000)
-                    })
-            })
+            return imgProduct.create().then((res) => {})
         })
         .catch((err) => {
             putSpinnet(form.closest('form'), `remove`)
@@ -2593,7 +2738,7 @@ if (btnClearCodes) {
 }
 
 //change inpiut file
-const inputFileProduct = document.querySelector('.fileToRead')
+const inputFileProduct = document.querySelector('form:not(.form-edit-product-codes) .fileToRead')
 
 if (inputFileProduct) changeFileProduct(inputFileProduct)
 

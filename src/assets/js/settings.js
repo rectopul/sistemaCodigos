@@ -117,6 +117,25 @@ const util = (() => {
 
     const request = (url, method, useToken, object, contentType) => {
         return new Promise((resolve, reject) => {
+            /* const { headers, method, url } = object
+
+            var myHeaders = new Headers()
+
+            if (headers['Content-Type']) myHeaders.append('Content-Type', headers['Content-Type'])
+            if (headers['authorization']) myHeaders.append('authorization', headers.authorization)
+
+            var myInit = { method, headers: myHeaders }
+
+            var myRequest = new Request(url, myInit)
+
+            fetch(myRequest)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error)) */
             const token = `Bearer ${document.body.dataset.token}`
 
             const headers = {}

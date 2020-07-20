@@ -17,7 +17,7 @@ class Product extends Model {
                     },
                 },
                 description: {
-                    type: DataTypes.STRING,
+                    type: DataTypes.TEXT,
                 },
                 excerpt: {
                     type: DataTypes.TEXT,
@@ -97,6 +97,7 @@ class Product extends Model {
         this.hasMany(models.Code, { foreignKey: 'product_id', as: 'codes' })
         this.hasMany(models.ProductImages, { foreignKey: 'product_id', as: 'image' })
         this.hasMany(models.ProductCategory, { foreignKey: 'product_id', as: 'category' })
+        this.hasMany(models.Bull, { foreignKey: 'product_id', as: 'bula' })
     }
 }
 

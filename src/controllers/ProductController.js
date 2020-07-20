@@ -6,6 +6,7 @@ const ProductCategory = require('../models/ProductCategory')
 const Code = require('../models/Code')
 const ImageProduct = require('../models/ImageProduct')
 const { Op } = require('sequelize')
+const Bull = require('../models/Bull')
 
 module.exports = {
     async show(req, res) {
@@ -89,6 +90,7 @@ module.exports = {
                 availability,
                 items,
                 image_id,
+                pdf,
             } = req.body
 
             if (!categories) return res.status(400).send({ error: `Please enter a category` })
@@ -121,6 +123,9 @@ module.exports = {
                 type,
                 availability,
             })
+
+            //bula
+            await Bull.update({ product_id: product.id }, { where: { id: pdf } })
 
             categories.map(async (category_id) => {
                 await ProductCategory.create({ product_id: product.id, category_id })
@@ -217,7 +222,7 @@ module.exports = {
 
             if (!product) return res.status(400).send({ error: `This product not exist` })
 
-            const { name, description, weight, lot, type, availability, brand, excerpt, category } = req.body
+            const { name, description, weight, lot, type, availability, items, brand, excerpt, category } = req.body
 
             await product.update({
                 name,
@@ -240,6 +245,21 @@ module.exports = {
                             category_id: categ,
                             product_id,
                         })
+                    })
+                )
+            }
+
+            //itens
+            if (items) {
+                await Promise.all(
+                    items.map(async (item) => {
+                        //Create item
+                        const productItem = await ProductIten.create({
+                            product_id: product.id,
+                            name: item.name,
+                            description,
+                        }) //Create Code
+                        await Code.create({ product_id: product.id, item_id: productItem.id, code: item.code })
                     })
                 )
             }

@@ -11,7 +11,6 @@ module.exports = {
             },
             code_id: {
                 type: Sequelize.INTEGER,
-                allowNull: false,
                 references: { model: 'codes', key: 'id' },
                 onUpdate: 'CASCADE',
                 onDelete: 'SET NULL',
