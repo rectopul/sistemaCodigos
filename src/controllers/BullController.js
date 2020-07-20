@@ -1,5 +1,6 @@
 const UserByToken = require('../middlewares/userByToken')
 const Bull = require('../models/Bull')
+const Product = require('../models/Product')
 
 module.exports = {
     async store(req, res, err) {
@@ -37,9 +38,24 @@ module.exports = {
 
             await UserByToken(authHeader)
 
-            const { title, position, description } = req.body
+            const { product_id } = req.params
 
-            const { banner_id } = req.params
+            //check product
+            const product = await Product.findByPk(product_id)
+
+            if (!product) return res.status(400).send({ error: `This product not exist` })
+
+            const pdf = await Bull.findOne({ where: { product_id } })
+
+            if (!pdf) return res.status(400).send({ error: `This bull not exist` })
+
+            await pdf.destroy()
+
+            let { originalname: name, size, key, location: url = '' } = req.file
+
+            const bula = await Bull.create({ name, size, key, url, product_id })
+
+            return res.json(bula)
         } catch (error) {
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })

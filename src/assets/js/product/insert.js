@@ -142,7 +142,13 @@ const product = (() => {
         codes = []
     }
 
-    const filePDF = (input) => {
+    const changePDF = (input) => {
+        input.addEventListener('change', async (e) => {
+            e.preventDefault()
+        })
+    }
+
+    const filePDF = (input, action, id) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const file = input.files[0]
@@ -156,6 +162,16 @@ const product = (() => {
                     const form = new FormData()
 
                     form.append('file', file)
+
+                    if (action && action == `update`) {
+                        const bull = await request({
+                            url: `/api/bull/${id}`,
+                            method: `PUT`,
+                            body: form,
+                        })
+
+                        return resolve(bull)
+                    }
 
                     const bull = await request({
                         url: `/api/bull`,
@@ -391,6 +407,7 @@ const product = (() => {
                     const excerpt = form.querySelector('.productExcerpt').value
                     const category = document.querySelectorAll('.productCategory:checked')
                     const images = form.querySelector('.productImages')
+                    const pdf = form.querySelector('.productPDF')
 
                     const listCodes = document.querySelectorAll('.listItensProduct > div')
 
@@ -436,6 +453,11 @@ const product = (() => {
 
                     //Codes
                     const codesExist = await codescheck(listCodes)
+
+                    if (pdf.value) {
+                        const resPDF = await filePDF(pdf, 'update', product_id)
+                        console.log(`new pdf: `, resPDF)
+                    }
 
                     //Product Infos
                     const product = await request({

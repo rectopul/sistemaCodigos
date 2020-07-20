@@ -823,6 +823,278 @@ if (btnLogin) {
     })
 }
 
+const partner = (() => {
+    const table = $('#dataTable').DataTable()
+    //private var/functions
+    const fileChange = (input) => {
+        input.addEventListener('change', (e) => {
+            const filename = input.value.split(/(\\|\/)/g).pop()
+
+            input.closest('.custom-file').querySelector('label').innerHTML = filename
+
+            //action in change
+            const containerImages = document.querySelector('.imagePartner')
+
+            const files = [...input.files]
+
+            console.log(`Lista de imagens`, files)
+
+            files.map((file) => {
+                if (file.type != `image/png`) {
+                    input.value = ``
+
+                    return Swal.fire({
+                        title: `Imagem invlálida`,
+                        text: `A imagem deve ser no formato png`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                }
+
+                const imageContainer = document.createElement('div')
+
+                imageContainer.classList.add(`mb-2`, `col-12`)
+
+                imageContainer.innerHTML = `
+                <img class="img-thumbnail" src="">
+                `
+
+                const image = imageContainer.querySelector('img')
+
+                // FileReader support
+                if (FileReader && file) {
+                    var fr = new FileReader()
+                    fr.onload = function () {
+                        image.src = fr.result
+                    }
+                    fr.readAsDataURL(file)
+
+                    containerImages.innerHTML = ``
+
+                    return containerImages.append(imageContainer)
+                }
+
+                // Not supported
+                else {
+                    // fallback -- perhaps submit the input to an iframe and temporarily store
+                    // them on the server until the user's session ends.
+                }
+            })
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { url, method, body, headers } = object
+
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': headers['content-type'] || null,
+                },
+            }
+
+            if (body) options.body = JSON.stringify(body)
+
+            console.log(`Options request: `, options)
+
+            fetch(url, options)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestImg = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const form = new FormData()
+            form.append('file', file)
+
+            const reqUrl = `/api/image`
+
+            fetch(reqUrl, {
+                method: `POST`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const create = (form) => {
+        const inputImage = form.querySelector('input[type="file"]')
+
+        if (inputImage) {
+            fileChange(inputImage)
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            if (form.checkValidity()) {
+                putSpinnet(form, `insert`)
+                const object = {
+                    title: form.querySelector('.partnerTitle').value,
+                    company: form.querySelector('.partnerCompany').value,
+                    content: form.querySelector('.partnerContent').value,
+                }
+
+                const options = {
+                    url: `/api/partner`,
+                    method: `POST`,
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: {
+                        title: object.title,
+                        company: object.company,
+                        content: object.content,
+                    },
+                }
+
+                return request(options)
+                    .then((response) => {
+                        const { title, company, id, createdAt } = response
+
+                        const elements = [...form.elements]
+
+                        form.classList.remove('was-validated')
+
+                        document.querySelector('.imagePartner').innerHTML = ``
+
+                        elements.map((element) => {
+                            element.value = ``
+                        })
+
+                        const data = new Intl.DateTimeFormat('pt-BR').format(new Date(createdAt))
+
+                        const newRow = table.row
+                            .add([
+                                id,
+                                title,
+                                company,
+                                data,
+                                `<button type="button"
+                                    class="btn btn-datatable btn-icon btn-transparent-dark partnerDestroy py-0"
+                                    data-id="${id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-trash-2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>`,
+                            ])
+                            .draw()
+                            .node()
+
+                        const btnDestroy = newRow.querySelector('button')
+
+                        destroy(btnDestroy)
+
+                        console.log(`Criated Partner: `, newRow)
+
+                        putSpinnet(form, `remove`)
+
+                        return Swal.fire({
+                            title: `Sucesso!`,
+                            text: `Parceiro ${title} criado com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((err) => {
+                        putSpinnet(form, `remove`)
+                        return Swal.fire({
+                            title: `Erro`,
+                            text: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            }
+        })
+    }
+
+    const destroy = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            const options = {
+                url: `/api/partner/${id}`,
+                method: `DELETE`,
+                headers: {
+                    'content-type': 'application/json',
+                },
+            }
+
+            return request(options)
+                .then((res) => {
+                    table
+                        .row($(button.closest('tr')))
+                        .remove()
+                        .draw()
+
+                    return Swal.fire({
+                        title: `Sucesso!`,
+                        text: `Parceiro ${res.title} deletado com sucesso!`,
+                        icon: 'success',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro!`,
+                        text: err,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+        })
+    }
+
+    return {
+        //public var/functions
+        create,
+        destroy,
+    }
+})()
+
+const formPartner = document.querySelector('.partnerForm')
+
+const partnerDestroy = document.querySelectorAll('.partnerDestroy')
+
+if (formPartner) partner.create(formPartner)
+
+if (partnerDestroy) {
+    Array.from(partnerDestroy).forEach((button) => {
+        partner.destroy(button)
+    })
+}
+
 const page = (() => {
     //private var/functions
     //slugkeydown
@@ -1272,277 +1544,187 @@ const newsForm = document.querySelector('.newsForm')
 
 if (newsForm) newsletter.subscribe(newsForm)
 
-const partner = (() => {
-    const table = $('#dataTable').DataTable()
-    //private var/functions
-    const fileChange = (input) => {
-        input.addEventListener('change', (e) => {
-            const filename = input.value.split(/(\\|\/)/g).pop()
-
-            input.closest('.custom-file').querySelector('label').innerHTML = filename
-
-            //action in change
-            const containerImages = document.querySelector('.imagePartner')
-
-            const files = [...input.files]
-
-            console.log(`Lista de imagens`, files)
-
-            files.map((file) => {
-                if (file.type != `image/png`) {
-                    input.value = ``
-
-                    return Swal.fire({
-                        title: `Imagem invlálida`,
-                        text: `A imagem deve ser no formato png`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                }
-
-                const imageContainer = document.createElement('div')
-
-                imageContainer.classList.add(`mb-2`, `col-12`)
-
-                imageContainer.innerHTML = `
-                <img class="img-thumbnail" src="">
-                `
-
-                const image = imageContainer.querySelector('img')
-
-                // FileReader support
-                if (FileReader && file) {
-                    var fr = new FileReader()
-                    fr.onload = function () {
-                        image.src = fr.result
-                    }
-                    fr.readAsDataURL(file)
-
-                    containerImages.innerHTML = ``
-
-                    return containerImages.append(imageContainer)
-                }
-
-                // Not supported
-                else {
-                    // fallback -- perhaps submit the input to an iframe and temporarily store
-                    // them on the server until the user's session ends.
-                }
-            })
-        })
-    }
-
-    const request = (object) => {
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
         return new Promise((resolve, reject) => {
             const token = document.body.dataset.token
 
-            const { url, method, body, headers } = object
-
-            const options = {
-                method: method || `GET`,
-                headers: {
-                    authorization: `Bearer ${token}`,
-                    'content-type': headers['content-type'] || null,
-                },
-            }
-
-            if (body) options.body = JSON.stringify(body)
-
-            console.log(`Options request: `, options)
-
-            fetch(url, options)
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestImg = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
+            const reqUrl = `/api/user/image`
 
             const form = new FormData()
             form.append('file', file)
 
-            const reqUrl = `/api/image`
-
             fetch(reqUrl, {
-                method: `POST`,
+                method: 'PUT',
                 headers: {
                     authorization: `Bearer ${token}`,
                 },
                 body: form,
             })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
                 .catch((error) => reject(error))
         })
     }
 
-    const create = (form) => {
-        const inputImage = form.querySelector('input[type="file"]')
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
 
-        if (inputImage) {
-            fileChange(inputImage)
-        }
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault()
+            const reqUrl = `/api/user`
 
-            if (form.checkValidity()) {
-                putSpinnet(form, `insert`)
-                const object = {
-                    title: form.querySelector('.partnerTitle').value,
-                    company: form.querySelector('.partnerCompany').value,
-                    content: form.querySelector('.partnerContent').value,
-                }
-
-                const options = {
-                    url: `/api/partner`,
-                    method: `POST`,
-                    headers: {
-                        'content-type': 'application/json',
-                    },
-                    body: {
-                        title: object.title,
-                        company: object.company,
-                        content: object.content,
-                    },
-                }
-
-                return request(options)
-                    .then((response) => {
-                        const { title, company, id, createdAt } = response
-
-                        const elements = [...form.elements]
-
-                        form.classList.remove('was-validated')
-
-                        document.querySelector('.imagePartner').innerHTML = ``
-
-                        elements.map((element) => {
-                            element.value = ``
-                        })
-
-                        const data = new Intl.DateTimeFormat('pt-BR').format(new Date(createdAt))
-
-                        const newRow = table.row
-                            .add([
-                                id,
-                                title,
-                                company,
-                                data,
-                                `<button type="button"
-                                    class="btn btn-datatable btn-icon btn-transparent-dark partnerDestroy py-0"
-                                    data-id="${id}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                        </path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </button>`,
-                            ])
-                            .draw()
-                            .node()
-
-                        const btnDestroy = newRow.querySelector('button')
-
-                        destroy(btnDestroy)
-
-                        console.log(`Criated Partner: `, newRow)
-
-                        putSpinnet(form, `remove`)
-
-                        return Swal.fire({
-                            title: `Sucesso!`,
-                            text: `Parceiro ${title} criado com sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                    .catch((err) => {
-                        putSpinnet(form, `remove`)
-                        return Swal.fire({
-                            title: `Erro`,
-                            text: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            }
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
         })
     }
 
-    const destroy = (button) => {
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
         button.addEventListener('click', (e) => {
             e.preventDefault()
 
-            const id = button.dataset.id
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
 
-            const options = {
-                url: `/api/partner/${id}`,
-                method: `DELETE`,
-                headers: {
-                    'content-type': 'application/json',
-                },
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
+                })
+
+                button.innerHTML = `Edit profile`
+
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
             }
-
-            return request(options)
-                .then((res) => {
-                    table
-                        .row($(button.closest('tr')))
-                        .remove()
-                        .draw()
-
-                    return Swal.fire({
-                        title: `Sucesso!`,
-                        text: `Parceiro ${res.title} deletado com sucesso!`,
-                        icon: 'success',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-                .catch((err) => {
-                    return Swal.fire({
-                        title: `Erro!`,
-                        text: err,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
         })
     }
 
+    //get all fields
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
+
     return {
         //public var/functions
-        create,
-        destroy,
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
     }
 })()
 
-const formPartner = document.querySelector('.partnerForm')
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
 
-const partnerDestroy = document.querySelectorAll('.partnerDestroy')
+if (inputEditAvatar) profile.edit(inputEditAvatar)
 
-if (formPartner) partner.create(formPartner)
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
 
-if (partnerDestroy) {
-    Array.from(partnerDestroy).forEach((button) => {
-        partner.destroy(button)
-    })
-}
+if (btnEditUser) profile.enableEdit(btnEditUser)
 
 const btnsProduct = document.querySelectorAll('.productDelete')
 
@@ -1739,7 +1921,13 @@ const product = (() => {
         codes = []
     }
 
-    const filePDF = (input) => {
+    const changePDF = (input) => {
+        input.addEventListener('change', async (e) => {
+            e.preventDefault()
+        })
+    }
+
+    const filePDF = (input, action, id) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const file = input.files[0]
@@ -1753,6 +1941,16 @@ const product = (() => {
                     const form = new FormData()
 
                     form.append('file', file)
+
+                    if (action && action == `update`) {
+                        const bull = await request({
+                            url: `/api/bull/${id}`,
+                            method: `PUT`,
+                            body: form,
+                        })
+
+                        return resolve(bull)
+                    }
 
                     const bull = await request({
                         url: `/api/bull`,
@@ -1988,6 +2186,7 @@ const product = (() => {
                     const excerpt = form.querySelector('.productExcerpt').value
                     const category = document.querySelectorAll('.productCategory:checked')
                     const images = form.querySelector('.productImages')
+                    const pdf = form.querySelector('.productPDF')
 
                     const listCodes = document.querySelectorAll('.listItensProduct > div')
 
@@ -2033,6 +2232,11 @@ const product = (() => {
 
                     //Codes
                     const codesExist = await codescheck(listCodes)
+
+                    if (pdf.value) {
+                        const resPDF = await filePDF(pdf, 'update', product_id)
+                        console.log(`new pdf: `, resPDF)
+                    }
 
                     //Product Infos
                     const product = await request({
@@ -2751,188 +2955,6 @@ if (btnInsertItemProduct) insertSingleCode(btnInsertItemProduct)
 const ImageProduct = document.querySelector('.productImage')
 
 if (ImageProduct) imgProduct.change(ImageProduct)
-
-const profile = (() => {
-    //private functions/var
-    const request = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const reqUrl = `/api/user/image`
-
-            const form = new FormData()
-            form.append('file', file)
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestProfile = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
-
-            const reqUrl = `/api/user`
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const changeState = (input) => {
-        input.addEventListener('change', function (e) {
-            editAvatar(input)
-        })
-    }
-
-    const editAvatar = (input) => {
-        console.log(input.files)
-        return request(input.files[0])
-            .then((res) => {
-                if (res.error) return console.log(res.error)
-
-                document.querySelector('.img-profile').src = res.url
-
-                return (document.querySelector('.profile-avatar').src = res.url)
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const enableForm = (button) => {
-        if (!button) console.log(`Botão não existe`)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
-
-            const formulario = document.querySelector('.formEditUser')
-
-            if (button.classList.contains('save')) {
-                Array.from(form).forEach((input) => {
-                    input.disabled = true
-                })
-
-                button.innerHTML = `Edit profile`
-
-                if (formulario) getFields(formulario)
-
-                return button.classList.remove('save')
-            } else {
-                Array.from(form).forEach((input) => {
-                    input.disabled = false
-                })
-
-                button.innerHTML = `Salvar alterações`
-
-                return button.classList.add('save')
-            }
-        })
-    }
-
-    //get all fields
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    const getFields = (form) => {
-        if (!form) return console.log(`Formulário não existe`)
-
-        const listElements = Array.from(form.elements)
-
-        const object = {
-            name: form.querySelector('#input-username').value,
-            email: form.querySelector('#input-email').value,
-            currentPassword: form.querySelector('#input-current-password').value,
-            newPassword: form.querySelector('#input-new-password').value,
-            address: form.querySelector('#input-address').value,
-            city: form.querySelector('#input-city').value,
-            phone: form.querySelector('#input-phone').value,
-            cell: form.querySelector('#input-cell').value,
-            about: form.querySelector('#textarea-about').value,
-        }
-
-        return requestProfile(object)
-            .then((res) => {
-                if (res.error)
-                    return Swal.fire({
-                        title: `Erro ao atualizar usuário`,
-                        text: res.error,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-
-                return Swal.fire({
-                    title: `Perfil atualizado`,
-                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) =>
-                Swal.fire({
-                    title: `Erro ao atualizar usuário`,
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            )
-
-        console.log(object)
-    }
-
-    //requestSaveProfile
-
-    return {
-        //public var/functions
-        edit: changeState,
-        enableEdit: enableForm,
-        save: getFields,
-    }
-})()
-
-const inputEditAvatar = document.querySelector('.inputProfileAvatar')
-
-if (inputEditAvatar) profile.edit(inputEditAvatar)
-
-//btnEditUser
-const btnEditUser = document.querySelector('.btnEditUser')
-
-if (btnEditUser) profile.enableEdit(btnEditUser)
 
 const search = (() => {
     //validate form

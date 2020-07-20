@@ -55,6 +55,7 @@ routes.put(`/api/product/:product_id`, ProductController.update)
 routes.post(`/api/product-item/:product_id`, ProductCodeController.store)
 //Bula
 routes.post(`/api/bull`, multer(multerText).single('file'), BullController.store)
+routes.put(`/api/bull/:product_id`, multer(multerText).single('file'), BullController.update)
 //codes
 routes.delete(`/api/code/:code_id`, ProductCodeController.destroy)
 //File
