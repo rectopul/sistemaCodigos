@@ -26,7 +26,9 @@ module.exports = {
 
             const { category_slug } = req.params
 
-            const products = await Product.findAll({ include: { association: `image`, where: { default: true } } })
+            const products = await Product.findAll({
+                include: { association: `image`, where: { default: true }, limit: 1 },
+            })
 
             const pages = await Page.findAll()
 
