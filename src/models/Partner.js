@@ -43,6 +43,21 @@ class Partner extends Model {
                         },
                     },
                 },
+                position: {
+                    type: DataTypes.INTEGER,
+                    allowNull: false,
+                    validate: {
+                        isInt: {
+                            msg: `Th position field is a integer`,
+                        },
+                        notNull: {
+                            msg: `The position field cannot be empty`,
+                        },
+                        notEmpty: {
+                            msg: `The position field cannot be empty`,
+                        },
+                    },
+                },
             },
             {
                 sequelize,

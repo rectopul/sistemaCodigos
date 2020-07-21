@@ -88,7 +88,7 @@ const category = (() => {
         return new Promise((resolve, reject) => {
             const token = document.body.dataset.token
 
-            const { name, description, slug, parent } = object
+            const { name, description, slug, parent, position } = object
 
             fetch(`/api/category`, {
                 method: 'POST',
@@ -96,7 +96,7 @@ const category = (() => {
                     'content-type': 'application/json',
                     authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ name, description, slug, parent }),
+                body: JSON.stringify({ name, description, slug, parent, position }),
             })
                 .then((r) => r.json())
                 .then((res) => {
@@ -109,7 +109,7 @@ const category = (() => {
 
     //Create category in front
     const createFront = (object) => {
-        const { id, name, description, createdAt } = object
+        const { id, name, description, createdAt, position } = object
 
         let data = new Date(createdAt)
 
@@ -120,6 +120,7 @@ const category = (() => {
                 id,
                 name,
                 description,
+                position,
                 0,
                 `<!-- Botão de ação Editar // -->
             <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
@@ -154,6 +155,7 @@ const category = (() => {
             const inputDescription = document.querySelector('.categoryDescription')
             const inputSlug = document.querySelector('.categorySlug')
             const inputParent = document.querySelector('.categoryParent')
+            const inputPosition = document.querySelector('.categoryPosition')
 
             const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
 
@@ -164,6 +166,7 @@ const category = (() => {
                         description: inputDescription.value,
                         slug: inputSlug.value,
                         parent: inputParent.value || null,
+                        position: inputPosition.value,
                     })
                         .then((res) => {
                             createFront(res)
@@ -207,7 +210,7 @@ const category = (() => {
         return new Promise((resolve, reject) => {
             const token = document.body.dataset.token
 
-            const { id, name, description, slug, parent } = object
+            const { id, name, description, slug, parent, position } = object
 
             fetch(`/api/category/${id}`, {
                 method: 'PUT',
@@ -215,7 +218,7 @@ const category = (() => {
                     'content-type': 'application/json',
                     authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ name, description, slug, parent }),
+                body: JSON.stringify({ name, description, slug, parent, position }),
             })
                 .then((res) => {
                     if (!res.ok) return reject(`Erro ao criar categoria`)
@@ -233,29 +236,9 @@ const category = (() => {
         const category = document.querySelector(`.category-${id}`)
 
         if (category) {
-            const fieldName = category.querySelector('td:nth-child(2)')
-            const fieldDescription = category.querySelector('td:nth-child(3)')
-            const fieldCreate = category.querySelector('td:nth-child(5)')
+            table.row($(category)).remove().draw()
 
-            let data = new Date(createdAt)
-            data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-            let valuesEdit = table.row($(category)).data()
-
-            console.log(category)
-
-            valuesEdit[1] = name
-            valuesEdit[2] = description
-
-            table.row($(category)).data(valuesEdit).draw()
-
-            /* const btnEdit = category.querySelector('.editCategory')
-
-            openModal(btnEdit) */
-
-            /* const btnDestroy = category.querySelector('.categoryDestroy')
-
-            destroy(btnDestroy) */
+            createFront(object)
 
             return Swal.fire({
                 title: `Categoria ${name} editada com sucesso!`,
@@ -278,8 +261,9 @@ const category = (() => {
                     const inputDescription = document.querySelector('.editCategoryDescription')
                     const inputSlug = document.querySelector('.editCategorySlug')
                     const inputParent = document.querySelector('.editCategoryParent')
+                    const inputPosition = document.querySelector('.editCategoryPosition')
 
-                    const { id, name, description, slug, parent } = res
+                    const { id, name, description, slug, parent, position } = res
 
                     if (inputParent.querySelector(`option[value="${parent}"]`)) {
                         inputParent.querySelector(`option[value="${parent}"]`).selected = true
@@ -288,6 +272,7 @@ const category = (() => {
                     inputName.value = name
                     inputDescription.value = description
                     inputSlug.value = slug
+                    inputPosition.value = position
 
                     return btnModal.addEventListener('click', (e) => {
                         return edit({
@@ -296,12 +281,15 @@ const category = (() => {
                             description: inputDescription.value,
                             slug: inputSlug.value,
                             parent: inputParent.value || null,
+                            position: inputPosition.value,
                         }).then((res) => {
+                            console.log(res)
                             return updateFront(res)
                         })
                     })
                 })
                 .catch((err) => {
+                    console.log(err)
                     return Swal.fire({
                         title: `Erro ao editar categoria`,
                         icon: 'error',

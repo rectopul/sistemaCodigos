@@ -74,8 +74,6 @@ const partner = (() => {
 
             if (body) options.body = JSON.stringify(body)
 
-            console.log(`Options request: `, options)
-
             fetch(url, options)
                 .then((r) => r.json())
                 .then((res) => {
@@ -129,11 +127,14 @@ const partner = (() => {
                     title: form.querySelector('.partnerTitle').value,
                     company: form.querySelector('.partnerCompany').value,
                     content: form.querySelector('.partnerContent').value,
+                    position: form.querySelector('.partnerPosition').value,
                 }
 
+                const url = form.dataset.id ? `/api/partner/${form.dataset.id}` : `/api/partner`
+
                 const options = {
-                    url: `/api/partner`,
-                    method: `POST`,
+                    url,
+                    method: form.dataset.id ? `PUT` : `POST`,
                     headers: {
                         'content-type': 'application/json',
                     },
@@ -141,12 +142,13 @@ const partner = (() => {
                         title: object.title,
                         company: object.company,
                         content: object.content,
+                        position: object.position,
                     },
                 }
 
                 return request(options)
                     .then((response) => {
-                        const { title, company, id, createdAt } = response
+                        const { title, company, position, id, createdAt } = response
 
                         const elements = [...form.elements]
 
@@ -160,11 +162,21 @@ const partner = (() => {
 
                         const data = new Intl.DateTimeFormat('pt-BR').format(new Date(createdAt))
 
+                        if (form.dataset.id) {
+                            table
+                                .row($(`.partner-${id}`))
+                                .remove()
+                                .draw()
+
+                            form.dataset.id = ``
+                        }
+
                         const newRow = table.row
                             .add([
                                 id,
                                 title,
                                 company,
+                                position,
                                 data,
                                 `<button type="button"
                                     class="btn btn-datatable btn-icon btn-transparent-dark partnerDestroy py-0"
@@ -179,18 +191,28 @@ const partner = (() => {
                                         <line x1="10" y1="11" x2="10" y2="17"></line>
                                         <line x1="14" y1="11" x2="14" y2="17"></line>
                                     </svg>
-                                </button>`,
+                                </button>
+                                
+                                <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark partnerEdit"
+                                    data-id="${id}">
+                                    <i class="fas fas-fw fa-edit"></i>
+                                </button>
+                                `,
                             ])
                             .draw()
                             .node()
 
-                        const btnDestroy = newRow.querySelector('button')
+                        newRow.classList.add(`partner-${id}`)
 
+                        const btnDestroy = newRow.querySelector('button.partnerDestroy')
+                        const btnEditAction = newRow.querySelector('button.partnerEdit')
+
+                        btnEdit(btnEditAction, form)
                         destroy(btnDestroy)
 
-                        console.log(`Criated Partner: `, newRow)
-
                         putSpinnet(form, `remove`)
+
+                        $(form.closest('#modalPartner')).modal('hide')
 
                         return Swal.fire({
                             title: `Sucesso!`,
@@ -251,12 +273,96 @@ const partner = (() => {
         })
     }
 
+    const btnEdit = (button, form) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            if (!form)
+                return Swal.fire({
+                    title: `Formulário não existe`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+
+            form.dataset.id = id
+            form.classList.add('edit')
+
+            getValues(id)
+                .then(edit)
+                .then(putValues)
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro ao editar`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+
+            //return edit(form)
+        })
+    }
+
+    const getValues = (id) => {
+        return new Promise((resolve, reject) => {
+            //Get all values
+
+            return request({
+                method: `GET`,
+                url: `/api/partner/${id}`,
+                headers: {
+                    'content-type': `application/json`,
+                },
+            })
+                .then((res) => resolve(res))
+                .catch((err) => reject(err))
+        })
+    }
+
+    const putValues = (values) => {
+        return new Promise((resolve, reject) => {
+            const { company, content, id, title, position } = values
+
+            //inputs
+            const inputCompany = document.querySelector('.partnerCompany')
+            const inputTitle = document.querySelector('.partnerTitle')
+            const inputContent = document.querySelector('.partnerContent')
+            const inputPosition = document.querySelector('.partnerPosition')
+
+            inputCompany.value = company
+            inputTitle.value = title
+            inputContent.value = content
+            inputPosition.value = position
+
+            $(inputContent.closest('#modalPartner')).modal('show')
+
+            resolve(values)
+        })
+    }
+
+    const edit = (values) => {
+        return new Promise((resolve, reject) => {
+            //Get new values
+            //const id = form.dataset.id
+
+            //Submit form
+            return resolve(values)
+        })
+    }
+
     return {
         //public var/functions
         create,
         destroy,
+        edit: btnEdit,
     }
 })()
+
+//Edit partners
+const btnEditPartn = document.querySelectorAll('.partnerEdit')
+
+if (btnEditPartn) Array.from(btnEditPartn).forEach((btn) => partner.edit(btn, document.querySelector('.partnerForm')))
 
 const formPartner = document.querySelector('.partnerForm')
 
@@ -269,3 +375,17 @@ if (partnerDestroy) {
         partner.destroy(button)
     })
 }
+
+//hidden form partner
+
+$('#modalPartner').on('hidden.bs.modal', function (e) {
+    let form = this.querySelector('form')
+
+    const elements = [...form.elements]
+
+    form.dataset.id = ``
+
+    elements.map((input) => (input.value = ``))
+
+    console.log(form)
+})

@@ -19,7 +19,10 @@ module.exports = {
             const productsCount = await Product.count()
 
             //get categories
-            const categories = await Category.findAll({ include: { association: `products` } })
+            const categories = await Category.findAll({
+                include: { association: `products` },
+                order: [['position', 'ASC']],
+            })
 
             //userName
             const users = await Users.findAll()
@@ -32,7 +35,7 @@ module.exports = {
                 avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
                 productsCount,
                 pageId: `page-top`,
-                pageTitle: `Usuários`,
+                pageTitle: `Categorias`,
                 pages: pages.map((page) => page.toJSON()),
                 categories: categories.map((category) => {
                     const categoria = category.toJSON()

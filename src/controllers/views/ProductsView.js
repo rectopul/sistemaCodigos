@@ -18,7 +18,12 @@ module.exports = {
                         [Op.not]: `oculto`,
                     },
                 },
-                include: { association: `child`, include: { association: `child` } },
+                order: [['position', 'ASC']],
+                include: {
+                    association: `child`,
+                    order: [['position', 'ASC']],
+                    include: { association: `child`, order: [['position', 'ASC']] },
+                },
             })
 
             const { category_slug } = req.params

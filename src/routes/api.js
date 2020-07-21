@@ -103,6 +103,8 @@ routes.post(`/api/image`, multer(multerConfig).single('file'), ImageController.s
 //parceiro
 routes.post(`/api/partner`, PartnerController.store)
 routes.delete(`/api/partner/:partner_id`, PartnerController.destroy)
+routes.get(`/api/partner/:partner_id`, PartnerController.show)
+routes.put(`/api/partner/:partner_id`, PartnerController.update)
 //Contact
 routes.delete(`/api/contact/:contact_id`, ContactController.destroy)
 routes.put(`/api/contact/:contact_id`, ContactController.update)

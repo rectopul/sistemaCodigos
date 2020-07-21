@@ -62,7 +62,9 @@ module.exports = {
 
             const { user_id } = await userByToken(authHeader)
 
-            const { name, description, parent } = req.body
+            const { name, description, parent, position } = req.body
+
+            const newPosition = (await Category.count()) + 1
 
             let { slug } = req.body
 
@@ -104,7 +106,13 @@ module.exports = {
                 }
             }
 
-            const category = await Category.create({ name, slug, description, parent })
+            const category = await Category.create({
+                name,
+                slug,
+                description,
+                parent,
+                position: parseInt(position) || parseInt(newPosition),
+            })
 
             const response = await Category.findByPk(category.id, { include: { association: `child` } })
 
@@ -166,7 +174,7 @@ module.exports = {
 
             const { category_id } = req.params
 
-            const { name, description, parent } = req.body
+            const { name, description, parent, position } = req.body
 
             let { slug } = req.body
 
@@ -178,7 +186,10 @@ module.exports = {
                     .replace(' ', '_')
             }
 
-            await Category.update({ name, slug, description, parent }, { where: { id: category_id } })
+            await Category.update(
+                { name, slug, description, parent, position: parseInt(position) },
+                { where: { id: category_id } }
+            )
 
             const response = await Category.findByPk(category_id, { include: { association: `child` } })
 

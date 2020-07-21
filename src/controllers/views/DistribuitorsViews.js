@@ -16,12 +16,17 @@ module.exports = {
                         [Op.not]: `oculto`,
                     },
                 },
-                include: { association: `child`, include: { association: `child` } },
+                order: [['position', 'ASC']],
+                include: {
+                    association: `child`,
+                    order: [['position', 'ASC']],
+                    include: { association: `child`, order: [['position', 'ASC']] },
+                },
             })
 
             const home = await Page.findOne({ where: { slug: 'home' } })
 
-            const partners = await Partner.findAll()
+            const partners = await Partner.findAll({ order: [['position', 'ASC']] })
 
             const contacts = await Contact.findAll()
 

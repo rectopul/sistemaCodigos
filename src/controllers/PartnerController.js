@@ -39,7 +39,7 @@ module.exports = {
 
             const { partner_id } = req.params
 
-            const partner = await Partner.findByPk(create.id, { include: { association: `image` } })
+            const partner = await Partner.findByPk(partner_id, { include: { association: `image` } })
 
             return res.json(partner)
         } catch (error) {
@@ -66,11 +66,18 @@ module.exports = {
 
             await UserByToken(authHeader)
 
-            const { title, content, company } = req.body
+            const { title, content, company, position } = req.body
 
             const format = content.replace(/\n/g, '<br>\n')
 
-            const create = await Partner.create({ title, content: format, company })
+            let newPosition = (await Partner.count()) + 1
+
+            const create = await Partner.create({
+                title,
+                content: format,
+                company,
+                position: parseInt(position) || parseInt(newPosition),
+            })
 
             return res.json(create)
         } catch (error) {
@@ -95,6 +102,21 @@ module.exports = {
             const authHeader = req.headers.authorization
 
             await UserByToken(authHeader)
+
+            const { partner_id } = req.params
+
+            const { title, content, company, position } = req.body
+
+            //check if exist
+            const partner = await Partner.findByPk(partner_id)
+
+            if (!partner) return res.status(400).send({ error: `this partner not exist` })
+
+            console.log(parseInt(position))
+
+            await partner.update({ title, content, company, position: parseInt(position) })
+
+            return res.json(partner)
         } catch (error) {
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
