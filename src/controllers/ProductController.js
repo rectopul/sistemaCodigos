@@ -125,7 +125,9 @@ module.exports = {
             })
 
             //bula
-            await Bull.update({ product_id: product.id }, { where: { id: pdf } })
+            if (pdf) {
+                await Bull.update({ product_id: product.id }, { where: { id: pdf } })
+            }
 
             categories.map(async (category_id) => {
                 await ProductCategory.create({ product_id: product.id, category_id })

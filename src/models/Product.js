@@ -52,6 +52,9 @@ class Product extends Model {
                 lot: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    unique: {
+                        msg: `This lot already exist`,
+                    },
                     validate: {
                         notNull: {
                             msg: `The lot field cannot be empty`,
