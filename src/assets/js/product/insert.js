@@ -151,39 +151,43 @@ const product = (() => {
     const filePDF = (input, action, id) => {
         return new Promise(async (resolve, reject) => {
             try {
-                const file = input.files[0]
+                if (input.files[0]) {
+                    const file = input.files[0]
 
-                //check data type
+                    //check data type
 
-                if (input.value) {
-                    //request insert pdf
-                    if (file.type != `application/pdf`) return reject(`Selecione um arquivo do tipo PDF`)
+                    if (input.value) {
+                        //request insert pdf
+                        if (file.type != `application/pdf`) return reject(`Selecione um arquivo do tipo PDF`)
 
-                    const form = new FormData()
+                        const form = new FormData()
 
-                    form.append('file', file)
+                        form.append('file', file)
 
-                    if (action && action == `update`) {
+                        if (action && action == `update`) {
+                            const bull = await request({
+                                url: `/api/bull/${id}`,
+                                method: `PUT`,
+                                body: form,
+                            })
+
+                            return resolve(bull)
+                        }
+
                         const bull = await request({
-                            url: `/api/bull/${id}`,
-                            method: `PUT`,
+                            url: `/api/bull`,
+                            method: `POST`,
                             body: form,
                         })
 
+                        document.querySelector('.idBullProduct').value = bull.id
+
                         return resolve(bull)
+                    } else {
+                        return reject(`O campo de bula está vazío`)
                     }
-
-                    const bull = await request({
-                        url: `/api/bull`,
-                        method: `POST`,
-                        body: form,
-                    })
-
-                    document.querySelector('.idBullProduct').value = bull.id
-
-                    return resolve(bull)
                 } else {
-                    return reject(`O campo de bula está vazío`)
+                    resolve('Criado')
                 }
             } catch (error) {
                 return reject(error)
@@ -988,16 +992,7 @@ const productCreate = (form) => {
 
     putSpinnet(form.closest('form'), `insert`)
 
-    const itensValidate = [
-        inputName,
-        inputWeight,
-        inputBrand,
-        inputLot,
-        inputType,
-        inputAvailability,
-        inputPrefix,
-        inputPDF,
-    ]
+    const itensValidate = [inputName, inputWeight, inputBrand, inputLot, inputType, inputAvailability, inputPrefix]
 
     if (!Checkswitch.checked) {
         itensValidate.push(productCode)
