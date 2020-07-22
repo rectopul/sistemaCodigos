@@ -182,7 +182,7 @@ routes.get(`/products`, async (req, res) => {
 
 routes.get(`/products-edit/:product_id`, ProductEditView.view)
 
-routes.get('/all-products', AllProductsViews.view)
+routes.get('/produtos', AllProductsViews.view)
 
 routes.get('/product/:product_id', ProductView.view)
 

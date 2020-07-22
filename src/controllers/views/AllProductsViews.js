@@ -24,10 +24,22 @@ module.exports = {
                 },
             })
 
-            const { category_slug } = req.params
-
             const products = await Product.findAll({
-                include: { association: `image`, where: { default: true }, limit: 1 },
+                include: [
+                    { association: `image`, where: { default: true }, limit: 1 },
+                    {
+                        association: `category`,
+                        include: {
+                            association: `category`,
+                            where: {
+                                slug: {
+                                    [Op.not]: `oculto`,
+                                },
+                            },
+                        },
+                        required: true,
+                    },
+                ],
             })
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
@@ -35,10 +47,10 @@ module.exports = {
             return res.render('page-products', {
                 pageTitle: `Todos o produtos`,
                 categories,
-                listProducts: products.map((product) => product.toJSON()),
+                listProducts: products ? products.map((product) => product.toJSON()) : null,
                 pageType: 'site',
                 pageClasses: `page-product`,
-                pages: pages ? pages.map((page) => page.toJSON()) : null,
+                pages: productPage ? productPage.map((page) => page.toJSON()) : null,
                 content: productPage ? productPage.toJSON() : null,
             })
         } catch (error) {

@@ -21,13 +21,11 @@ module.exports = {
             const product = await Product.findByPk(product_id, {
                 include: [
                     { association: `image` },
-                    { association: `codes` },
+                    { association: `codes`, limit: 50 },
                     { association: `category` },
-                    { association: `items`, include: { association: `code` } },
+                    { association: `items`, include: { association: `code` }, limit: 50 },
                 ],
             })
-
-            console.log(product.toJSON().items)
 
             const user = await User.findByPk(user_id, { include: { association: `avatar` } })
 

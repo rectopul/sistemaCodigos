@@ -57,7 +57,11 @@ module.exports = {
                 },
                 include: {
                     association: `products`,
-                    include: { association: `product`, include: { association: `image`, where: { default: true } } },
+                    include: {
+                        association: `product`,
+                        include: { association: `image`, where: { default: true }, required: false },
+                    },
+                    limit: 8,
                 },
             })
 
@@ -71,13 +75,14 @@ module.exports = {
                         if (product.product.image.length) {
                             product.product.image = [product.product.image[0]]
                         }
+
+                        return product.product
                     }
-                    return product.product
                 })
 
-                productInfo
+                const filtered = productInfo.filter(Boolean)
 
-                return productInfo
+                return filtered
             })
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
@@ -86,12 +91,12 @@ module.exports = {
                 pageTitle: `Produto`,
                 categories,
                 pageType: 'site',
-                imageDef: imageDef.toJSON(),
-                product: productInfos.toJSON(),
-                listProducts: productSend[0],
+                imageDef: imageDef ? imageDef.toJSON() : null,
+                product: productInfos ? productInfos.toJSON() : null,
+                listProducts: productSend[0] ? productSend[0] : [],
                 pageClasses: `page-product`,
-                pages: pages.map((page) => page.toJSON()),
-                content: productPage.toJSON(),
+                pages: pages ? pages.map((page) => page.toJSON()) : [],
+                content: productPage ? productPage.toJSON() : null,
             })
         } catch (error) {
             console.log(error)
