@@ -30,8 +30,6 @@ module.exports = {
                 include: { association: `image`, where: { default: true }, limit: 1 },
             })
 
-            const pages = await Page.findAll()
-
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
             return res.render('page-products', {
