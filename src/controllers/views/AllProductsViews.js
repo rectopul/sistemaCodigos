@@ -38,7 +38,7 @@ module.exports = {
                 listProducts: products.map((product) => product.toJSON()),
                 pageType: 'site',
                 pageClasses: `page-product`,
-                pages: pages.map((page) => page.toJSON()),
+                pages: pages ? pages.map((page) => page.toJSON()) : null,
                 content: productPage ? productPage.toJSON() : null,
             })
         } catch (error) {
