@@ -493,6 +493,7 @@ const product = (() => {
                         confirmButtonText: 'Ok',
                     })
                 } catch (error) {
+                    console.log(error)
                     return Swal.fire({
                         title: error,
                         icon: 'error',
