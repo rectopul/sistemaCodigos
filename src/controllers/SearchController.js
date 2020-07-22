@@ -42,7 +42,7 @@ module.exports = {
                 console.log(response.city); // Mountain View
             }); */
 
-            const ipinfos = await axios.get(`http://ip-api.com/json/${`45.173.149.16`}`)
+            const ipinfos = await axios.get(`http://ip-api.com/json/${ip}`)
 
             const { city, region } = ipinfos.data
 
