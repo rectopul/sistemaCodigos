@@ -167,7 +167,6 @@ module.exports = {
 
             return res.json(response)
         } catch (error) {
-            console.log(`Erro ao criar novo produto: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 
@@ -177,6 +176,8 @@ module.exports = {
                 error.name == `userToken`
             )
                 return res.status(400).send({ error: error.message })
+
+            console.log(`Erro ao criar novo produto: `, error)
 
             return res.status(500).send({ error: `Erro de servidor` })
         }
