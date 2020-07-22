@@ -41,7 +41,7 @@ module.exports = {
                 pageType: 'site',
                 pageClasses: `page-product`,
                 pages: pages.map((page) => page.toJSON()),
-                content: productPage.toJSON(),
+                content: productPage ? productPage.toJSON() : null,
             })
         } catch (error) {
             console.log(error)
