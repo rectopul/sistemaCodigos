@@ -28,8 +28,6 @@ module.exports = {
                 include: { association: `banner`, include: { association: `image` } },
             })
 
-            console.log(home)
-
             const carousel = await Carousel.findAll({ include: { association: `image` } })
 
             return res.render('index', {

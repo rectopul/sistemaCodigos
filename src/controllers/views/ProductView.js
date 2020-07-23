@@ -88,8 +88,10 @@ module.exports = {
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
             return res.render('product', {
-                pageTitle: `Produto`,
+                pageTitle: productInfos ? productInfos.toJSON().name : `Produto`,
+                meta: { description: productInfos.toJSON().excerpt },
                 categories,
+                pageMetaTag: `true`,
                 pageType: 'site',
                 imageDef: imageDef ? imageDef.toJSON() : null,
                 product: productInfos ? productInfos.toJSON() : null,
