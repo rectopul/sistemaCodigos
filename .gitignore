@@ -1,5 +1,6 @@
 node_modules
 __tests__/coverage
 tmp/uploads/*.*
+.env
 !tmp/uploads/*.txt
 !tmp/uploads/
