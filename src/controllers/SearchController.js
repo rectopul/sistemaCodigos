@@ -30,17 +30,18 @@ module.exports = {
 
             const ip = req.clientIp.replace('::', '')
 
-            console.log(req.clientIp)
+            //console.log(req.clientIp)
 
             //2dfe1036d13a74
 
-            /* const ipinfoWrapper = new IPinfoWrapper('2dfe1036d13a74');
+            /* const ipinfoWrapper = new IPinfoWrapper('2dfe1036d13a74')
 
-            ipinfoWrapper.lookupIp(ip).then((response: IPinfo) => {
-                console.log(response.asn); // { asn: 'AS15169', name: 'Google LLC', domain: 'google.com', route: '8.8.8.0/24', type: 'hosting' }
-                console.log(response.hostname); // google-public-dns-a.google.com
-                console.log(response.city); // Mountain View
-            }); */
+            ipinfoWrapper.lookupIp('45.173.149.16').then((response) => {
+                console.log(response)
+                //console.log(response.asn); // { asn: 'AS15169', name: 'Google LLC', domain: 'google.com', route: '8.8.8.0/24', type: 'hosting' }
+                //console.log(response.hostname); // google-public-dns-a.google.com
+                //console.log(response.city); // Mountain View
+            }) */
 
             const ipinfos = await axios.get(`http://ip-api.com/json/${ip}`)
 
