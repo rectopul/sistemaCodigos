@@ -747,13 +747,15 @@ const formEditCategory = document.querySelector('.modalEditCategory form')
 
 if (formEditCategory) category.formSubmitEdit(document.querySelector('.modalEditCategory form'))
 
-document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
-    e.preventDefault()
+if (document.querySelector('.editCategorySlug')) {
+    document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
+        e.preventDefault()
 
-    const thisValue = document.querySelector('.editCategorySlug').value
+        const thisValue = document.querySelector('.editCategorySlug').value
 
-    document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
-})
+        document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
+    })
+}
 
 const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
 

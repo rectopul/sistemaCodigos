@@ -106,6 +106,7 @@ routes.get(`/dashboard`, async (req, res) => {
             subscribers,
         })
     } catch (error) {
+        console.log(error)
         return res.redirect('/login')
     }
 })
