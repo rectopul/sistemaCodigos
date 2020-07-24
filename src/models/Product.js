@@ -118,7 +118,7 @@ class Product extends Model {
         this.hasMany(models.Code, { foreignKey: 'product_id', as: 'codes' })
         this.hasMany(models.ProductImages, { foreignKey: 'product_id', as: 'image' })
         this.hasMany(models.ProductCategory, { foreignKey: 'product_id', as: 'category' })
-        this.hasMany(models.Bull, { foreignKey: 'product_id', as: 'bula' })
+        this.hasOne(models.Bull, { foreignKey: 'product_id', as: 'bula' })
     }
 }
 

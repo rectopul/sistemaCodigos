@@ -49,8 +49,6 @@ module.exports = {
                 include: { association: `category` },
             })
 
-            console.log(category)
-
             const idsCategory = category.category.map((inf) => inf.category_id)
 
             const productInfos = await Product.findOne({
@@ -96,6 +94,8 @@ module.exports = {
             })
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
+
+            console.log(productInfos.toJSON())
 
             return res.render('product', {
                 pageTitle: productInfos ? productInfos.toJSON().name : `Produto`,

@@ -50,7 +50,7 @@ module.exports = {
             const pdf = await Bull.findOne({ where: { product_id } })
 
             if (!pdf) {
-                const bula = await Bull.create({ name, size, key, url })
+                const bula = await Bull.create({ name, size, key, url, product_id })
 
                 return res.json(bula)
             }
