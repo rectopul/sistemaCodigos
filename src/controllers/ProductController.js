@@ -97,7 +97,7 @@ module.exports = {
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .toLowerCase()
-                .replace(' ', '_')
+                .replace(/ /g, '_')
 
             if (!categories) return res.status(400).send({ error: `Please enter a category` })
 
@@ -238,7 +238,7 @@ module.exports = {
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .toLowerCase()
-                .replace(' ', '_')
+                .replace(/ /g, '_')
 
             await product.update({
                 name,

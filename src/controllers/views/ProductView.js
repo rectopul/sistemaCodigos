@@ -49,11 +49,13 @@ module.exports = {
                 include: { association: `category` },
             })
 
+            console.log(category)
+
             const idsCategory = category.category.map((inf) => inf.category_id)
 
             const productInfos = await Product.findOne({
                 where: { slug: product_slug },
-                include: { association: `image` },
+                include: [{ association: `image` }, { association: `bula` }],
             })
 
             const products = await Category.findAll({
