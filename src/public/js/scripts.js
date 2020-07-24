@@ -168,12 +168,23 @@ const util = (() => {
         })
     }
 
+    const validateSlug = (slug) => {
+        slug = slug
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/ /g, '_')
+
+        return slug
+    }
+
     return {
         //public var/functions
         image,
         images,
         request,
         scroll,
+        validateSlug,
     }
 })()
 
@@ -230,81 +241,182 @@ if (btnValidat) util.scroll(btnValidat)
     )
 })()
 
-const loginResource = `login`
+const carousel = (() => {
+    //private var/functions
+    const table = $('#dataTable').DataTable()
 
-const requestLogin = (object) => {
-    return new Promise((resolve, reject) => {
-        const { email, password, gToken } = object
-
-        const reqUrl = `/api/${loginResource}`
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({ email, password, gToken }),
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) {
-                    return reject(response.error)
-                }
-
-                resolve(response)
-                return console.log(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const login = (form) => {
-    const inputMail = form.querySelector('.loginMail')
-    const inputPassword = form.querySelector('.loginPassword')
-
-    form.classList.add('was-validated')
-
-    if (!inputMail.value) {
-        return inputMail.classList.add('is-invalid')
-    } else {
-        inputMail.classList.remove('is-invalid')
-        inputMail.classList.add('is-valid')
-        //
+    const change = (input) => {
+        const container = document.querySelector('.carouselImageContainer')
+        util.image(input, container, 'single', 'large')
     }
-    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
 
-    grecaptcha.ready(function () {
-        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
-            // Add your logic to submit to your backend server here.
-            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
-                .then((res) => {
-                    ///dashboard
-                    window.location.href = '/dashboard'
+    const destroy = (button) => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault()
+
+            try {
+                const id = button.dataset.id
+
+                const deleted = await request({
+                    url: `/api/carousel/${id}`,
+                    method: `DELETE`,
                 })
-                .catch((error) => {
-                    const divAlert = document.createElement('div')
-                    divAlert.classList.add('alert', 'alert-danger')
-                    divAlert.setAttribute('role', 'alert')
-                    divAlert.innerHTML = error
 
-                    form.prepend(divAlert)
+                console.log(deleted)
 
-                    setTimeout(() => {
-                        divAlert.remove()
-                    }, 4000)
-                })
+                table
+                    .row($(button.closest('tr')))
+                    .remove()
+                    .draw()
+            } catch (error) {
+                console.log(error)
+            }
         })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { url, method, body, headers } = object
+
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
+
+            if (headers) {
+                options.headers['content-type'] = headers['content-type']
+            }
+
+            if (body) options.body = body
+
+            console.log(`Options request: `, options)
+
+            fetch(url, options)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const create = (form) => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            const image = form.querySelector('.carouselImage').files[0]
+
+            //return console.log(image)
+
+            if (form.checkValidity()) {
+                const formSend = new FormData()
+                formSend.append('file', image)
+
+                return request({
+                    url: `/api/carousel/image`,
+                    method: `POST`,
+                    body: formSend,
+                })
+                    .then((rImage) => {
+                        console.log(rImage)
+                        return request({
+                            url: `/api/carousel`,
+                            method: `POST`,
+                            headers: {
+                                'content-type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                name: form.querySelector('.carouselName').value,
+                                image_id: rImage.id,
+                            }),
+                        })
+                            .then((res) => {
+                                console.log(res)
+
+                                listInput = [...form.elements]
+
+                                listInput.map((input) => (input.value = ``))
+
+                                const newRow = table.row
+                                    .add([
+                                        res.id,
+                                        res.name,
+                                        `<img src="${res.image.url}" alt="..." class="img-thumbnail" style="max-width: 120px;">`,
+                                        res.createdAt,
+                                        `<button type="button"
+                                            class="btn btn-datatable btn-icon btn-transparent-dark carouselDestroy py-0"
+                                            data-id="${res.id}">
+
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" class="feather feather-trash-2">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path
+                                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                </path>
+                                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                                            </svg>
+                                        </button>
+                                        `,
+                                    ])
+                                    .draw()
+                                    .node()
+
+                                $('#modalCarousel').modal('hide')
+                                const buttonDestroy = newRow.querySelector('.carouselDestroy')
+
+                                if (buttonDestroy) destroy(buttonDestroy)
+
+                                return Swal.fire({
+                                    title: `Sucesso!`,
+                                    text: `Imagem criada com sucesso!`,
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok',
+                                })
+                            })
+                            .catch((err) => console.log(err))
+                    })
+                    .catch((err) => {
+                        return Swal.fire({
+                            title: `Erro`,
+                            text: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            }
+        })
+    }
+
+    return {
+        //public var/functions
+        change,
+        create,
+        destroy,
+    }
+})()
+
+const carouselDestroy = document.querySelectorAll('.carouselDestroy')
+
+if (carouselDestroy) {
+    Array.from(carouselDestroy).forEach((button) => {
+        carousel.destroy(button)
     })
 }
 
-const btnLogin = document.querySelector('.btnLogin')
+const carouselImage = document.querySelector('.carouselImage')
 
-if (btnLogin) {
-    btnLogin.addEventListener('click', (e) => {
-        e.preventDefault()
+const carouselForm = document.querySelector('.carouselForm')
 
-        login(btnLogin.closest('form'))
-    })
-}
+if (carouselForm) carousel.create(carouselForm)
+if (carouselImage) carousel.change(carouselImage)
 
 const category = (() => {
     const table = $('#dataTable').DataTable()
@@ -556,12 +668,40 @@ const category = (() => {
         }
     }
 
+    const formSubmitEdit = (form) => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+            const id = form.dataset.id
+
+            const name = form.querySelector('.editCategoryName').value
+            const description = form.querySelector('.editCategoryDescription').value
+            const slug = form.querySelector('.editCategorySlug').value
+            const parent = form.querySelector('.editCategoryParent').value || null
+            const position = form.querySelector('.editCategoryPosition').value
+
+            return edit({
+                id,
+                name,
+                description,
+                slug,
+                parent,
+                position,
+            }).then((res) => {
+                console.log(res)
+                $('#modalEditCategory').modal('hide')
+
+                return updateFront(res)
+            })
+        })
+    }
+
     //Functions from edit categories
     const openModal = (btn) => {
         btn.addEventListener('click', (e) => {
             const id = btn.dataset.id
             const action = `editCategory`
-            const btnModal = document.querySelector('.btnEditCategory')
+
+            //const btnModal = document.querySelector('.btnEditCategory')
 
             return find(id)
                 .then((res) => {
@@ -582,19 +722,7 @@ const category = (() => {
                     inputSlug.value = slug
                     inputPosition.value = position
 
-                    return btnModal.addEventListener('click', (e) => {
-                        return edit({
-                            id,
-                            name: inputName.value,
-                            description: inputDescription.value,
-                            slug: inputSlug.value,
-                            parent: inputParent.value || null,
-                            position: inputPosition.value,
-                        }).then((res) => {
-                            console.log(res)
-                            return updateFront(res)
-                        })
-                    })
+                    return (document.querySelector('.modalEditCategory form').dataset.id = id)
                 })
                 .catch((err) => {
                     console.log(err)
@@ -611,8 +739,21 @@ const category = (() => {
         destroy,
         create,
         edit: openModal,
+        formSubmitEdit,
     }
 })()
+
+const formEditCategory = document.querySelector('.modalEditCategory form')
+
+if (formEditCategory) category.formSubmitEdit(document.querySelector('.modalEditCategory form'))
+
+document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
+    e.preventDefault()
+
+    const thisValue = document.querySelector('.editCategorySlug').value
+
+    document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
+})
 
 const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
 
@@ -633,6 +774,82 @@ if (btnModalEditCategory) {
 const btnCreateCategory = document.querySelector('.btnCreateCategory')
 
 if (btnCreateCategory) category.create(btnCreateCategory)
+
+const loginResource = `login`
+
+const requestLogin = (object) => {
+    return new Promise((resolve, reject) => {
+        const { email, password, gToken } = object
+
+        const reqUrl = `/api/${loginResource}`
+        fetch(reqUrl, {
+            method: `POST`,
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, gToken }),
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                if (response.error) {
+                    return reject(response.error)
+                }
+
+                resolve(response)
+                return console.log(response)
+            })
+            .catch((error) => reject(error))
+    })
+}
+
+const login = (form) => {
+    const inputMail = form.querySelector('.loginMail')
+    const inputPassword = form.querySelector('.loginPassword')
+
+    form.classList.add('was-validated')
+
+    if (!inputMail.value) {
+        return inputMail.classList.add('is-invalid')
+    } else {
+        inputMail.classList.remove('is-invalid')
+        inputMail.classList.add('is-valid')
+        //
+    }
+    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
+
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
+            // Add your logic to submit to your backend server here.
+            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
+                .then((res) => {
+                    ///dashboard
+                    window.location.href = '/dashboard'
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
+
+                    form.prepend(divAlert)
+
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
+        })
+    })
+}
+
+const btnLogin = document.querySelector('.btnLogin')
+
+if (btnLogin) {
+    btnLogin.addEventListener('click', (e) => {
+        e.preventDefault()
+
+        login(btnLogin.closest('form'))
+    })
+}
 
 const page = (() => {
     //private var/functions
@@ -1082,6 +1299,398 @@ const newsletter = (() => {
 const newsForm = document.querySelector('.newsForm')
 
 if (newsForm) newsletter.subscribe(newsForm)
+
+const partner = (() => {
+    const table = $('#dataTable').DataTable()
+    //private var/functions
+    const fileChange = (input) => {
+        input.addEventListener('change', (e) => {
+            const filename = input.value.split(/(\\|\/)/g).pop()
+
+            input.closest('.custom-file').querySelector('label').innerHTML = filename
+
+            //action in change
+            const containerImages = document.querySelector('.imagePartner')
+
+            const files = [...input.files]
+
+            console.log(`Lista de imagens`, files)
+
+            files.map((file) => {
+                if (file.type != `image/png`) {
+                    input.value = ``
+
+                    return Swal.fire({
+                        title: `Imagem invlálida`,
+                        text: `A imagem deve ser no formato png`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                }
+
+                const imageContainer = document.createElement('div')
+
+                imageContainer.classList.add(`mb-2`, `col-12`)
+
+                imageContainer.innerHTML = `
+                <img class="img-thumbnail" src="">
+                `
+
+                const image = imageContainer.querySelector('img')
+
+                // FileReader support
+                if (FileReader && file) {
+                    var fr = new FileReader()
+                    fr.onload = function () {
+                        image.src = fr.result
+                    }
+                    fr.readAsDataURL(file)
+
+                    containerImages.innerHTML = ``
+
+                    return containerImages.append(imageContainer)
+                }
+
+                // Not supported
+                else {
+                    // fallback -- perhaps submit the input to an iframe and temporarily store
+                    // them on the server until the user's session ends.
+                }
+            })
+        })
+    }
+
+    const request = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { url, method, body, headers } = object
+
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': headers['content-type'] || null,
+                },
+            }
+
+            if (body) options.body = JSON.stringify(body)
+
+            fetch(url, options)
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const requestImg = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const form = new FormData()
+            form.append('file', file)
+
+            const reqUrl = `/api/image`
+
+            fetch(reqUrl, {
+                method: `POST`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const create = (form) => {
+        const inputImage = form.querySelector('input[type="file"]')
+
+        if (inputImage) {
+            fileChange(inputImage)
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            if (form.checkValidity()) {
+                putSpinnet(form, `insert`)
+                const object = {
+                    title: form.querySelector('.partnerTitle').value,
+                    company: form.querySelector('.partnerCompany').value,
+                    content: form.querySelector('.partnerContent').value,
+                    position: form.querySelector('.partnerPosition').value,
+                }
+
+                const url = form.dataset.id ? `/api/partner/${form.dataset.id}` : `/api/partner`
+
+                const options = {
+                    url,
+                    method: form.dataset.id ? `PUT` : `POST`,
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: {
+                        title: object.title,
+                        company: object.company,
+                        content: object.content,
+                        position: object.position,
+                    },
+                }
+
+                return request(options)
+                    .then((response) => {
+                        const { title, company, position, id, createdAt } = response
+
+                        const elements = [...form.elements]
+
+                        form.classList.remove('was-validated')
+
+                        document.querySelector('.imagePartner').innerHTML = ``
+
+                        elements.map((element) => {
+                            element.value = ``
+                        })
+
+                        const data = new Intl.DateTimeFormat('pt-BR').format(new Date(createdAt))
+
+                        if (form.dataset.id) {
+                            table
+                                .row($(`.partner-${id}`))
+                                .remove()
+                                .draw()
+
+                            form.dataset.id = ``
+                        }
+
+                        const newRow = table.row
+                            .add([
+                                id,
+                                title,
+                                company,
+                                position,
+                                data,
+                                `<button type="button"
+                                    class="btn btn-datatable btn-icon btn-transparent-dark partnerDestroy py-0"
+                                    data-id="${id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-trash-2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                                
+                                <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark partnerEdit"
+                                    data-id="${id}">
+                                    <i class="fas fas-fw fa-edit"></i>
+                                </button>
+                                `,
+                            ])
+                            .draw()
+                            .node()
+
+                        newRow.classList.add(`partner-${id}`)
+
+                        const btnDestroy = newRow.querySelector('button.partnerDestroy')
+                        const btnEditAction = newRow.querySelector('button.partnerEdit')
+
+                        btnEdit(btnEditAction, form)
+                        destroy(btnDestroy)
+
+                        putSpinnet(form, `remove`)
+
+                        $(form.closest('#modalPartner')).modal('hide')
+
+                        return Swal.fire({
+                            title: `Sucesso!`,
+                            text: `Parceiro ${title} criado com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((err) => {
+                        putSpinnet(form, `remove`)
+                        return Swal.fire({
+                            title: `Erro`,
+                            text: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            }
+        })
+    }
+
+    const destroy = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            const options = {
+                url: `/api/partner/${id}`,
+                method: `DELETE`,
+                headers: {
+                    'content-type': 'application/json',
+                },
+            }
+
+            return request(options)
+                .then((res) => {
+                    table
+                        .row($(button.closest('tr')))
+                        .remove()
+                        .draw()
+
+                    return Swal.fire({
+                        title: `Sucesso!`,
+                        text: `Parceiro ${res.title} deletado com sucesso!`,
+                        icon: 'success',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro!`,
+                        text: err,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+        })
+    }
+
+    const btnEdit = (button, form) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            if (!form)
+                return Swal.fire({
+                    title: `Formulário não existe`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+
+            form.dataset.id = id
+            form.classList.add('edit')
+
+            getValues(id)
+                .then(edit)
+                .then(putValues)
+                .catch((err) => {
+                    return Swal.fire({
+                        title: `Erro ao editar`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+
+            //return edit(form)
+        })
+    }
+
+    const getValues = (id) => {
+        return new Promise((resolve, reject) => {
+            //Get all values
+
+            return request({
+                method: `GET`,
+                url: `/api/partner/${id}`,
+                headers: {
+                    'content-type': `application/json`,
+                },
+            })
+                .then((res) => resolve(res))
+                .catch((err) => reject(err))
+        })
+    }
+
+    const putValues = (values) => {
+        return new Promise((resolve, reject) => {
+            const { company, content, id, title, position } = values
+
+            //inputs
+            const inputCompany = document.querySelector('.partnerCompany')
+            const inputTitle = document.querySelector('.partnerTitle')
+            const inputContent = document.querySelector('.partnerContent')
+            const inputPosition = document.querySelector('.partnerPosition')
+
+            inputCompany.value = company
+            inputTitle.value = title
+            inputContent.value = content
+            inputPosition.value = position
+
+            $(inputContent.closest('#modalPartner')).modal('show')
+
+            resolve(values)
+        })
+    }
+
+    const edit = (values) => {
+        return new Promise((resolve, reject) => {
+            //Get new values
+            //const id = form.dataset.id
+
+            //Submit form
+            return resolve(values)
+        })
+    }
+
+    return {
+        //public var/functions
+        create,
+        destroy,
+        edit: btnEdit,
+    }
+})()
+
+//Edit partners
+const btnEditPartn = document.querySelectorAll('.partnerEdit')
+
+if (btnEditPartn) Array.from(btnEditPartn).forEach((btn) => partner.edit(btn, document.querySelector('.partnerForm')))
+
+const formPartner = document.querySelector('.partnerForm')
+
+const partnerDestroy = document.querySelectorAll('.partnerDestroy')
+
+if (formPartner) partner.create(formPartner)
+
+if (partnerDestroy) {
+    Array.from(partnerDestroy).forEach((button) => {
+        partner.destroy(button)
+    })
+}
+
+//hidden form partner
+
+$('#modalPartner').on('hidden.bs.modal', function (e) {
+    let form = this.querySelector('form')
+
+    const elements = [...form.elements]
+
+    form.dataset.id = ``
+
+    elements.map((input) => (input.value = ``))
+
+    console.log(form)
+})
 
 const btnsProduct = document.querySelectorAll('.productDelete')
 
@@ -1621,6 +2230,10 @@ const product = (() => {
                     })
 
                     codesClear()
+
+                    images.value = ``
+
+                    pdf.value = ``
 
                     return Swal.fire({
                         title: `Produto atualizado com sucesso`,
@@ -2309,182 +2922,368 @@ const ImageProduct = document.querySelector('.productImage')
 
 if (ImageProduct) imgProduct.change(ImageProduct)
 
-const carousel = (() => {
-    //private var/functions
-    const table = $('#dataTable').DataTable()
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
 
-    const change = (input) => {
-        const container = document.querySelector('.carouselImageContainer')
-        util.image(input, container, 'single', 'large')
+            const reqUrl = `/api/user/image`
+
+            const form = new FormData()
+            form.append('file', file)
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
     }
 
-    const destroy = (button) => {
-        button.addEventListener('click', async (e) => {
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
+
+            const reqUrl = `/api/user`
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
+        button.addEventListener('click', (e) => {
             e.preventDefault()
 
-            try {
-                const id = button.dataset.id
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
 
-                const deleted = await request({
-                    url: `/api/carousel/${id}`,
-                    method: `DELETE`,
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
                 })
 
-                console.log(deleted)
+                button.innerHTML = `Edit profile`
 
-                table
-                    .row($(button.closest('tr')))
-                    .remove()
-                    .draw()
-            } catch (error) {
-                console.log(error)
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
+            }
+        })
+    }
+
+    //get all fields
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
+
+    return {
+        //public var/functions
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
+    }
+})()
+
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
+
+if (inputEditAvatar) profile.edit(inputEditAvatar)
+
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
+
+if (btnEditUser) profile.enableEdit(btnEditUser)
+
+const search = (() => {
+    //validate form
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.value) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //private vars/functions
+    const search = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            console.log()
+
+            const inputCode = document.querySelector('input.Code')
+
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
+                    .then((res) => {
+                        return request({
+                            code: inputCode.value,
+                            name: inputName.value,
+                            surname: inputSurname.value,
+                            email: inputMail.value,
+                        })
+                            .then((res) => {
+                                const { device, code, ip, city, address } = res
+                                const clientInfo = document.querySelector('.clientInfo')
+
+                                return (clientInfo.innerHTML = `
+                            <p>
+                                <strong>Código: </strong> ${code.code}
+                            </p>
+                            <p>
+                                <strong>Produto: </strong> ${code.product.name}
+                            </p>
+                            <p>
+                                <strong>Item: </strong> ${code.item.name}
+                            </p>
+                            <p>
+                                <strong>Device: </strong> ${device}
+                            </p>
+                            <p>
+                                <strong>Cidade: </strong> ${city}
+                            </p>
+                            <p>
+                                <strong>Estado: </strong> ${address}
+                            </p>
+                            <p>
+                                <strong>Endereço IP: </strong> ${ip}
+                            </p>
+                        `)
+                            })
+                            .catch((err) => {
+                                return Swal.fire({
+                                    title: err,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok',
+                                })
+                            })
+                    })
+                    .catch((err) => console.log(err))
             }
         })
     }
 
     const request = (object) => {
         return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
+            const { name, surname, email, code } = object
 
-            const { url, method, body, headers } = object
-
-            const options = {
-                method: method || `GET`,
+            fetch(`/api/search`, {
+                method: 'POST',
                 headers: {
-                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json',
                 },
-            }
-
-            if (headers) {
-                options.headers['content-type'] = headers['content-type']
-            }
-
-            if (body) options.body = body
-
-            console.log(`Options request: `, options)
-
-            fetch(url, options)
-                .then((r) => r.json())
+                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
+            })
+                .then((res) => res.json())
                 .then((res) => {
+                    console.log(res)
                     if (res.error) return reject(res.error)
-
                     return resolve(res)
                 })
                 .catch((error) => reject(error))
         })
     }
 
-    const create = (form) => {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault()
+    const requestShow = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
 
-            const image = form.querySelector('.carouselImage').files[0]
-
-            //return console.log(image)
-
-            if (form.checkValidity()) {
-                const formSend = new FormData()
-                formSend.append('file', image)
-
-                return request({
-                    url: `/api/carousel/image`,
-                    method: `POST`,
-                    body: formSend,
+            fetch(`/api/search/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
                 })
-                    .then((rImage) => {
-                        console.log(rImage)
-                        return request({
-                            url: `/api/carousel`,
-                            method: `POST`,
-                            headers: {
-                                'content-type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                name: form.querySelector('.carouselName').value,
-                                image_id: rImage.id,
-                            }),
-                        })
-                            .then((res) => {
-                                console.log(res)
-
-                                listInput = [...form.elements]
-
-                                listInput.map((input) => (input.value = ``))
-
-                                const newRow = table.row
-                                    .add([
-                                        res.id,
-                                        res.name,
-                                        `<img src="${res.image.url}" alt="..." class="img-thumbnail" style="max-width: 120px;">`,
-                                        res.createdAt,
-                                        `<button type="button"
-                                            class="btn btn-datatable btn-icon btn-transparent-dark carouselDestroy py-0"
-                                            data-id="${res.id}">
-
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round" class="feather feather-trash-2">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path
-                                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                                </path>
-                                                <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                <line x1="14" y1="11" x2="14" y2="17"></line>
-                                            </svg>
-                                        </button>
-                                        `,
-                                    ])
-                                    .draw()
-                                    .node()
-
-                                $('#modalCarousel').modal('hide')
-                                const buttonDestroy = newRow.querySelector('.carouselDestroy')
-
-                                if (buttonDestroy) destroy(buttonDestroy)
-
-                                return Swal.fire({
-                                    title: `Sucesso!`,
-                                    text: `Imagem criada com sucesso!`,
-                                    icon: 'success',
-                                    confirmButtonText: 'Ok',
-                                })
-                            })
-                            .catch((err) => console.log(err))
-                    })
-                    .catch((err) => {
-                        return Swal.fire({
-                            title: `Erro`,
-                            text: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            }
+                .catch((error) => reject(error))
         })
     }
 
+    const show = (searche) => {
+        //modalShowConsult
+        searche.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = searche.dataset.id
+
+            return requestShow(id).then((res) => {
+                const date = new Intl.DateTimeFormat('pt-BR').format(new Date(res.createdAt))
+                document.querySelector('.consultId').innerHTML = res.id
+                document.querySelector('.consultName').innerHTML = res.name
+                document.querySelector('.consultSurname').innerHTML = res.surname
+                document.querySelector('.consultMail').innerHTML = res.email
+                document.querySelector('.consultCity').innerHTML = res.city
+                document.querySelector('.consultAddress').innerHTML = res.address
+                document.querySelector('.consultCode').innerHTML = res.code.code
+                document.querySelector('.consultIp').innerHTML = res.ip
+                document.querySelector('.constData').innerHTML = date
+                $('#modalShowConsult').modal('show')
+            })
+        })
+    }
     return {
-        //public var/functions
-        change,
-        create,
-        destroy,
+        //piblic vars/function
+        search,
+        show,
     }
 })()
 
-const carouselDestroy = document.querySelectorAll('.carouselDestroy')
+const consults = document.querySelectorAll('.listConsults > tr')
 
-if (carouselDestroy) {
-    Array.from(carouselDestroy).forEach((button) => {
-        carousel.destroy(button)
+if (consults) {
+    Array.from(consults).forEach((consult) => {
+        search.show(consult)
     })
 }
 
-const carouselImage = document.querySelector('.carouselImage')
+$('.page-adm-consults #dataTable').on('draw.dt', function () {
+    const elementsConsults = document.querySelectorAll('.listConsults > tr')
 
-const carouselForm = document.querySelector('.carouselForm')
+    if (elementsConsults) {
+        Array.from(elementsConsults).forEach((consult) => {
+            search.show(consult)
+        })
+    }
+})
 
-if (carouselForm) carousel.create(carouselForm)
-if (carouselImage) carousel.change(carouselImage)
+const btnSearchCode = document.querySelector('.submitSearch')
+
+if (btnSearchCode) search.search(btnSearchCode)
 
 const userResource = `user`
 
@@ -2722,761 +3521,6 @@ if (btnInsertUser) {
         userCreate(btnInsertUser.closest('form'))
     })
 }
-
-const partner = (() => {
-    const table = $('#dataTable').DataTable()
-    //private var/functions
-    const fileChange = (input) => {
-        input.addEventListener('change', (e) => {
-            const filename = input.value.split(/(\\|\/)/g).pop()
-
-            input.closest('.custom-file').querySelector('label').innerHTML = filename
-
-            //action in change
-            const containerImages = document.querySelector('.imagePartner')
-
-            const files = [...input.files]
-
-            console.log(`Lista de imagens`, files)
-
-            files.map((file) => {
-                if (file.type != `image/png`) {
-                    input.value = ``
-
-                    return Swal.fire({
-                        title: `Imagem invlálida`,
-                        text: `A imagem deve ser no formato png`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                }
-
-                const imageContainer = document.createElement('div')
-
-                imageContainer.classList.add(`mb-2`, `col-12`)
-
-                imageContainer.innerHTML = `
-                <img class="img-thumbnail" src="">
-                `
-
-                const image = imageContainer.querySelector('img')
-
-                // FileReader support
-                if (FileReader && file) {
-                    var fr = new FileReader()
-                    fr.onload = function () {
-                        image.src = fr.result
-                    }
-                    fr.readAsDataURL(file)
-
-                    containerImages.innerHTML = ``
-
-                    return containerImages.append(imageContainer)
-                }
-
-                // Not supported
-                else {
-                    // fallback -- perhaps submit the input to an iframe and temporarily store
-                    // them on the server until the user's session ends.
-                }
-            })
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { url, method, body, headers } = object
-
-            const options = {
-                method: method || `GET`,
-                headers: {
-                    authorization: `Bearer ${token}`,
-                    'content-type': headers['content-type'] || null,
-                },
-            }
-
-            if (body) options.body = JSON.stringify(body)
-
-            fetch(url, options)
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestImg = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const form = new FormData()
-            form.append('file', file)
-
-            const reqUrl = `/api/image`
-
-            fetch(reqUrl, {
-                method: `POST`,
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const create = (form) => {
-        const inputImage = form.querySelector('input[type="file"]')
-
-        if (inputImage) {
-            fileChange(inputImage)
-        }
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault()
-
-            if (form.checkValidity()) {
-                putSpinnet(form, `insert`)
-                const object = {
-                    title: form.querySelector('.partnerTitle').value,
-                    company: form.querySelector('.partnerCompany').value,
-                    content: form.querySelector('.partnerContent').value,
-                    position: form.querySelector('.partnerPosition').value,
-                }
-
-                const url = form.dataset.id ? `/api/partner/${form.dataset.id}` : `/api/partner`
-
-                const options = {
-                    url,
-                    method: form.dataset.id ? `PUT` : `POST`,
-                    headers: {
-                        'content-type': 'application/json',
-                    },
-                    body: {
-                        title: object.title,
-                        company: object.company,
-                        content: object.content,
-                        position: object.position,
-                    },
-                }
-
-                return request(options)
-                    .then((response) => {
-                        const { title, company, position, id, createdAt } = response
-
-                        const elements = [...form.elements]
-
-                        form.classList.remove('was-validated')
-
-                        document.querySelector('.imagePartner').innerHTML = ``
-
-                        elements.map((element) => {
-                            element.value = ``
-                        })
-
-                        const data = new Intl.DateTimeFormat('pt-BR').format(new Date(createdAt))
-
-                        if (form.dataset.id) {
-                            table
-                                .row($(`.partner-${id}`))
-                                .remove()
-                                .draw()
-
-                            form.dataset.id = ``
-                        }
-
-                        const newRow = table.row
-                            .add([
-                                id,
-                                title,
-                                company,
-                                position,
-                                data,
-                                `<button type="button"
-                                    class="btn btn-datatable btn-icon btn-transparent-dark partnerDestroy py-0"
-                                    data-id="${id}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="feather feather-trash-2">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path
-                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                        </path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </button>
-                                
-                                <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark partnerEdit"
-                                    data-id="${id}">
-                                    <i class="fas fas-fw fa-edit"></i>
-                                </button>
-                                `,
-                            ])
-                            .draw()
-                            .node()
-
-                        newRow.classList.add(`partner-${id}`)
-
-                        const btnDestroy = newRow.querySelector('button.partnerDestroy')
-                        const btnEditAction = newRow.querySelector('button.partnerEdit')
-
-                        btnEdit(btnEditAction, form)
-                        destroy(btnDestroy)
-
-                        putSpinnet(form, `remove`)
-
-                        $(form.closest('#modalPartner')).modal('hide')
-
-                        return Swal.fire({
-                            title: `Sucesso!`,
-                            text: `Parceiro ${title} criado com sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                    .catch((err) => {
-                        putSpinnet(form, `remove`)
-                        return Swal.fire({
-                            title: `Erro`,
-                            text: err,
-                            icon: 'error',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-            }
-        })
-    }
-
-    const destroy = (button) => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const id = button.dataset.id
-
-            const options = {
-                url: `/api/partner/${id}`,
-                method: `DELETE`,
-                headers: {
-                    'content-type': 'application/json',
-                },
-            }
-
-            return request(options)
-                .then((res) => {
-                    table
-                        .row($(button.closest('tr')))
-                        .remove()
-                        .draw()
-
-                    return Swal.fire({
-                        title: `Sucesso!`,
-                        text: `Parceiro ${res.title} deletado com sucesso!`,
-                        icon: 'success',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-                .catch((err) => {
-                    return Swal.fire({
-                        title: `Erro!`,
-                        text: err,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-        })
-    }
-
-    const btnEdit = (button, form) => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const id = button.dataset.id
-
-            if (!form)
-                return Swal.fire({
-                    title: `Formulário não existe`,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-
-            form.dataset.id = id
-            form.classList.add('edit')
-
-            getValues(id)
-                .then(edit)
-                .then(putValues)
-                .catch((err) => {
-                    return Swal.fire({
-                        title: `Erro ao editar`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-
-            //return edit(form)
-        })
-    }
-
-    const getValues = (id) => {
-        return new Promise((resolve, reject) => {
-            //Get all values
-
-            return request({
-                method: `GET`,
-                url: `/api/partner/${id}`,
-                headers: {
-                    'content-type': `application/json`,
-                },
-            })
-                .then((res) => resolve(res))
-                .catch((err) => reject(err))
-        })
-    }
-
-    const putValues = (values) => {
-        return new Promise((resolve, reject) => {
-            const { company, content, id, title, position } = values
-
-            //inputs
-            const inputCompany = document.querySelector('.partnerCompany')
-            const inputTitle = document.querySelector('.partnerTitle')
-            const inputContent = document.querySelector('.partnerContent')
-            const inputPosition = document.querySelector('.partnerPosition')
-
-            inputCompany.value = company
-            inputTitle.value = title
-            inputContent.value = content
-            inputPosition.value = position
-
-            $(inputContent.closest('#modalPartner')).modal('show')
-
-            resolve(values)
-        })
-    }
-
-    const edit = (values) => {
-        return new Promise((resolve, reject) => {
-            //Get new values
-            //const id = form.dataset.id
-
-            //Submit form
-            return resolve(values)
-        })
-    }
-
-    return {
-        //public var/functions
-        create,
-        destroy,
-        edit: btnEdit,
-    }
-})()
-
-//Edit partners
-const btnEditPartn = document.querySelectorAll('.partnerEdit')
-
-if (btnEditPartn) Array.from(btnEditPartn).forEach((btn) => partner.edit(btn, document.querySelector('.partnerForm')))
-
-const formPartner = document.querySelector('.partnerForm')
-
-const partnerDestroy = document.querySelectorAll('.partnerDestroy')
-
-if (formPartner) partner.create(formPartner)
-
-if (partnerDestroy) {
-    Array.from(partnerDestroy).forEach((button) => {
-        partner.destroy(button)
-    })
-}
-
-//hidden form partner
-
-$('#modalPartner').on('hidden.bs.modal', function (e) {
-    let form = this.querySelector('form')
-
-    const elements = [...form.elements]
-
-    form.dataset.id = ``
-
-    elements.map((input) => (input.value = ``))
-
-    console.log(form)
-})
-
-const search = (() => {
-    //validate form
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                if (!input.value) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //private vars/functions
-    const search = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            console.log()
-
-            const inputCode = document.querySelector('input.Code')
-
-            const inputName = document.querySelector('input.name')
-            const inputSurname = document.querySelector('input.surname')
-            const inputMail = document.querySelector('input.mail')
-
-            if (inputName && inputSurname && inputMail) {
-                const objectValidate = [
-                    { input: inputName, msg: `Informe seu nome` },
-                    { input: inputSurname, msg: `Informe seu sobrenome` },
-                    { input: inputMail, msg: `Informe seu e-mail` },
-                ]
-
-                return validate(objectValidate)
-                    .then((res) => {
-                        return request({
-                            code: inputCode.value,
-                            name: inputName.value,
-                            surname: inputSurname.value,
-                            email: inputMail.value,
-                        })
-                            .then((res) => {
-                                const { device, code, ip, city, address } = res
-                                const clientInfo = document.querySelector('.clientInfo')
-
-                                return (clientInfo.innerHTML = `
-                            <p>
-                                <strong>Código: </strong> ${code.code}
-                            </p>
-                            <p>
-                                <strong>Produto: </strong> ${code.product.name}
-                            </p>
-                            <p>
-                                <strong>Item: </strong> ${code.item.name}
-                            </p>
-                            <p>
-                                <strong>Device: </strong> ${device}
-                            </p>
-                            <p>
-                                <strong>Cidade: </strong> ${city}
-                            </p>
-                            <p>
-                                <strong>Estado: </strong> ${address}
-                            </p>
-                            <p>
-                                <strong>Endereço IP: </strong> ${ip}
-                            </p>
-                        `)
-                            })
-                            .catch((err) => {
-                                return Swal.fire({
-                                    title: err,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok',
-                                })
-                            })
-                    })
-                    .catch((err) => console.log(err))
-            }
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { name, surname, email, code } = object
-
-            fetch(`/api/search`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestShow = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/search/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const show = (searche) => {
-        //modalShowConsult
-        searche.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const id = searche.dataset.id
-
-            return requestShow(id).then((res) => {
-                const date = new Intl.DateTimeFormat('pt-BR').format(new Date(res.createdAt))
-                document.querySelector('.consultId').innerHTML = res.id
-                document.querySelector('.consultName').innerHTML = res.name
-                document.querySelector('.consultSurname').innerHTML = res.surname
-                document.querySelector('.consultMail').innerHTML = res.email
-                document.querySelector('.consultCity').innerHTML = res.city
-                document.querySelector('.consultAddress').innerHTML = res.address
-                document.querySelector('.consultCode').innerHTML = res.code.code
-                document.querySelector('.consultIp').innerHTML = res.ip
-                document.querySelector('.constData').innerHTML = date
-                $('#modalShowConsult').modal('show')
-            })
-        })
-    }
-    return {
-        //piblic vars/function
-        search,
-        show,
-    }
-})()
-
-const consults = document.querySelectorAll('.listConsults > tr')
-
-if (consults) {
-    Array.from(consults).forEach((consult) => {
-        search.show(consult)
-    })
-}
-
-$('.page-adm-consults #dataTable').on('draw.dt', function () {
-    const elementsConsults = document.querySelectorAll('.listConsults > tr')
-
-    if (elementsConsults) {
-        Array.from(elementsConsults).forEach((consult) => {
-            search.show(consult)
-        })
-    }
-})
-
-const btnSearchCode = document.querySelector('.submitSearch')
-
-if (btnSearchCode) search.search(btnSearchCode)
-
-const profile = (() => {
-    //private functions/var
-    const request = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const reqUrl = `/api/user/image`
-
-            const form = new FormData()
-            form.append('file', file)
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestProfile = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
-
-            const reqUrl = `/api/user`
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const changeState = (input) => {
-        input.addEventListener('change', function (e) {
-            editAvatar(input)
-        })
-    }
-
-    const editAvatar = (input) => {
-        console.log(input.files)
-        return request(input.files[0])
-            .then((res) => {
-                if (res.error) return console.log(res.error)
-
-                document.querySelector('.img-profile').src = res.url
-
-                return (document.querySelector('.profile-avatar').src = res.url)
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const enableForm = (button) => {
-        if (!button) console.log(`Botão não existe`)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
-
-            const formulario = document.querySelector('.formEditUser')
-
-            if (button.classList.contains('save')) {
-                Array.from(form).forEach((input) => {
-                    input.disabled = true
-                })
-
-                button.innerHTML = `Edit profile`
-
-                if (formulario) getFields(formulario)
-
-                return button.classList.remove('save')
-            } else {
-                Array.from(form).forEach((input) => {
-                    input.disabled = false
-                })
-
-                button.innerHTML = `Salvar alterações`
-
-                return button.classList.add('save')
-            }
-        })
-    }
-
-    //get all fields
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    const getFields = (form) => {
-        if (!form) return console.log(`Formulário não existe`)
-
-        const listElements = Array.from(form.elements)
-
-        const object = {
-            name: form.querySelector('#input-username').value,
-            email: form.querySelector('#input-email').value,
-            currentPassword: form.querySelector('#input-current-password').value,
-            newPassword: form.querySelector('#input-new-password').value,
-            address: form.querySelector('#input-address').value,
-            city: form.querySelector('#input-city').value,
-            phone: form.querySelector('#input-phone').value,
-            cell: form.querySelector('#input-cell').value,
-            about: form.querySelector('#textarea-about').value,
-        }
-
-        return requestProfile(object)
-            .then((res) => {
-                if (res.error)
-                    return Swal.fire({
-                        title: `Erro ao atualizar usuário`,
-                        text: res.error,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-
-                return Swal.fire({
-                    title: `Perfil atualizado`,
-                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) =>
-                Swal.fire({
-                    title: `Erro ao atualizar usuário`,
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            )
-
-        console.log(object)
-    }
-
-    //requestSaveProfile
-
-    return {
-        //public var/functions
-        edit: changeState,
-        enableEdit: enableForm,
-        save: getFields,
-    }
-})()
-
-const inputEditAvatar = document.querySelector('.inputProfileAvatar')
-
-if (inputEditAvatar) profile.edit(inputEditAvatar)
-
-//btnEditUser
-const btnEditUser = document.querySelector('.btnEditUser')
-
-if (btnEditUser) profile.enableEdit(btnEditUser)
 
 const contact = (() => {
     //private var/functions

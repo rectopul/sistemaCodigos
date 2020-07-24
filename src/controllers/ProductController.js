@@ -93,6 +93,12 @@ module.exports = {
                 pdf,
             } = req.body
 
+            let slug = name
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(' ', '_')
+
             if (!categories) return res.status(400).send({ error: `Please enter a category` })
 
             if (!items.length) return res.status(400).send({ error: `please enter at least one item` })
@@ -115,6 +121,7 @@ module.exports = {
 
             const product = await Product.create({
                 name,
+                slug,
                 description,
                 excerpt,
                 weight,
@@ -227,8 +234,15 @@ module.exports = {
 
             const { name, description, weight, lot, type, availability, items, brand, excerpt, category } = req.body
 
+            let slug = name
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(' ', '_')
+
             await product.update({
                 name,
+                slug,
                 description,
                 weight,
                 lot,

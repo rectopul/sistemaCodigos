@@ -4,6 +4,7 @@ const Page = require('../../models/Page')
 const ProductCategory = require('../../models/ProductCategory')
 const ImageProduct = require('../../models/ImageProduct')
 const { Op } = require('sequelize')
+const sequelize = require('sequelize')
 
 function doTruncarStr(str, size) {
     if (str == undefined || str == 'undefined' || str == '' || size == undefined || size == 'undefined' || size == '') {
@@ -39,15 +40,21 @@ module.exports = {
 
             const pages = await Page.findAll()
 
-            const { product_id } = req.params
+            const { product_id: product_slug } = req.params
 
-            if (!product_id) return res.redirect('/404')
+            if (!product_slug) return res.redirect('/404')
 
-            const category = await Product.findByPk(product_id, { include: { association: `category` } })
+            const category = await Product.findOne({
+                where: { slug: product_slug },
+                include: { association: `category` },
+            })
 
             const idsCategory = category.category.map((inf) => inf.category_id)
 
-            const productInfos = await Product.findByPk(product_id, { include: { association: `image` } })
+            const productInfos = await Product.findOne({
+                where: { slug: product_slug },
+                include: { association: `image` },
+            })
 
             const products = await Category.findAll({
                 where: {
@@ -57,6 +64,7 @@ module.exports = {
                 },
                 include: {
                     association: `products`,
+                    order: [[sequelize.literal('random()')]],
                     include: {
                         association: `product`,
                         include: { association: `image`, where: { default: true }, required: false },
@@ -65,7 +73,7 @@ module.exports = {
                 },
             })
 
-            const imageDef = await ImageProduct.findOne({ where: { product_id, default: true } })
+            const imageDef = await ImageProduct.findOne({ where: { product_id: category.id, default: true } })
 
             const productSend = products.map((prod) => {
                 const produto = prod.toJSON()

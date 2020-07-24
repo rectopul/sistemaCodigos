@@ -486,6 +486,10 @@ const product = (() => {
 
                     codesClear()
 
+                    images.value = ``
+
+                    pdf.value = ``
+
                     return Swal.fire({
                         title: `Produto atualizado com sucesso`,
                         text: `O produto ${product.name} foi atualizado com sucesso!`,

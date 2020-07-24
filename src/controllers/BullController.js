@@ -43,20 +43,25 @@ module.exports = {
             //check product
             const product = await Product.findByPk(product_id)
 
+            let { originalname: name, size, key, location: url = '' } = req.file
+
             if (!product) return res.status(400).send({ error: `This product not exist` })
 
             const pdf = await Bull.findOne({ where: { product_id } })
 
-            if (!pdf) return res.status(400).send({ error: `This bull not exist` })
+            if (!pdf) {
+                const bula = await Bull.create({ name, size, key, url })
+
+                return res.json(bula)
+            }
 
             await pdf.destroy()
-
-            let { originalname: name, size, key, location: url = '' } = req.file
 
             const bula = await Bull.create({ name, size, key, url, product_id })
 
             return res.json(bula)
         } catch (error) {
+            console.log(`Erro ao atualizar banner: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 

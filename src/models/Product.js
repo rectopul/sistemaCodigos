@@ -7,12 +7,30 @@ class Product extends Model {
                 name: {
                     type: DataTypes.STRING,
                     allowNull: false,
+                    unique: {
+                        msg: `Este nome de produto já existe`,
+                    },
                     validate: {
                         notNull: {
                             msg: `The name field cannot be empty`,
                         },
                         notEmpty: {
                             msg: `The name field cannot be empty`,
+                        },
+                    },
+                },
+                slug: {
+                    type: DataTypes.TEXT,
+                    allowNull: false,
+                    unique: {
+                        msg: `This slug already exist`,
+                    },
+                    validate: {
+                        notEmpty: {
+                            msg: `Slug field Can not be empty`,
+                        },
+                        notNull: {
+                            msg: `Slug field Can not be empty`,
                         },
                     },
                 },

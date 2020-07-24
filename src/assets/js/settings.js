@@ -168,12 +168,23 @@ const util = (() => {
         })
     }
 
+    const validateSlug = (slug) => {
+        slug = slug
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/ /g, '_')
+
+        return slug
+    }
+
     return {
         //public var/functions
         image,
         images,
         request,
         scroll,
+        validateSlug,
     }
 })()
 

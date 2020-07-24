@@ -32,7 +32,10 @@ module.exports = {
                 where: { slug: category_slug },
                 include: {
                     association: `products`,
-                    include: { association: `product`, include: { association: `image`, where: { default: true } } },
+                    include: {
+                        association: `product`,
+                        include: { association: `image`, where: { default: true }, limit: 1, required: false },
+                    },
                 },
             })
 

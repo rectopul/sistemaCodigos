@@ -75,6 +75,7 @@ module.exports = {
 
             return res.json(banner)
         } catch (error) {
+            console.log(`Erro ao atualizar banner: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 

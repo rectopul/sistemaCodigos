@@ -176,6 +176,8 @@ module.exports = {
 
             const { name, description, parent, position } = req.body
 
+            const newPosition = (await Category.count()) + 1
+
             let { slug } = req.body
 
             if (!slug) {
@@ -186,8 +188,19 @@ module.exports = {
                     .replace(' ', '_')
             }
 
+            const categoryNameCount = await Category.count({
+                where: {
+                    slug,
+                    id: {
+                        [Op.not]: category_id,
+                    },
+                },
+            })
+
+            slug += `${categoryNameCount > 0 ? '_' + categoryNameCount : ``}`
+
             await Category.update(
-                { name, slug, description, parent, position: parseInt(position) },
+                { name, slug, description, parent, position: parseInt(position) || parseInt(newPosition) },
                 { where: { id: category_id } }
             )
 

@@ -28,6 +28,7 @@ module.exports = {
 
             return res.json(response)
         } catch (error) {
+            console.log(`Erro ao criar carousel novo: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 

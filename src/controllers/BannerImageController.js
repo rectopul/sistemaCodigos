@@ -20,6 +20,7 @@ module.exports = {
 
             return res.json(image)
         } catch (error) {
+            console.log(`Erro ao inserir imagem de produto: `, error)
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
 

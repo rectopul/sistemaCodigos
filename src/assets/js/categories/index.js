@@ -248,12 +248,40 @@ const category = (() => {
         }
     }
 
+    const formSubmitEdit = (form) => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+            const id = form.dataset.id
+
+            const name = form.querySelector('.editCategoryName').value
+            const description = form.querySelector('.editCategoryDescription').value
+            const slug = form.querySelector('.editCategorySlug').value
+            const parent = form.querySelector('.editCategoryParent').value || null
+            const position = form.querySelector('.editCategoryPosition').value
+
+            return edit({
+                id,
+                name,
+                description,
+                slug,
+                parent,
+                position,
+            }).then((res) => {
+                console.log(res)
+                $('#modalEditCategory').modal('hide')
+
+                return updateFront(res)
+            })
+        })
+    }
+
     //Functions from edit categories
     const openModal = (btn) => {
         btn.addEventListener('click', (e) => {
             const id = btn.dataset.id
             const action = `editCategory`
-            const btnModal = document.querySelector('.btnEditCategory')
+
+            //const btnModal = document.querySelector('.btnEditCategory')
 
             return find(id)
                 .then((res) => {
@@ -274,19 +302,7 @@ const category = (() => {
                     inputSlug.value = slug
                     inputPosition.value = position
 
-                    return btnModal.addEventListener('click', (e) => {
-                        return edit({
-                            id,
-                            name: inputName.value,
-                            description: inputDescription.value,
-                            slug: inputSlug.value,
-                            parent: inputParent.value || null,
-                            position: inputPosition.value,
-                        }).then((res) => {
-                            console.log(res)
-                            return updateFront(res)
-                        })
-                    })
+                    return (document.querySelector('.modalEditCategory form').dataset.id = id)
                 })
                 .catch((err) => {
                     console.log(err)
@@ -303,8 +319,21 @@ const category = (() => {
         destroy,
         create,
         edit: openModal,
+        formSubmitEdit,
     }
 })()
+
+const formEditCategory = document.querySelector('.modalEditCategory form')
+
+if (formEditCategory) category.formSubmitEdit(document.querySelector('.modalEditCategory form'))
+
+document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
+    e.preventDefault()
+
+    const thisValue = document.querySelector('.editCategorySlug').value
+
+    document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
+})
 
 const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
 
