@@ -122,9 +122,9 @@ routes.get(`/edit-page/:page_slug`, EditPageView.view)
 
 routes.get('/partner', PartnersViews.view)
 
-routes.get('/contact', ContactView.view)
+routes.get('/contato', ContactView.view)
 routes.get('/reques-contact', RequestView.view)
-routes.get('/distributors', DistributorsView.view)
+routes.get('/distribuidores', DistributorsView.view)
 routes.get('/codes', CodesView.view)
 
 //search
