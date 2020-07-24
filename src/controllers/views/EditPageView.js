@@ -48,8 +48,8 @@ module.exports = {
 
                     return client
                 }),
-                info: pageInfo.toJSON(),
-                pages: pages.map((page) => page.toJSON()),
+                info: pageInfo ? pageInfo.toJSON() : null,
+                pages: pages ? pages.map((page) => page.toJSON()) : null,
             })
         } catch (error) {
             console.log(error)
