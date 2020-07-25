@@ -115,27 +115,36 @@ const util = (() => {
         })
     }
 
-    const request = (url, method, useToken, object, contentType) => {
+    const newRequest = (object) => {
         return new Promise((resolve, reject) => {
-            /* const { headers, method, url } = object
+            const token = document.body.dataset.token
 
-            var myHeaders = new Headers()
+            const { url, method, body, headers } = object
 
-            if (headers['Content-Type']) myHeaders.append('Content-Type', headers['Content-Type'])
-            if (headers['authorization']) myHeaders.append('authorization', headers.authorization)
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
 
-            var myInit = { method, headers: myHeaders }
+            if (headers) options.headers['content-type'] = headers['content-type']
 
-            var myRequest = new Request(url, myInit)
+            if (body) options.body = body
 
-            fetch(myRequest)
+            fetch(url, options)
                 .then((r) => r.json())
                 .then((res) => {
                     if (res.error) return reject(res.error)
 
                     return resolve(res)
                 })
-                .catch((error) => reject(error)) */
+                .catch((error) => reject(error))
+        })
+    }
+
+    const request = (url, method, useToken, object, contentType) => {
+        return new Promise((resolve, reject) => {
             const token = `Bearer ${document.body.dataset.token}`
 
             const headers = {}
@@ -185,6 +194,7 @@ const util = (() => {
         request,
         scroll,
         validateSlug,
+        newRequest,
     }
 })()
 

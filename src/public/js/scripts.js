@@ -115,27 +115,36 @@ const util = (() => {
         })
     }
 
-    const request = (url, method, useToken, object, contentType) => {
+    const newRequest = (object) => {
         return new Promise((resolve, reject) => {
-            /* const { headers, method, url } = object
+            const token = document.body.dataset.token
 
-            var myHeaders = new Headers()
+            const { url, method, body, headers } = object
 
-            if (headers['Content-Type']) myHeaders.append('Content-Type', headers['Content-Type'])
-            if (headers['authorization']) myHeaders.append('authorization', headers.authorization)
+            const options = {
+                method: method || `GET`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+            }
 
-            var myInit = { method, headers: myHeaders }
+            if (headers) options.headers['content-type'] = headers['content-type']
 
-            var myRequest = new Request(url, myInit)
+            if (body) options.body = body
 
-            fetch(myRequest)
+            fetch(url, options)
                 .then((r) => r.json())
                 .then((res) => {
                     if (res.error) return reject(res.error)
 
                     return resolve(res)
                 })
-                .catch((error) => reject(error)) */
+                .catch((error) => reject(error))
+        })
+    }
+
+    const request = (url, method, useToken, object, contentType) => {
+        return new Promise((resolve, reject) => {
             const token = `Bearer ${document.body.dataset.token}`
 
             const headers = {}
@@ -185,6 +194,7 @@ const util = (() => {
         request,
         scroll,
         validateSlug,
+        newRequest,
     }
 })()
 
@@ -3291,6 +3301,8 @@ const userResource = `user`
 
 const user = (() => {
     //private vars/functions
+    const img = document.querySelector('.insertUserAvatar')
+    const table = $('#dataTable').DataTable()
 
     const requestForgot = (email) => {
         return new Promise((resolve, reject) => {
@@ -3326,9 +3338,116 @@ const user = (() => {
         })
     }
 
+    const handleImage = (input) => {
+        input.addEventListener('change', function (e) {
+            e.preventDefault()
+
+            const file = input.files[0]
+
+            const accept = ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif']
+
+            input.closest('div').querySelector('label').innerHTML = file.name
+
+            if (accept.indexOf(file.type) === -1) {
+                return Swal.fire({
+                    title: `Selecione um arquivo de imagem`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            }
+
+            // FileReader support
+            if (FileReader && file) {
+                //console.log(file)
+                var fr = new FileReader()
+                fr.onload = function () {
+                    img.src = fr.result
+                }
+                fr.readAsDataURL(file)
+            }
+        })
+    }
+
+    const image = (object) => {
+        return new Promise((resolve, reject) => {
+            const input = document.querySelector('.userFile')
+
+            if (!input) return reject(`Input not exist`)
+
+            const file = input.files[0]
+
+            if (file) {
+                const form = new FormData()
+                form.append('file', file)
+
+                return util
+                    .newRequest({
+                        method: `POST`,
+                        url: `/api/user/image/${object.id}`,
+                        body: form,
+                    })
+                    .then((res) => resolve(res))
+                    .catch((err) => reject(err))
+            } else {
+                return resolve()
+            }
+        })
+    }
+
+    const create = (form) => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault()
+
+            if (form.checkValidity()) {
+                const name = form.querySelector('.userName').value
+                const email = form.querySelector('.userMail').value
+                const phone = form.querySelector('.userPhone').value
+                const cell = form.querySelector('.userCell').value
+                const password = form.querySelector('.userPassword').value
+
+                return util
+                    .newRequest({
+                        method: `POST`,
+                        url: `/api/user`,
+                        headers: {
+                            'content-type': `application/json`,
+                        },
+                        body: JSON.stringify({ name, email, phone, cell, password }),
+                    })
+                    .then(image)
+                    .then((res) => {
+                        const elements = [...form.elements]
+
+                        elements.map((input) => (input.value = ``))
+
+                        img.src = `https://via.placeholder.com/200`
+
+                        const { id, name, email, type } = res.user
+
+                        const newRow = table.row.add([name, email, type, ``]).draw()
+
+                        return Swal.fire({
+                            title: `${name} criado com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((err) => {
+                        return Swal.fire({
+                            title: err,
+                            icon: 'error',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            }
+        })
+    }
+
     return {
         //public vars/functions
         forgot,
+        handleImage,
+        create,
     }
 })()
 
@@ -3506,23 +3625,13 @@ const userCreate = (form) => {
 const inputImageUser = document.querySelector('.userFile')
 
 if (inputImageUser) {
-    inputImageUser.addEventListener('change', (e) => {
-        console.log(inputImageUser.files[0])
-        return requestInsertAvatar(inputImageUser.files[0]).then((res) => {
-            document.querySelector('.insertUserAvatar').setAttribute('src', res.url)
-            document.querySelector('.inputUserImage').value = res.id
-        })
-    })
+    console.log(inputImageUser)
+    user.handleImage(inputImageUser)
 }
 
-const btnInsertUser = document.querySelector('.btnCreateUser')
+const formNewUser = document.querySelector('.formCreateUser')
 
-if (btnInsertUser) {
-    btnInsertUser.addEventListener('click', (e) => {
-        e.preventDefault()
-        userCreate(btnInsertUser.closest('form'))
-    })
-}
+if (formNewUser) user.create(formNewUser)
 
 const contact = (() => {
     //private var/functions

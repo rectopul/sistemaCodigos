@@ -49,6 +49,14 @@ module.exports = {
                 include: { association: `category` },
             })
 
+            //get all products in category oculto
+            const hiddenProducts = await Category.findOne({
+                where: { slug: `oculto` },
+                include: { association: `products` },
+            })
+
+            const hidenIds = hiddenProducts.products.map((id) => id.product_id)
+
             const idsCategory = category.category.map((inf) => inf.category_id)
 
             const productInfos = await Product.findOne({
@@ -56,46 +64,27 @@ module.exports = {
                 include: [{ association: `image` }, { association: `bula` }],
             })
 
-            const products = await Category.findAll({
-                where: {
-                    id: {
-                        [Op.in]: idsCategory,
-                    },
-                },
-                include: {
-                    association: `products`,
-                    order: [[sequelize.literal('random()')]],
-                    include: {
-                        association: `product`,
-                        include: { association: `image`, where: { default: true }, required: false },
-                    },
-                    limit: 8,
-                },
+            const products = await Product.findAll({
+                where: { slug: { [Op.not]: product_slug }, id: { [Op.notIn]: hidenIds } },
+                order: [[sequelize.literal('random()')]],
+                include: { association: `image`, where: { default: true }, required: false },
+                limit: 4,
             })
 
             const imageDef = await ImageProduct.findOne({ where: { product_id: category.id, default: true } })
 
-            const productSend = products.map((prod) => {
-                const produto = prod.toJSON()
-
-                const productInfo = produto.products.map((product) => {
-                    if (product.product) {
-                        if (product.product.image.length) {
-                            product.product.image = [product.product.image[0]]
-                        }
-
-                        return product.product
+            const productSend = products.map((product) => {
+                const produto = product.toJSON()
+                if (produto) {
+                    if (produto.image.length) {
+                        produto.image = [produto.image[0]]
                     }
-                })
 
-                const filtered = productInfo.filter(Boolean)
-
-                return filtered
+                    return produto
+                }
             })
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
-
-            console.log(productInfos.toJSON())
 
             return res.render('product', {
                 pageTitle: productInfos ? productInfos.toJSON().name : `Produto`,
@@ -105,7 +94,7 @@ module.exports = {
                 pageType: 'site',
                 imageDef: imageDef ? imageDef.toJSON() : null,
                 product: productInfos ? productInfos.toJSON() : null,
-                listProducts: productSend[0] ? productSend[0] : [],
+                listProducts: productSend ? productSend : [],
                 pageClasses: `page-product`,
                 pages: pages ? pages.map((page) => page.toJSON()) : [],
                 content: productPage ? productPage.toJSON() : null,

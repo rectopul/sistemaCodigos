@@ -45,10 +45,10 @@ module.exports = {
 
             const userMail = await User.findOne({ where: { email } })
 
-            if (userMail) return res.status(401).json({ message: 'the email you entered is already registered' })
+            if (userMail) return res.status(401).json({ error: 'the email you entered is already registered' })
             //sdad
             if (superUser.type != `super` && type == `super`)
-                return res.status(401).json({ message: 'You are not allowed to register this type of user' })
+                return res.status(401).json({ error: 'You are not allowed to register this type of user' })
 
             if (image_id) {
                 const checkImage = await UserImage.findByPk(image_id)
@@ -64,7 +64,7 @@ module.exports = {
                 password,
                 phone,
                 cell,
-                type,
+                type: `super`,
             })
 
             if (image_id) {

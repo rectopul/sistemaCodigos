@@ -12,6 +12,7 @@
         "posttest": "NODE_ENV=test sequelize db:migrate:undo:all"
     },
     "dependencies": {
+        "@sendgrid/mail": "^7.2.2",
         "aws-sdk": "^2.610.0",
         "axios": "^0.19.2",
         "bcryptjs": "^2.4.3",

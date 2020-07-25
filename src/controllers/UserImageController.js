@@ -35,7 +35,9 @@ module.exports = {
         try {
             const authHeader = req.headers.authorization
 
-            const { user_id } = await UserByToken(authHeader)
+            await UserByToken(authHeader)
+
+            const { user_id } = req.params
 
             let { originalname: name, size, key, location: url = '' } = req.file
 
@@ -47,7 +49,9 @@ module.exports = {
                 user_id,
             })
 
-            return res.json(image)
+            const response = await UserImage.findByPk(image.id, { include: { association: `user` } })
+
+            return res.json(response)
         } catch (error) {}
     },
     async edit(req, res) {

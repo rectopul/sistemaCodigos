@@ -1,5 +1,6 @@
 const UserByToken = require('../middlewares/userByToken')
 const Contact = require('../models/Contact')
+const mailer = require('../modules/mailer')
 
 module.exports = {
     async index(req, res) {
@@ -131,6 +132,47 @@ module.exports = {
             const { fullname, email, subject, message } = req.body
 
             const contact = await Contact.create({ fullname, email, subject, message, status: `pending` })
+
+            /* const msg = {
+                to: 'test@example.com',
+                from: 'test@example.com',
+                subject: 'Sending with Twilio SendGrid is Fun',
+                text: 'and easy to do anywhere, even with Node.js',
+                html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+            } */
+
+            /* const mailsend = await mailer({
+                to: process.env.MAIL_FROM,
+                from: email,
+                subject: 'Sending with Twilio SendGrid is Fun',
+                text: 'Solicitação de contato',
+                html: `<strong>Você uma solicitação de contato foi recebida</strong>
+                <p>
+                Detalhes: 
+                </p>
+                <ul>
+                    <li>Remetente: ${email}</li>
+                    <li>Assunto: ${subject}</li>
+                    <li>message: ${message}</li>
+                </ul>`,
+            }) */
+
+            const mailsend = await mailer.sendMail(
+                {
+                    to: process.env.MAIL_FROM,
+                    from: email,
+                    subject: `Solicitação de contato de <${email}>`,
+                    template: 'requestContact',
+                    context: { fullname, mail: email, subject, message },
+                },
+                (err) => {
+                    if (err) return res.status(400).send({ error: 'Cannot send forgot password email' })
+
+                    return res.send()
+                }
+            )
+
+            console.log(`/nEmail Recebido`, mailsend)
 
             return res.json(contact)
         } catch (error) {

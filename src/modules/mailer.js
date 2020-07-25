@@ -6,16 +6,58 @@ const sgTransport = require('nodemailer-sendgrid-transport')
 
 aws.config.update({ region: process.env.AWS_DEFAULT_REGION })
 
+const sgMail = require('@sendgrid/mail')
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+
+const sendMail = (msg) => {
+    return new Promise((resolve, reject) => {
+        sgMail
+            .send(msg)
+            .then((res) => resolve(res))
+            .catch((err) => {
+                console.log(err.response.body)
+                reject({
+                    name: `sendGridSender`,
+                    message: err.response.body,
+                })
+            })
+    })
+}
+
+const sendMailGmail = (msg) => {
+    return new Promise((resolve, reject) => {
+        sgMail
+            .send(msg)
+            .then((res) => resolve(res))
+            .catch((err) => {
+                console.log(err.response.body)
+                reject({
+                    name: `sendGridSender`,
+                    message: err.response.body,
+                })
+            })
+    })
+}
+
+/* const msg = {
+    to: 'test@example.com',
+    from: 'test@example.com',
+    subject: 'Sending with Twilio SendGrid is Fun',
+    text: 'and easy to do anywhere, even with Node.js',
+    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+} */
+
 // create Nodemailer SES transporter
 // eslint-disable-next-line no-unused-vars
-/* const gmail = {
+const gmail = {
     host: `smtp.gmail.com`,
     port: 587,
     auth: {
         user: `mateusrectopul@gmail.com`,
-        pass: `308554970B`,
+        pass: `27m0209R`,
     },
-} */
+}
 
 /* {
     host: process.env.MAIL_HOST,
@@ -26,23 +68,15 @@ aws.config.update({ region: process.env.AWS_DEFAULT_REGION })
     },
 }
  */
-const transport = nodemailer.createTransport(
+/* const transport = nodemailer.createTransport(
     sgTransport({
         auth: {
             api_key: process.env.ADMIN_EMAIL_API_KEY, // your api key here, better hide it in env vars
         },
     })
-)
+) */
 
-/* var transport = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    secure: true,
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-}) */
+var transport = nodemailer.createTransport(gmail)
 
 transport.use(
     'compile',
