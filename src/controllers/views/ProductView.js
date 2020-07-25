@@ -57,8 +57,6 @@ module.exports = {
 
             const hidenIds = hiddenProducts.products.map((id) => id.product_id)
 
-            const idsCategory = category.category.map((inf) => inf.category_id)
-
             const productInfos = await Product.findOne({
                 where: { slug: product_slug },
                 include: [{ association: `image` }, { association: `bula` }],
