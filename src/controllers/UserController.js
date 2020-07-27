@@ -89,6 +89,28 @@ module.exports = {
             return res.status(500).send({ error: `Erro de servidor` })
         }
     },
+
+    async destroy(req, res) {
+        try {
+            //Get user id by token
+            const authHeader = req.headers.authorization
+
+            const { user_id } = req.params
+
+            await UserByToken(authHeader)
+
+            const user = await User.findByPk(user_id)
+
+            if (!user) return res.status(400).send({ error: `This user not exist` })
+
+            await user.destroy()
+
+            return res.json(user)
+        } catch (error) {
+            console.log(error)
+        }
+    },
+
     async update(req, res) {
         try {
             //Get user id by token

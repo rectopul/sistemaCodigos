@@ -43,7 +43,7 @@
                         <td>
                             <button type="button"
                                 class="btn btn-datatable btn-icon btn-transparent-dark contactChange py-0"
-                                data-id="{{id}}">
+                                data-id="{{id}}" {{#ifCond status 'attended'}}disabled{{/ifCond}}>
                                 <i class="fas fa-check"></i>
                             </button>
                         </td>

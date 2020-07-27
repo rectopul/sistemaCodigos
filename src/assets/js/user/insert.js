@@ -90,7 +90,7 @@ const user = (() => {
                     .then((res) => resolve(res))
                     .catch((err) => reject(err))
             } else {
-                return resolve()
+                return resolve({ user: object })
             }
         })
     }
@@ -125,7 +125,17 @@ const user = (() => {
 
                         const { id, name, email, type } = res.user
 
-                        const newRow = table.row.add([name, email, type, ``]).draw()
+                        const newRow = table.row
+                            .add([
+                                name,
+                                email,
+                                type,
+                                `<button type="button" class="btn btn-sm btn-danger excludeUser" data-id="${id}">excluir</button>`,
+                            ])
+                            .draw()
+                            .node()
+
+                        destroy(newRow.querySelector('button'))
 
                         return Swal.fire({
                             title: `${name} criado com sucesso!`,
@@ -144,13 +154,45 @@ const user = (() => {
         })
     }
 
+    const destroy = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            util.newRequest({
+                url: `/api/user/${id}`,
+                method: `DELETE`,
+            }).then((res) => {
+                //Delete row
+
+                table
+                    .row($(button.closest('tr')))
+                    .remove()
+                    .draw()
+
+                return Swal.fire({
+                    title: `Usuário excluído!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+        })
+    }
+
     return {
         //public vars/functions
         forgot,
         handleImage,
         create,
+        destroy,
     }
 })()
+
+//Delete user
+const btnDestroyUser = document.querySelectorAll('.excludeUser')
+
+if (btnDestroyUser) Array.from(btnDestroyUser).forEach((btn) => user.destroy(btn))
 
 const btnForgot = document.querySelector('.btnForgot')
 

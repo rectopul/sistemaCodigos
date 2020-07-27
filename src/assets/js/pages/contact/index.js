@@ -1,5 +1,7 @@
 const contact = (() => {
     //private var/functions
+    const table = $('#dataTable').DataTable()
+
     const request = (object) => {
         return new Promise((resolve, reject) => {
             const { url, method, body, headers } = object
@@ -75,11 +77,59 @@ const contact = (() => {
         })
     }
 
+    const change = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            util.newRequest({
+                url: `/api/contact/${id}`,
+                method: 'PUT',
+            }).then((res) => {
+                const { createdAt, fullname, email, subject, id, status } = res
+
+                const data = new Intl.DateTimeFormat('pt-br').format(new Date(createdAt))
+
+                table
+                    .row($(button.closest('tr')))
+                    .remove()
+                    .draw()
+
+                const newRow = table.row
+                    .add([
+                        id,
+                        fullname,
+                        email,
+                        subject,
+                        data,
+                        status,
+                        `<button type="button" class="btn btn-datatable btn-icon btn-transparent-dark contactChange py-0" data-id="${id}" disabled>
+                        <i class="fas fa-check"></i>
+                        </button>`,
+                    ])
+                    .draw()
+                    .node()
+
+                return Swal.fire({
+                    title: `Solicitação atendida`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+        })
+    }
+
     return {
         //public var/functions
         create,
+        change,
     }
 })()
+
+const btnContactChange = document.querySelectorAll('.contactChange')
+
+if (btnContactChange) Array.from(btnContactChange).forEach((btn) => contact.change(btn))
 
 const formContact = document.querySelector('.form-contact')
 

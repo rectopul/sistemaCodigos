@@ -11,6 +11,7 @@ const handlebars = require('express-handlebars')
 const session = require('express-session')
 const flash = require('connect-flash')
 const requestIp = require('request-ip')
+const errorView = require('./controllers/views/404View')
 
 require('./database')
 
@@ -156,7 +157,9 @@ app.use('/files', express.static(path.resolve(__dirname, '..', 'tmp', 'uploads')
 app.use(routes)
 
 app.use((req, res) => {
-    res.status(404).send({ url: req.originalUrl + ' not found' })
+    // /errorView
+    res.render('404')
+    //res.status(404).send({ url: req.originalUrl + ' not found' })
 })
 
 app.listen(process.env.PORT || 3333)

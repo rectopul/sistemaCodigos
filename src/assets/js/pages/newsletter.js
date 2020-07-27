@@ -66,8 +66,8 @@ const newsletter = (() => {
                         })
                         .catch((err) => {
                             return Swal.fire({
-                                title: `Erro ao cadastrar-se`,
-                                text: err,
+                                title: `Esse e-mail já está cadastrado`,
+                                text: `Insira outro e-mail para um novo cadastro`,
                                 icon: 'error',
                                 confirmButtonText: 'Ok',
                             })

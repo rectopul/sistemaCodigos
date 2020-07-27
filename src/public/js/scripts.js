@@ -1291,8 +1291,8 @@ const newsletter = (() => {
                         })
                         .catch((err) => {
                             return Swal.fire({
-                                title: `Erro ao cadastrar-se`,
-                                text: err,
+                                title: `Esse e-mail já está cadastrado`,
+                                text: `Insira outro e-mail para um novo cadastro`,
                                 icon: 'error',
                                 confirmButtonText: 'Ok',
                             })
@@ -3389,7 +3389,7 @@ const user = (() => {
                     .then((res) => resolve(res))
                     .catch((err) => reject(err))
             } else {
-                return resolve()
+                return resolve({ user: object })
             }
         })
     }
@@ -3424,7 +3424,17 @@ const user = (() => {
 
                         const { id, name, email, type } = res.user
 
-                        const newRow = table.row.add([name, email, type, ``]).draw()
+                        const newRow = table.row
+                            .add([
+                                name,
+                                email,
+                                type,
+                                `<button type="button" class="btn btn-sm btn-danger excludeUser" data-id="${id}">excluir</button>`,
+                            ])
+                            .draw()
+                            .node()
+
+                        destroy(newRow.querySelector('button'))
 
                         return Swal.fire({
                             title: `${name} criado com sucesso!`,
@@ -3443,13 +3453,45 @@ const user = (() => {
         })
     }
 
+    const destroy = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            util.newRequest({
+                url: `/api/user/${id}`,
+                method: `DELETE`,
+            }).then((res) => {
+                //Delete row
+
+                table
+                    .row($(button.closest('tr')))
+                    .remove()
+                    .draw()
+
+                return Swal.fire({
+                    title: `Usuário excluído!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+        })
+    }
+
     return {
         //public vars/functions
         forgot,
         handleImage,
         create,
+        destroy,
     }
 })()
+
+//Delete user
+const btnDestroyUser = document.querySelectorAll('.excludeUser')
+
+if (btnDestroyUser) Array.from(btnDestroyUser).forEach((btn) => user.destroy(btn))
 
 const btnForgot = document.querySelector('.btnForgot')
 
@@ -3635,6 +3677,8 @@ if (formNewUser) user.create(formNewUser)
 
 const contact = (() => {
     //private var/functions
+    const table = $('#dataTable').DataTable()
+
     const request = (object) => {
         return new Promise((resolve, reject) => {
             const { url, method, body, headers } = object
@@ -3710,11 +3754,59 @@ const contact = (() => {
         })
     }
 
+    const change = (button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            util.newRequest({
+                url: `/api/contact/${id}`,
+                method: 'PUT',
+            }).then((res) => {
+                const { createdAt, fullname, email, subject, id, status } = res
+
+                const data = new Intl.DateTimeFormat('pt-br').format(new Date(createdAt))
+
+                table
+                    .row($(button.closest('tr')))
+                    .remove()
+                    .draw()
+
+                const newRow = table.row
+                    .add([
+                        id,
+                        fullname,
+                        email,
+                        subject,
+                        data,
+                        status,
+                        `<button type="button" class="btn btn-datatable btn-icon btn-transparent-dark contactChange py-0" data-id="${id}" disabled>
+                        <i class="fas fa-check"></i>
+                        </button>`,
+                    ])
+                    .draw()
+                    .node()
+
+                return Swal.fire({
+                    title: `Solicitação atendida`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+        })
+    }
+
     return {
         //public var/functions
         create,
+        change,
     }
 })()
+
+const btnContactChange = document.querySelectorAll('.contactChange')
+
+if (btnContactChange) Array.from(btnContactChange).forEach((btn) => contact.change(btn))
 
 const formContact = document.querySelector('.form-contact')
 
