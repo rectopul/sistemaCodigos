@@ -11,7 +11,6 @@ const handlebars = require('express-handlebars')
 const session = require('express-session')
 const flash = require('connect-flash')
 const requestIp = require('request-ip')
-const errorView = require('./controllers/views/404View')
 
 require('./database')
 
@@ -68,13 +67,19 @@ app.engine(
                 if (arr.length) {
                     return arr.map((item, key) => {
                         if (key < 1) {
-                            return `<div class="carousel-item active">
-                            <img src="${item.url}" class="d-block w-100" alt="...">
-                        </div>`
+                            return `
+                            <div class="carousel-item active">
+                                <a href="${item.url || `/`}">
+                                    <img src="${item.image.url}" class="d-block w-100" alt="...">
+                                </a>
+                            </div>`
                         } else {
-                            return `<div class="carousel-item">
-                            <img src="${item.url}" class="d-block w-100" alt="...">
-                        </div>`
+                            return `
+                            <div class="carousel-item">
+                                <a href="${item.url || `/`}">
+                                    <img src="${item.image.url}" class="d-block w-100" alt="...">
+                                </a>
+                            </div>`
                         }
                     })
                 }

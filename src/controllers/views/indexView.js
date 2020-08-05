@@ -34,7 +34,7 @@ module.exports = {
                 pageTitle: `Bratva`,
                 categories,
                 banners: carousel.map((carr) => {
-                    return carr.toJSON().image
+                    return carr.toJSON()
                 }),
                 bannerPape: home.toJSON().banner.image,
                 home: home.toJSON(),

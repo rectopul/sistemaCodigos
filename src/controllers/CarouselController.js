@@ -10,7 +10,7 @@ module.exports = {
 
             await UserByToken(authHeader)
 
-            const { name, image_id } = req.body
+            const { name, image_id, url } = req.body
 
             //check page
 
@@ -22,7 +22,7 @@ module.exports = {
             }
 
             //Create carousel
-            const carousel = await Carousel.create({ name, image_id })
+            const carousel = await Carousel.create({ name, image_id, url: url || null })
 
             const response = await Carousel.findByPk(carousel.id, { include: { association: `image` } })
 

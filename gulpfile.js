@@ -1,10 +1,31 @@
-var { watch, src, dest, series } = require('gulp'),
+var { watch, src, dest, series, parallel } = require('gulp'),
     stylus = require('gulp-stylus'),
     autoprefixer = require('autoprefixer-stylus'),
     jsImport = require('gulp-js-import'),
     minify = require('gulp-minify'),
     rename = require('gulp-rename'),
-    concat = require('gulp-concat')
+    concat = require('gulp-concat'),
+    nodemon = require('gulp-nodemon')
+
+/* var gulp = require('gulp')
+
+gulp.task('nodemon', function () {
+    
+}) */
+
+const start = (done) => {
+    nodemon({
+        script: 'src/server.js',
+        ext: 'js',
+        env: { NODE_ENV: 'development' },
+        done,
+    })
+}
+
+function watchSrc() {
+    watch('./src/assets/css/**/*.styl', css)
+    watch(['./src/assets/js/**/*.js'], js)
+}
 
 const css = () => {
     return src('./src/assets/css/**/*.styl')
@@ -43,10 +64,8 @@ const js = () => {
 
 exports.js = js
 exports.css = css
+exports.start = start
 
-exports.init = series(css, js)
+exports.init = series(css, js, start)
 
-exports.default = function () {
-    watch('./src/assets/css/**/*.styl', series(css))
-    watch(['./src/assets/js/**/*.js'], series(js))
-}
+exports.default = parallel(series(watchSrc), start)

@@ -16,6 +16,14 @@ class Carousel extends Model {
                         },
                     },
                 },
+                url: {
+                    type: DataTypes.TEXT,
+                    validate: {
+                        notEmpty: {
+                            msg: `The url field cannot be empty`,
+                        },
+                    },
+                },
             },
             {
                 sequelize,

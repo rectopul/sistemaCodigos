@@ -90,6 +90,7 @@ const carousel = (() => {
                             },
                             body: JSON.stringify({
                                 name: form.querySelector('.carouselName').value,
+                                url: form.elements['url'].value,
                                 image_id: rImage.id,
                             }),
                         })
