@@ -3,6 +3,35 @@ const Image = require('../models/Image')
 const Carousel = require('../models/Carousel')
 
 module.exports = {
+    async show(req, res) {
+        try {
+            //Get user id by token
+            const authHeader = req.headers.authorization
+
+            await UserByToken(authHeader)
+
+            const { carousel_id } = req.params
+
+            const carousel = await Carousel.findByPk(carousel_id, { include: { association: `image` } })
+
+            return res.json(carousel)
+        } catch (error) {
+            //Validação de erros
+            if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
+
+            if (
+                error.name == `SequelizeValidationError` ||
+                error.name == `SequelizeUniqueConstraintError` ||
+                error.name == `userToken`
+            )
+                return res.status(400).send({ error: error.message })
+
+            console.log(`Erro ao listar banner: `, error)
+
+            return res.status(500).send({ error: `Erro de servidor` })
+        }
+    },
+
     async store(req, res, err) {
         try {
             //Get user id by token

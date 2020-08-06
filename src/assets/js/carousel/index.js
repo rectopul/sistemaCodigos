@@ -275,13 +275,27 @@ const carousel = (() => {
 
             const form = document.querySelector('.formEditCarousel')
 
-            console.log(form)
+            //console.log(form)
 
             form.dataset.id = id
 
-            const modal = document.querySelector('#carouselEditModal')
+            //get infos
+            util.newRequest({
+                url: `/api/carousel/${id}`,
+                method: `GET`,
+                headers: {
+                    'content-type': 'application/json',
+                },
+            }).then((res) => {
+                const { name, url } = res
 
-            $(modal).modal('show')
+                form.elements['name'].value = name
+                form.elements['url'].value = url
+
+                const modal = document.querySelector('#carouselEditModal')
+
+                $(modal).modal('show')
+            })
         })
     }
 

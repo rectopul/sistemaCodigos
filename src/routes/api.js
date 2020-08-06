@@ -116,6 +116,7 @@ routes.post(`/api/contact`, ContactController.store)
 routes.post(`/api/carousel/image`, multer(multerConfig).single('file'), ImageController.store)
 routes.post(`/api/carousel`, CarouselController.store)
 routes.put(`/api/carousel/:carousel_id`, CarouselController.update)
+routes.get(`/api/carousel/:carousel_id`, CarouselController.show)
 routes.put(`/api/carousel_image/:carousel_id`, multer(multerConfig).single('file'), CarouselController.imageUpdate)
 routes.delete(`/api/carousel/:carousel_id`, CarouselController.destroy)
 //session
