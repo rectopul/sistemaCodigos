@@ -22,6 +22,24 @@ const util = (() => {
         })
     }
 
+    const serialize = (form) => {
+        const inputs = [...form.elements]
+
+        const object = {}
+
+        inputs.map((input, key) => {
+            //console.dir(input)
+            if (input.type == `radio`) {
+                if (input.checked) return (object[input.name] = input.value)
+                else return
+            }
+
+            if (input.name) object[input.name] = input.value
+        })
+
+        return object
+    }
+
     image = (input, output, mode, size) => {
         input.addEventListener('change', (e) => {
             e.preventDefault()
@@ -187,6 +205,12 @@ const util = (() => {
         return slug
     }
 
+    const resetForm = (form) => {
+        const inputs = [...form.elements]
+
+        inputs.map((input) => (input.value = ``))
+    }
+
     return {
         //public var/functions
         image,
@@ -195,6 +219,8 @@ const util = (() => {
         scroll,
         validateSlug,
         newRequest,
+        serialize,
+        resetForm,
     }
 })()
 
@@ -406,13 +432,157 @@ const carousel = (() => {
         })
     }
 
+    const handleImageUpdate = (object) => {
+        return new Promise((resolve, reject) => {
+            const { id } = object.data
+
+            const form = object.form
+
+            const file = form.elements['file'].files[0]
+
+            if (!file) return resolve(object.data)
+
+            const formData = new FormData()
+
+            formData.append('file', file)
+
+            fetch(`/api/carousel_image/${id}`, {
+                method: 'PUT',
+                headers: {
+                    authorization: `Bearer ${document.body.dataset.token}`,
+                },
+                body: formData,
+            })
+                .then((r) => r.json())
+                .then((res) => resolve(res))
+                .catch((error) => {
+                    console.log(error)
+                    reject(error)
+                })
+        })
+    }
+
+    const handleUpdate = (form) => {
+        return new Promise((resolve, reject) => {
+            const object = util.serialize(form)
+
+            const id = form.dataset.id
+
+            return util
+                .newRequest({
+                    url: `/api/carousel/${id}`,
+                    method: `PUT`,
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify(object),
+                })
+                .then((res) => resolve({ data: res, form: form }))
+                .catch((err) => reject(err))
+        })
+    }
+
+    const update = (form) => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault()
+
+            const formId = form.dataset.id
+
+            if (form.checkValidity()) {
+                return handleUpdate(form)
+                    .then(handleImageUpdate)
+                    .then((res) => {
+                        util.resetForm(form)
+
+                        //update table
+
+                        let temp = []
+
+                        temp[0] = res.id
+                        temp[1] = res.name
+                        temp[2] = `<img src="${
+                            res.image.url || `via.placeholder.com/200`
+                        }" alt="..." class="img-thumbnail" style="max-width: 120px;">`
+
+                        temp[3] = res.createdAt
+                        temp[4] = `
+                            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark carouselDestroy py-0" data-id="${res.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+
+                            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark carouselEdit py-0" data-id="${res.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        `
+
+                        const changed = table
+                            .row($(`tr[data-carousel="${formId}"]`))
+                            .data(temp)
+                            .draw()
+                            .node()
+
+                        changed.dataset.carousel = res.id
+                        console.log(changed)
+
+                        const btnEdit = changed.querySelector('.carouselEdit')
+                        const btnDelete = changed.querySelector('.carouselDestroy')
+
+                        handleModalUpdate(btnEdit)
+                        destroy(btnDelete)
+
+                        return Swal.fire(`Sucesso!`, `Carrossel alterado com sucesso!`, 'success')
+                    })
+                    .catch((err) => {
+                        console.log(err)
+                        Swal.fire('Erro', err, 'warning')
+                    })
+            }
+        })
+    }
+
+    const handleModalUpdate = (button) => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault()
+
+            const id = button.dataset.id
+
+            const form = document.querySelector('.formEditCarousel')
+
+            console.log(form)
+
+            form.dataset.id = id
+
+            const modal = document.querySelector('#carouselEditModal')
+
+            $(modal).modal('show')
+        })
+    }
+
     return {
         //public var/functions
         change,
         create,
         destroy,
+        update,
+        handleModalUpdate,
     }
 })()
+
+//Edit carrousel
+const btnEditCarousel = [...document.querySelectorAll('.carouselEdit')]
+
+if (btnEditCarousel) btnEditCarousel.map((btn) => carousel.handleModalUpdate(btn))
+
+//form = document.querySelector('.formEditCarousel')
+const formEditCarousel = document.querySelector('.formEditCarousel')
+
+if (formEditCarousel) carousel.update(formEditCarousel)
 
 const carouselDestroy = document.querySelectorAll('.carouselDestroy')
 
@@ -428,6 +598,82 @@ const carouselForm = document.querySelector('.carouselForm')
 
 if (carouselForm) carousel.create(carouselForm)
 if (carouselImage) carousel.change(carouselImage)
+
+const loginResource = `login`
+
+const requestLogin = (object) => {
+    return new Promise((resolve, reject) => {
+        const { email, password, gToken } = object
+
+        const reqUrl = `/api/${loginResource}`
+        fetch(reqUrl, {
+            method: `POST`,
+            headers: {
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, gToken }),
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                if (response.error) {
+                    return reject(response.error)
+                }
+
+                resolve(response)
+                return console.log(response)
+            })
+            .catch((error) => reject(error))
+    })
+}
+
+const login = (form) => {
+    const inputMail = form.querySelector('.loginMail')
+    const inputPassword = form.querySelector('.loginPassword')
+
+    form.classList.add('was-validated')
+
+    if (!inputMail.value) {
+        return inputMail.classList.add('is-invalid')
+    } else {
+        inputMail.classList.remove('is-invalid')
+        inputMail.classList.add('is-valid')
+        //
+    }
+    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
+
+    grecaptcha.ready(function () {
+        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
+            // Add your logic to submit to your backend server here.
+            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
+                .then((res) => {
+                    ///dashboard
+                    window.location.href = '/dashboard'
+                })
+                .catch((error) => {
+                    const divAlert = document.createElement('div')
+                    divAlert.classList.add('alert', 'alert-danger')
+                    divAlert.setAttribute('role', 'alert')
+                    divAlert.innerHTML = error
+
+                    form.prepend(divAlert)
+
+                    setTimeout(() => {
+                        divAlert.remove()
+                    }, 4000)
+                })
+        })
+    })
+}
+
+const btnLogin = document.querySelector('.btnLogin')
+
+if (btnLogin) {
+    btnLogin.addEventListener('click', (e) => {
+        e.preventDefault()
+
+        login(btnLogin.closest('form'))
+    })
+}
 
 const category = (() => {
     const table = $('#dataTable').DataTable()
@@ -787,82 +1033,6 @@ if (btnModalEditCategory) {
 const btnCreateCategory = document.querySelector('.btnCreateCategory')
 
 if (btnCreateCategory) category.create(btnCreateCategory)
-
-const loginResource = `login`
-
-const requestLogin = (object) => {
-    return new Promise((resolve, reject) => {
-        const { email, password, gToken } = object
-
-        const reqUrl = `/api/${loginResource}`
-        fetch(reqUrl, {
-            method: `POST`,
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({ email, password, gToken }),
-        })
-            .then((res) => res.json())
-            .then((response) => {
-                if (response.error) {
-                    return reject(response.error)
-                }
-
-                resolve(response)
-                return console.log(response)
-            })
-            .catch((error) => reject(error))
-    })
-}
-
-const login = (form) => {
-    const inputMail = form.querySelector('.loginMail')
-    const inputPassword = form.querySelector('.loginPassword')
-
-    form.classList.add('was-validated')
-
-    if (!inputMail.value) {
-        return inputMail.classList.add('is-invalid')
-    } else {
-        inputMail.classList.remove('is-invalid')
-        inputMail.classList.add('is-valid')
-        //
-    }
-    if (!inputPassword.value) return inputPassword.classList.add('is-invalid')
-
-    grecaptcha.ready(function () {
-        grecaptcha.execute('6LeM9q0ZAAAAAPJ827IgGMXdYRB9NdnNkbfrmaEY', { action: 'login' }).then(function (token) {
-            // Add your logic to submit to your backend server here.
-            return requestLogin({ email: inputMail.value, password: inputPassword.value, gToken: token })
-                .then((res) => {
-                    ///dashboard
-                    window.location.href = '/dashboard'
-                })
-                .catch((error) => {
-                    const divAlert = document.createElement('div')
-                    divAlert.classList.add('alert', 'alert-danger')
-                    divAlert.setAttribute('role', 'alert')
-                    divAlert.innerHTML = error
-
-                    form.prepend(divAlert)
-
-                    setTimeout(() => {
-                        divAlert.remove()
-                    }, 4000)
-                })
-        })
-    })
-}
-
-const btnLogin = document.querySelector('.btnLogin')
-
-if (btnLogin) {
-    btnLogin.addEventListener('click', (e) => {
-        e.preventDefault()
-
-        login(btnLogin.closest('form'))
-    })
-}
 
 const page = (() => {
     //private var/functions

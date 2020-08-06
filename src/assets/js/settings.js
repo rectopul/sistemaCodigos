@@ -22,6 +22,24 @@ const util = (() => {
         })
     }
 
+    const serialize = (form) => {
+        const inputs = [...form.elements]
+
+        const object = {}
+
+        inputs.map((input, key) => {
+            //console.dir(input)
+            if (input.type == `radio`) {
+                if (input.checked) return (object[input.name] = input.value)
+                else return
+            }
+
+            if (input.name) object[input.name] = input.value
+        })
+
+        return object
+    }
+
     image = (input, output, mode, size) => {
         input.addEventListener('change', (e) => {
             e.preventDefault()
@@ -187,6 +205,12 @@ const util = (() => {
         return slug
     }
 
+    const resetForm = (form) => {
+        const inputs = [...form.elements]
+
+        inputs.map((input) => (input.value = ``))
+    }
+
     return {
         //public var/functions
         image,
@@ -195,6 +219,8 @@ const util = (() => {
         scroll,
         validateSlug,
         newRequest,
+        serialize,
+        resetForm,
     }
 })()
 
