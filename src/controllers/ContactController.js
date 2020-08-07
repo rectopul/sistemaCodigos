@@ -133,35 +133,9 @@ module.exports = {
 
             const contact = await Contact.create({ fullname, email, subject, message, status: `pending` })
 
-            /* const msg = {
-                to: 'test@example.com',
-                from: 'test@example.com',
-                subject: 'Sending with Twilio SendGrid is Fun',
-                text: 'and easy to do anywhere, even with Node.js',
-                html: '<strong>and easy to do anywhere, even with Node.js</strong>',
-            } */
-
-            /* const mailsend = await mailer({
-                to: process.env.MAIL_FROM,
-                from: email,
-                subject: 'Sending with Twilio SendGrid is Fun',
-                text: 'Solicitação de contato',
-                html: `<strong>Você uma solicitação de contato foi recebida</strong>
-                <p>
-                Detalhes: 
-                </p>
-                <ul>
-                    <li>Remetente: ${email}</li>
-                    <li>Assunto: ${subject}</li>
-                    <li>message: ${message}</li>
-                </ul>`,
-            }) */
-
-            console.log(email)
-
             mailer.sendMail(
                 {
-                    to: email,
+                    to: process.env.MAIL_TO,
                     from: process.env.MAIL_FROM,
                     subject: `Solicitação de contato de <${email}>`,
                     template: 'requestContact',
