@@ -59,6 +59,17 @@ const gmail = {
     },
 }
 
+const user = process.env.MAIL_USER
+const password = process.env.MAIL_PASS
+const umbler = {
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+    },
+}
+
 /* {
     host: process.env.MAIL_HOST,
     port: process.env.MAIL_PORT,
@@ -76,7 +87,7 @@ const gmail = {
     })
 ) */
 
-var transport = nodemailer.createTransport(gmail)
+var transport = nodemailer.createTransport(umbler)
 
 transport.use(
     'compile',

@@ -157,24 +157,23 @@ module.exports = {
                 </ul>`,
             }) */
 
-            const mailsend = await mailer.sendMail(
+            console.log(email)
+
+            mailer.sendMail(
                 {
-                    to: process.env.MAIL_FROM,
-                    from: email,
+                    to: email,
+                    from: process.env.MAIL_FROM,
                     subject: `Solicitação de contato de <${email}>`,
                     template: 'requestContact',
                     context: { fullname, mail: email, subject, message },
                 },
                 (err) => {
+                    if (err) console.log(err)
                     if (err) return res.status(400).send({ error: 'Cannot send forgot password email' })
 
-                    return res.send()
+                    return res.json(contact)
                 }
             )
-
-            console.log(`/nEmail Recebido`, mailsend)
-
-            return res.json(contact)
         } catch (error) {
             //Validação de erros
             if (error.name == `JsonWebTokenError`) return res.status(400).send({ error })
