@@ -12,6 +12,7 @@ module.exports = {
                 cell: '99 9999-9999',
                 created_at: new Date(),
                 updated_at: new Date(),
+                type: "super"
             },
         ])
     },
