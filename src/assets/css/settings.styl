@@ -47,13 +47,14 @@ body
         position relative
         padding-bottom 100px
         height auto !important
+        background-color #000
     & > footer
         height 100px
         position absolute
         bottom 0
-        background-color #fff
+        background-color #000
         // Style for "Copyright"
-        color #333333
+        color #fff
         font-size 14px
         font-weight 400
 
@@ -73,10 +74,26 @@ body
             color #fff !important
         & h1
             margin-bottom 0
+        & p
+            color #fafafa !important
     &.page
+        & .text-white
+            &, & h1
+                color #e4ae59 !important
+            & h1
+                margin-bottom 0
+            & p
+                color #fafafa !important
+        .whats-icon
+            position fixed
+            right 30px
+            bottom 125px
+            z-index 9999
+            &:hover
+                opacity .7
         & h1
             // Style for "BratvaLabs"
-            color #000000
+            color #e4ae59
             font-size 32px
             font-weight 700
         & h5
@@ -107,8 +124,8 @@ body
         // Style for "Retângulo"
         height 60px
         border-radius 5px
-        background-color #555555
-        color #ffffff
+        background-color #e4ae59
+        color #000000
         // Style for "entrar no"
         font-size 20px
         font-weight 400
@@ -118,13 +135,15 @@ body
             background-color: #fff;
             color: #000;
             border-color: #000
+        
+        
     & .btn-black
         width 100%
         // Style for "Retângulo"
         height 60px
         border-radius 5px
-        background-color #000000
-        color #ffffff
+        background-color #e4ae59
+        color #000000
         // Style for "entrar no"
         font-size 20px
         font-weight 400
@@ -138,7 +157,7 @@ body
     & .bg-black
         // Style for "Retângulo"
         height 490px
-        background-color #000000
+        background-color #131313
         color #fff
         @media screen and (min-width: 1024px)
             padding-right 80px !important
@@ -149,8 +168,17 @@ body
     & .bg-gray
         // Style for "Retângulo"
         height 490px
-        background-color rgba(0,0,0,0.25)
+        background-color #131313
         color #000000
+        & p
+            color #fafafa
+
+        & small
+            display block
+            margin-top 16px
+            margin-bottom -36px
+            a
+                color #555555
         @media screen and (min-width: 1024px)
             padding-left 80px !important
         @media screen and (max-width: 995px)
