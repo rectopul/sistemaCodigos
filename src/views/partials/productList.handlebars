@@ -2,17 +2,19 @@
     <div class="row">
         {{#each listProducts}}
         <div class="col-md-3 pageProductItem">
-            <a class="btn btn-light" href="/product/{{slug}}" role="button">ver detalhes</a>
-            <div class="row">
-                <div class="col-12 product-media text-center py-4 mb-4">
-                    {{#each image}}
-                    <img src="{{url}}" class="product-thumbnail" alt="">
-                    {{/each}}
+            <div class="productWrapper">
+                <a class="btn btn-light" href="/product/{{slug}}" role="button">ver detalhes</a>
+                <div class="row">
+                    <div class="col-12 product-media text-center py-4 mb-4">
+                        {{#each image}}
+                        <img src="{{url}}" class="product-thumbnail" alt="">
+                        {{/each}}
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 product-title text-center">
-                    <h4>{{name}}</h4>
+                <div class="row">
+                    <div class="col-md-12 product-title text-center">
+                        <h4>{{name}}</h4>
+                    </div>
                 </div>
             </div>
 
