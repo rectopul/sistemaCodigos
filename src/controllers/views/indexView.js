@@ -43,6 +43,7 @@ module.exports = {
                 })
 
                 if (translate) home.content = translate.text
+                if (translate) home.title = translate.title
             }
 
             const carousel = await Carousel.findAll({ include: { association: `image` } })

@@ -96,6 +96,7 @@ module.exports = {
                 })
 
                 if (translate) productInfos.description = translate.text
+                if (translate) productInfos.name = translate.title
             }
 
             return res.render('product', {

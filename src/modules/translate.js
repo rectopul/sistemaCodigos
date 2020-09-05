@@ -30,28 +30,28 @@ module.exports = (lang) => {
 
     if (lang === 'esp') {
         const params = {
-            mail: `your email`,
-            subtitle1: `Be part of the exclusive <br>
-            Bratva family. Sign up.`,
-            subtitle2: `Enter the product code <br>
-            to authenticate your Bratva.`,
-            fullName: `full name`,
-            productCode: `product code`,
-            findCode: `how to find the code`,
-            authenticate: `Authenticate product`,
-            contact: `Contact`,
-            distributors: `Distributors`,
-            products: `Products`,
-            start: `Start`,
-            enter: `join the club`,
-            consult: `query code`,
-            subject: `Message subject`,
-            message: `Message`,
-            sendMessage: `send Message`,
-            details: `see details`,
-            toBuy: `where to buy`,
-            seePackage: `See package insert`,
-            otherProducts: `Other products`,
+            mail: `su email`,
+            subtitle1: `Sé parte de la exclusiva <br>
+             Familia Bratva. Regístrate.`,
+            subtitle2: `Ingrese el código del producto <br>
+             para autenticar su Bratva.`,
+            fullName: `nombre completo`,
+            productCode: `código de producto`,
+            findCode: `cómo encontrar el código`,
+            authenticate: `Autenticar producto`,
+            contact: `Contacto`,
+            distributors: `Distribuidores`,
+            products: `Productos`,
+            start: `Inicio`,
+            enter: `unirse al club`,
+            consult: `código de consulta`,
+            subject: `Asunto del mensaje`,
+            message: `Mensaje`,
+            sendMessage: `enviar mensaje`,
+            details: `Ver detalles`,
+            toBuy: `Donde comprar`,
+            seePackage: `Ver el prospecto`,
+            otherProducts: `Otros productos`,
         }
 
         return params

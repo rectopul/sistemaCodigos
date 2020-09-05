@@ -53,10 +53,7 @@ module.exports = {
                     })
 
                     if (translate) product.description = translate.text
-
-                    product.language = language
-
-                    product.details = partialTranslations(language).details
+                    if (translate) product.name = translate.title
                 })
             }
 

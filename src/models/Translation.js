@@ -19,6 +19,14 @@ class Translation extends Model {
                         msg: `A linguagem não pode estar vazía`,
                     },
                 },
+                title: {
+                    type: DataTypes.TEXT,
+                    validate: {
+                        notEmpty: {
+                            msg: `O titulo da tradução não pode estar vazio`,
+                        },
+                    },
+                },
             },
             {
                 sequelize,

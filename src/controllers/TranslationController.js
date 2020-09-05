@@ -11,7 +11,7 @@ module.exports = {
             if (Object.keys(req.body).length === 0)
                 return res.status(400).send({ error: `Por favor envie as infomações` })
 
-            const { language, contentTranslate: text, page_id, product_id, category_id, type } = req.body
+            const { language, contentTranslate: text, page_id, product_id, category_id, type, title } = req.body
 
             if (!text) return res.status(400).send({ error: `Por favor envie a tradução` })
 
@@ -31,13 +31,14 @@ module.exports = {
             })
 
             if (translateCheck) {
-                translateCheck.update({ text })
+                translateCheck.update({ text, title })
 
                 return res.json(translateCheck)
             }
 
             const translate = await Translation.create({
                 language,
+                title,
                 text,
                 page_id: parseInt(page_id) || null,
                 product_id: parseInt(product_id) || null,

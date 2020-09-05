@@ -55,10 +55,7 @@ module.exports = {
                     })
 
                     if (translate) product.description = translate.text
-
-                    product.language = language
-
-                    console.log(product)
+                    if (translate) product.name = translate.title
                 })
             }
 
