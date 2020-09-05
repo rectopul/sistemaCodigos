@@ -45,6 +45,8 @@ const ProductCodeController = require('../controllers/ProductCodeController')
 
 const BullController = require('../controllers/BullController')
 
+const TranslationController = require('../controllers/TranslationController')
+
 //API
 //Product
 routes.post(`/api/product`, ProductController.store)
@@ -120,6 +122,8 @@ routes.get(`/api/carousel/:carousel_id`, CarouselController.show)
 routes.put(`/api/carousel_image/:carousel_id`, multer(multerConfig).single('file'), CarouselController.imageUpdate)
 routes.delete(`/api/carousel/:carousel_id`, CarouselController.destroy)
 //session
+//Translate
+routes.post(`/api/v1/translate`, TranslationController.store)
 routes.post(`/api/login`, SessionController.store)
 
 module.exports = routes

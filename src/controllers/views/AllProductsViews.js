@@ -3,10 +3,13 @@ const Product = require('../../models/Product')
 const Page = require('../../models/Page')
 ProductCategory = require('../../models/ProductCategory')
 const { Op } = require('sequelize')
+const Translation = require('../../models/Translation')
+const partialTranslations = require('../../modules/translate')
 
 module.exports = {
     async view(req, res) {
         try {
+            const { lang: language } = req.query
             const categories = await Category.findAll({
                 where: {
                     parent: {
@@ -42,6 +45,23 @@ module.exports = {
                 ],
             })
 
+            if (language) {
+                products.map(async (product) => {
+                    const translate = await Translation.findOne({
+                        where: {
+                            product_id: product.id,
+                            language,
+                        },
+                    })
+
+                    if (translate) product.description = translate.text
+
+                    product.language = language
+
+                    console.log(product)
+                })
+            }
+
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
             return res.render('page-products', {
@@ -51,6 +71,8 @@ module.exports = {
                 pageType: 'site',
                 pageClasses: `page-product`,
                 content: productPage ? productPage.toJSON() : null,
+                partials: partialTranslations(language),
+                language,
             })
         } catch (error) {
             console.log(error)

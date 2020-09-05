@@ -5,8 +5,20 @@ class Translation extends Model {
     static init(sequelize) {
         super.init(
             {
-                text: DataTypes.TEXT,
-                language: DataTypes.STRING,
+                text: {
+                    type: DataTypes.TEXT,
+                    validate: {
+                        notEmpty: {
+                            msg: `A tradução não pode estar vazía`,
+                        },
+                    },
+                },
+                language: {
+                    type: DataTypes.STRING,
+                    notEmpty: {
+                        msg: `A linguagem não pode estar vazía`,
+                    },
+                },
             },
             {
                 sequelize,

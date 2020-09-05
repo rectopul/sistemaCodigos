@@ -5,6 +5,8 @@ const ProductCategory = require('../../models/ProductCategory')
 const ImageProduct = require('../../models/ImageProduct')
 const { Op } = require('sequelize')
 const sequelize = require('sequelize')
+const Translation = require('../../models/Translation')
+const partialTranslations = require('../../modules/translate')
 
 function doTruncarStr(str, size) {
     if (str == undefined || str == 'undefined' || str == '' || size == undefined || size == 'undefined' || size == '') {
@@ -21,6 +23,7 @@ function doTruncarStr(str, size) {
 module.exports = {
     async view(req, res) {
         try {
+            const { lang: language } = req.query
             const categories = await Category.findAll({
                 where: {
                     parent: {
@@ -84,6 +87,17 @@ module.exports = {
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
+            if (language) {
+                const translate = await Translation.findOne({
+                    where: {
+                        product_id: productInfos.id,
+                        language,
+                    },
+                })
+
+                if (translate) productInfos.description = translate.text
+            }
+
             return res.render('product', {
                 pageTitle: productInfos ? productInfos.toJSON().name : `Produto`,
                 meta: { description: productInfos.toJSON().excerpt },
@@ -96,6 +110,8 @@ module.exports = {
                 pageClasses: `page-product`,
                 pages: pages ? pages.map((page) => page.toJSON()) : [],
                 content: productPage ? productPage.toJSON() : null,
+                partials: partialTranslations(language),
+                language,
             })
         } catch (error) {
             console.log(error)

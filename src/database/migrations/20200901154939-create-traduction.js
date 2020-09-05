@@ -10,21 +10,18 @@ module.exports = {
             },
             product_id: {
                 type: Sequelize.INTEGER,
-                unique: true,
                 references: { model: 'products', key: 'id' },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
             category_id: {
                 type: Sequelize.INTEGER,
-                unique: true,
                 references: { model: 'categories', key: 'id' },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
             page_id: {
                 type: Sequelize.INTEGER,
-                unique: true,
                 references: { model: 'pages', key: 'id' },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',

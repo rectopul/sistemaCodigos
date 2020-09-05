@@ -119,6 +119,7 @@ class Product extends Model {
         this.hasMany(models.ProductImages, { foreignKey: 'product_id', as: 'image' })
         this.hasMany(models.ProductCategory, { foreignKey: 'product_id', as: 'category' })
         this.hasOne(models.Bull, { foreignKey: 'product_id', as: 'bula' })
+        this.hasMany(models.Translation, { foreignKey: 'product_id', as: 'translations' })
     }
 }
 

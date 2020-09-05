@@ -3,10 +3,12 @@ const { Op } = require('sequelize')
 const Page = require('../../models/Page')
 const Partner = require('../../models/Partner')
 const Contact = require('../../models/Contact')
+const partialTranslations = require('../../modules/translate')
 
 module.exports = {
     async view(req, res) {
         try {
+            const { lang: language } = req.query
             const categories = await Category.findAll({
                 where: {
                     parent: {
@@ -50,6 +52,7 @@ module.exports = {
                 }),
                 home: home.toJSON(),
                 partners: partners.map((partner) => partner.toJSON()),
+                partials: partialTranslations(language),
             })
         } catch (error) {
             return res.redirect('/404')

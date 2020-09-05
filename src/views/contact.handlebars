@@ -23,25 +23,25 @@
             <form class="form-contact needs-validation" novalidate>
                 <div class="form-group">
                     <input type="text" class="form-control contactFullName" id="contactFullName"
-                        aria-describedby="fullnameHelp" placeholder="Nome completo" required>
+                        aria-describedby="fullnameHelp" placeholder="{{partials.fullName}}" required>
                     {{>validate}}
                 </div>
                 <div class="form-group">
                     <input type="email" class="form-control contactMail" id="contactMail" aria-describedby="emailHelp"
-                        placeholder="Seu e-mail" required>
+                        placeholder="{{partials.mail}}" required>
                     {{>validate}}
                 </div>
                 <div class="form-group">
                     <input type="text" class="form-control contactSubject" id="contactSubject"
-                        placeholder="Assunto da mensagem" required>
+                        placeholder="{{partials.subject}}" required>
                     {{>validate}}
                 </div>
                 <div class="form-group">
-                    <textarea class="form-control contactMessage" id="contactMessage" rows="3" placeholder="Mensagem"
-                        required></textarea>
+                    <textarea class="form-control contactMessage" id="contactMessage" rows="3"
+                        placeholder="{{partials.message}}" required></textarea>
                     {{>validate}}
                 </div>
-                <button type="submit" class="btn btn-primary">enviar mensagem</button>
+                <button type="submit" class="btn btn-primary">{{partials.sendMessage}}</button>
             </form>
         </div>
     </div>

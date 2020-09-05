@@ -18,49 +18,43 @@
     <div class="row">
         <div class="col-md bg-black miniforms d-flex flex-column justify-content-center text-white text-right py-xl-5">
             <h1>BratvaClub®</h1>
-            <p>
-                Faça parte da exclusiva<br>
-                família Bratva. Inscreva-se.
-            </p>
+            <p>{{{partials.subtitle1}}}</p>
 
             <!-- Form newsletter // -->
             <form class="ml-auto mt-xl-4 newsForm">
                 <div class="form-group">
                     <input type="email" class="form-control subEmail" id="subEmail" autocomplete="email"
-                        aria-describedby="emailHelp" placeholder="seu e-mail">
+                        aria-describedby="emailHelp" placeholder="{{partials.mail}}">
                 </div>
                 <div class="form-group">
                     <input type="text" class="form-control subName" autocomplete="full-name" id="subName"
-                        placeholder="nome completo">
+                        placeholder="{{partials.fullName}}">
                 </div>
 
-                <button type="submit" class="btn btn-gray">entrar no clube</button>
+                <button type="submit" class="btn btn-gray">{{partials.enter}}</button>
             </form>
         </div>
         <!-- Newsletter // -->
 
         <div class="col-md miniforms d-flex flex-column justify-content-center bg-gray py-5" id="validateProduct">
             <h1>BratvaOriginals®</h1>
-            <p>
-                Insira o código do produto <br>
-                para autenticar seu Bratva.
-            </p>
+            <p>{{{partials.subtitle2}}}</p>
 
             <!-- Form consulta codigo // -->
             <form class="mr-auto mt-4 formValidateCode">
                 <div class="form-group">
                     <input type="email" class="form-control consultMail" id="consultMail" autocomplete="email"
-                        aria-describedby="emailHelp" placeholder="seu e-mail">
+                        aria-describedby="emailHelp" placeholder="{{partials.mail}}">
                 </div>
                 <div class="form-group">
                     <input type="text" class="form-control consultCode" autocomplete="code" id="consultCode"
-                        placeholder="código do produto">
+                        placeholder="{{partials.productCode}}">
                 </div>
                 <!-- modalConsult -->
-                <button type="submit" class="btn btn-black">consultar código</button>
+                <button type="submit" class="btn btn-black">{{partials.consult}}</button>
 
                 <small>
-                    <a href="#">como localizar o código?</a>
+                    <a href="#">{{partials.findCode}}</a>
                 </small>
             </form>
         </div>

@@ -135,23 +135,25 @@
             <div class="mobile-back"></div>
             <ul class="navbar-nav mx-auto" role="menu">
                 <li class="nav-item active">
-                    <a class="nav-link" href="/">Início <span class="sr-only">(current)</span></a>
+                    <a class="nav-link" href="/?lang={{language}}">{{partials.start}} <span
+                            class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="/produtos" id="navbarDropdown" role="button"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Produtos</a>
+                    <a class="nav-link dropdown-toggle" href="/produtos?lang={{language}}" id="navbarDropdown"
+                        role="button" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">{{partials.products}}</a>
                     {{{dropDown categories}}}
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/distribuidores">Distribuidores</a>
+                    <a class="nav-link" href="/distribuidores?lang={{language}}">{{partials.distributors}}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/contato">Contato</a>
+                    <a class="nav-link" href="/contato?lang={{language}}">{{partials.contact}}</a>
                 </li>
             </ul>
             <a class="btn btn-dark btn-validateProd {{#ifCond pageTitle 'Bratva'}}btnAnchor{{/ifCond}}"
-                href="{{#ifCond pageTitle 'Bratva'}}#validateProduct{{else}}/#validateProduct{{/ifCond}}"
-                role="button">Autenticar produto</a>
+                href="{{#ifCond pageTitle 'Bratva'}}?lang={{language}}#validateProduct{{else}}/#validateProduct{{/ifCond}}"
+                role="button">{{partials.authenticate}}</a>
 
             <div class="languagesList">
                 <div class="dropdown">
@@ -160,11 +162,11 @@
                         <img src="/img/brasil.png" alt="">
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="?lang=esp">
                             <img src="/img/espanhol.png" alt="">
                             ESP
                         </a>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="?lang=en">
                             <img src="/img/ingles.png" alt="">
                             EN
                         </a>

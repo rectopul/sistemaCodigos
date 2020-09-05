@@ -65,6 +65,7 @@ class Category extends Model {
         //this.hasOne(models.Category, { foreignKey: 'parent', as: 'parent' })
         this.hasMany(models.Category, { foreignKey: 'parent', as: 'child' })
         this.hasMany(models.ProductCategory, { foreignKey: 'category_id', as: 'products' })
+        this.hasMany(models.Translation, { foreignKey: 'category_id', as: 'translations' })
     }
 }
 

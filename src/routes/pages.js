@@ -52,6 +52,9 @@ const RequestView = require('../controllers/views/RequestViews')
 //Carousel
 const CarouselView = require('../controllers/views/CarouselViews')
 
+//Traduções
+const TranslationsView = require('../controllers/views/TranslationsView')
+
 const Contact = require('../models/Contact')
 
 //Dashboard
@@ -112,6 +115,7 @@ routes.get(`/dashboard`, async (req, res) => {
 })
 
 routes.get(`/seachs`, SearchesController.view)
+routes.get(`/translate/:translate_type`, TranslationsView.view)
 
 routes.get(`/subscribers`, SubscribersView.view)
 

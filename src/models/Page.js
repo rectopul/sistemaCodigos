@@ -49,6 +49,7 @@ class Page extends Model {
 
     static associate(models) {
         this.hasOne(models.Banner, { foreignKey: 'page_id', as: 'banner' })
+        this.hasMany(models.Translation, { foreignKey: 'page_id', as: 'translations' })
     }
 }
 

@@ -3,13 +3,13 @@
 {{!-- <div class="container mt-5 pt-5 text-center">
     {{{content.content}}}
 </div> --}}
-
 <div class="container page-product-list">
     <div class="row">
         {{#each listProducts}}
         <div class="col-md-3 pageProductItem">
             <div class="productWrapper">
-                <a class="btn btn-light" href="/product/{{slug}}" role="button">ver detalhes</a>
+                <a class="btn btn-light" href="/product/{{slug}}?lang={{../language}}"
+                    role="button">{{../partials.details}}</a>
                 <div class="row">
                     <div class="col-12 product-media text-center py-4 mb-4">
                         {{#each image}}
