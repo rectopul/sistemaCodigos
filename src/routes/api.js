@@ -46,6 +46,7 @@ const ProductCodeController = require('../controllers/ProductCodeController')
 const BullController = require('../controllers/BullController')
 
 const TranslationController = require('../controllers/TranslationController')
+const WhatsappController = require('../controllers/WhatsappController')
 
 //API
 //Product
@@ -124,6 +125,7 @@ routes.delete(`/api/carousel/:carousel_id`, CarouselController.destroy)
 //session
 //Translate
 routes.post(`/api/v1/translate`, TranslationController.store)
+routes.post(`/api/v1/whatsapp`, WhatsappController.store)
 routes.post(`/api/login`, SessionController.store)
 
 module.exports = routes

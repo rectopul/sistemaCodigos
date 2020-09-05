@@ -4,6 +4,7 @@ const Page = require('../../models/Page')
 const Partner = require('../../models/Partner')
 const Contact = require('../../models/Contact')
 const partialTranslations = require('../../modules/translate')
+const Whatsapp = require('../../models/Whatsapp')
 
 module.exports = {
     async view(req, res) {
@@ -32,6 +33,8 @@ module.exports = {
 
             const contacts = await Contact.findAll()
 
+            const whatsapp = await Whatsapp.findAll()
+
             return res.render('distributors', {
                 pageTitle: `Distribuidores`,
                 categories,
@@ -53,6 +56,7 @@ module.exports = {
                 home: home.toJSON(),
                 partners: partners.map((partner) => partner.toJSON()),
                 partials: partialTranslations(language),
+                whatsapp: whatsapp[0].toJSON(),
             })
         } catch (error) {
             return res.redirect('/404')

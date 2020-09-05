@@ -22,9 +22,11 @@ const Contact = require('../models/Contact')
 const Carousel = require('../models/Carousel')
 const Bull = require('../models/Bull')
 const Translations = require('../models/Translation')
+const Whatsapp = require('../models/Whatsapp')
 
 //user
 User.init(connection)
+Whatsapp.init(connection)
 Translations.init(connection)
 UserImage.init(connection)
 Product.init(connection)
@@ -62,5 +64,6 @@ Partner.associate(connection.models)
 Carousel.associate(connection.models)
 Bull.associate(connection.models)
 Translations.associate(connection.models)
+Whatsapp.associate(connection.models)
 
 module.exports = connection

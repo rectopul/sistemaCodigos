@@ -5,6 +5,7 @@ ProductCategory = require('../../models/ProductCategory')
 const { Op } = require('sequelize')
 const Translation = require('../../models/Translation')
 const partialTranslations = require('../../modules/translate')
+const Whatsapp = require('../../models/Whatsapp')
 
 module.exports = {
     async view(req, res) {
@@ -61,6 +62,8 @@ module.exports = {
 
             const productPage = await Page.findOne({ where: { slug: 'produtos' } })
 
+            const whatsapp = await Whatsapp.findAll()
+
             return res.render('page-products', {
                 pageTitle: `Todos o produtos`,
                 categories,
@@ -70,6 +73,7 @@ module.exports = {
                 content: productPage ? productPage.toJSON() : null,
                 partials: partialTranslations(language),
                 language,
+                whatsapp: whatsapp[0].toJSON(),
             })
         } catch (error) {
             console.log(error)

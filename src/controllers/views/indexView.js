@@ -3,6 +3,7 @@ const { Op } = require('sequelize')
 const Page = require('../../models/Page')
 const Carousel = require('../../models/Carousel')
 const Translation = require('../../models/Translation')
+const Whatsapp = require('../../models/Whatsapp')
 const partialTranslations = require('../../modules/translate')
 
 module.exports = {
@@ -46,6 +47,8 @@ module.exports = {
                 if (translate) home.title = translate.title
             }
 
+            const whatsapp = await Whatsapp.findAll()
+
             const carousel = await Carousel.findAll({ include: { association: `image` } })
 
             console.log(partialTranslations(language))
@@ -60,6 +63,7 @@ module.exports = {
                 home: home.toJSON(),
                 partials: partialTranslations(language),
                 language: language || ``,
+                whatsapp: whatsapp[0].toJSON(),
             })
         } catch (error) {
             console.log(error)

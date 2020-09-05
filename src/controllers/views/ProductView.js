@@ -7,6 +7,7 @@ const { Op } = require('sequelize')
 const sequelize = require('sequelize')
 const Translation = require('../../models/Translation')
 const partialTranslations = require('../../modules/translate')
+const Whatsapp = require('../../models/Whatsapp')
 
 function doTruncarStr(str, size) {
     if (str == undefined || str == 'undefined' || str == '' || size == undefined || size == 'undefined' || size == '') {
@@ -99,6 +100,8 @@ module.exports = {
                 if (translate) productInfos.name = translate.title
             }
 
+            const whatsapp = await Whatsapp.findAll()
+
             return res.render('product', {
                 pageTitle: productInfos ? productInfos.toJSON().name : `Produto`,
                 meta: { description: productInfos.toJSON().excerpt },
@@ -113,6 +116,7 @@ module.exports = {
                 content: productPage ? productPage.toJSON() : null,
                 partials: partialTranslations(language),
                 language,
+                whatsapp: whatsapp[0].toJSON(),
             })
         } catch (error) {
             console.log(error)
