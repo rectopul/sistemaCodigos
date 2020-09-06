@@ -59,8 +59,16 @@ const translate = (() => {
     }
 })()
 
-translate.init()
+//translate.init()
 
 const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
 
 if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
+
+$('#dataTable').on('draw.dt', function () {
+    translate.init()
+
+    const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
+
+    if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
+})
