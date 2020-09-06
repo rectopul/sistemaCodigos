@@ -13,7 +13,7 @@ module.exports = (lang) => {
             contact: `Contact`,
             distributors: `Distributors`,
             products: `Products`,
-            start: `Start`,
+            start: `Home`,
             enter: `join the club`,
             consult: `query code`,
             subject: `Message subject`,

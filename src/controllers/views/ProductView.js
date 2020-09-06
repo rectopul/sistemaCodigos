@@ -98,6 +98,51 @@ module.exports = {
 
                 if (translate) productInfos.description = translate.text
                 if (translate) productInfos.name = translate.title
+
+                //translate other products
+                productSend.map(async (product) => {
+                    const _translate = await Translation.findOne({
+                        where: {
+                            category_id: category.id,
+                            language,
+                        },
+                    })
+
+                    if (_translate) {
+                        product.description = _translate.text
+                        product.name = _translate.title
+                    }
+                })
+
+                //translate category
+                categories.map(async (category) => {
+                    const _translate = await Translation.findOne({
+                        where: {
+                            category_id: category.id,
+                            language,
+                        },
+                    })
+
+                    if (_translate) {
+                        category.description = _translate.text
+                        category.name = _translate.title
+                    }
+
+                    //translate child
+                    category.child.map(async (child) => {
+                        const __translate = await Translation.findOne({
+                            where: {
+                                category_id: child.id,
+                                language,
+                            },
+                        })
+
+                        if (__translate) {
+                            child.description = __translate.text
+                            child.name = __translate.title
+                        }
+                    })
+                })
             }
 
             const whatsapp = await Whatsapp.findAll()
@@ -115,7 +160,7 @@ module.exports = {
                 pages: pages ? pages.map((page) => page.toJSON()) : [],
                 content: productPage ? productPage.toJSON() : null,
                 partials: partialTranslations(language),
-                language,
+                language: language || ``,
                 whatsapp: whatsapp[0].toJSON(),
             })
         } catch (error) {

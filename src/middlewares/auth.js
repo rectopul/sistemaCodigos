@@ -23,11 +23,12 @@ module.exports = async (authHeader) => {
         // Fetch the user by id
         const UserExist = await User.findOne({ where: { id, name } })
 
-        if (!UserExist)
+        if (!UserExist) {
+            console.log(`erro`)
             return reject({
                 name: `userToken`,
                 message: `User informed by token not exists`,
             })
-        else return resolve({ user_id: UserExist.id })
+        } else return resolve({ user_id: UserExist.id })
     })
 }

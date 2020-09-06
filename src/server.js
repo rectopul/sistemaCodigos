@@ -84,14 +84,17 @@ app.engine(
                     })
                 }
             },
-            dropDown: (arr) => {
+            dropDown: (arr, options) => {
                 let ul = `<ul class="dropdown-menu">`
                 var text = ``
+
+                const myParam = options.data.root.language
+
                 if (arr.length) {
                     for (i = 0; i < arr.length; i++) {
                         text += `
                         <li ${arr[i].child.length ? `class="dropdown-submenu"` : ``}>
-                            <a href="/products/${arr[i].slug}" ${
+                            <a href="/products/${arr[i].slug}?lang=${myParam}" ${
                             arr[i].child.length ? `class="dropdown-toggle" data-toggle="dropdown"` : ``
                         }>${arr[i].name}
                         ${arr[i].child.length ? `<i class="arrow"></i>` : ``}
@@ -103,7 +106,7 @@ app.engine(
                             for (b = 0; b < arr[i].child.length; b++) {
                                 text += `
                                 <li ${arr[i].child[b].child.length ? `class="dropdown-submenu"` : ``} >
-                                    <a href="/products/${arr[i].child[b].slug}" ${
+                                    <a href="/products/${arr[i].child[b].slug}?lang=${myParam}" ${
                                     arr[i].child[b].child.length ? `class="dropdown-toggle" data-toggle="dropdown"` : ``
                                 }>${arr[i].child[b].name}
                                 ${arr[i].child[b].child.length ? `<i class="arrow"></i>` : ``}
@@ -115,7 +118,7 @@ app.engine(
                                     for (c = 0; c < arr[i].child[b].child.length; c++) {
                                         text += `
                                         <li>
-                                            <a href="/products/${arr[i].child[b].child[c].slug}">${arr[i].child[b].child[c].name}</a>
+                                            <a href="/products/${arr[i].child[b].child[c].slug}?lang=${myParam}">${arr[i].child[b].child[c].name}</a>
                                         </li>`
                                     }
                                     text += `</ul></li>`
@@ -132,6 +135,79 @@ app.engine(
 
                     return (ul += `</ul>`)
                 }
+            },
+            flags: (options) => {
+                //html
+                const lang = options.data.root.language
+
+                let render = `
+                <div class="languagesList">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img src="/img/brasil.png" alt="">
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="?lang=esp">
+                                <img src="/img/espanhol.png" alt="">
+                                ESP
+                            </a>
+                            <a class="dropdown-item" href="?lang=en">
+                                <img src="/img/ingles.png" alt="">
+                                EN
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                `
+
+                if (lang && lang === `en`) {
+                    render = `
+                    <div class="languagesList">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="/img/ingles.png" alt="">
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="?lang=esp">
+                                    <img src="/img/espanhol.png" alt="">
+                                    ESP
+                                </a>
+                                <a class="dropdown-item" href="?lang=">
+                                    <img src="/img/brasil.png" alt="">
+                                    BR
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                }
+
+                if (lang && lang === `esp`) {
+                    render = `
+                    <div class="languagesList">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="/img/espanhol.png" alt="">
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="?lang=en">
+                                    <img src="/img/ingles.png" alt="">
+                                    EN
+                                </a>
+                                <a class="dropdown-item" href="?lang=">
+                                    <img src="/img/brasil.png" alt="">
+                                    BR
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                }
+
+                return render
             },
         },
     })

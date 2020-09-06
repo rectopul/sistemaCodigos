@@ -13,7 +13,10 @@ class SessionController {
             }
 
             request(options, async (error, response, body) => {
-                if (error) throw new Error(error)
+                if (error) {
+                    console.log(error)
+                    throw new Error(error)
+                }
 
                 body = JSON.parse(body)
 
@@ -51,8 +54,8 @@ class SessionController {
                 })
             })
         } catch (error) {
-            return res.status(500).json({ error: error.message })
             console.log(`Erro de sessão: `, error)
+            return res.status(500).json({ error: error.message })
         }
     }
 }

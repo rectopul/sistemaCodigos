@@ -17,6 +17,13 @@ const whatsapp = (() => {
                 })
                     .then((r) => r.json())
                     .then((res) => {
+                        if (res.error)
+                            return Swal.fire({
+                                title: res.error,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+
                         return Swal.fire({
                             title: `O número ${res.number} foi cadastrado com sucesso!`,
                             icon: 'success',

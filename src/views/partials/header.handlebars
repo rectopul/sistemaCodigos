@@ -1,6 +1,6 @@
 <div class="container">
     <nav class="navbar px-md-0 navbar-expand-lg navbar-light nav-header">
-        <a class="navbar-brand header-logo" href="/">
+        <a class="navbar-brand header-logo" href="/?lang={{language}}">
             <svg xmlns="http://www.w3.org/2000/svg" width="150" height="37" viewBox="0 0 185 37">
                 <g id="Objeto_Inteligente_de_Vetor" data-name="Objeto Inteligente de Vetor" transform="translate(0 0)">
                     <path id="Caminho_66" data-name="Caminho 66"
@@ -152,33 +152,16 @@
                 </li>
             </ul>
             <a class="btn btn-dark btn-validateProd {{#ifCond pageTitle 'Bratva'}}btnAnchor{{/ifCond}}"
-                href="{{#ifCond pageTitle 'Bratva'}}?lang={{language}}#validateProduct{{else}}/#validateProduct{{/ifCond}}"
+                href="{{#ifCond pageTitle 'Bratva'}}#validateProduct{{else}}/#validateProduct{{/ifCond}}"
                 role="button">{{partials.authenticate}}</a>
 
-            <div class="languagesList">
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img src="/img/brasil.png" alt="">
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a class="dropdown-item" href="?lang=esp">
-                            <img src="/img/espanhol.png" alt="">
-                            ESP
-                        </a>
-                        <a class="dropdown-item" href="?lang=en">
-                            <img src="/img/ingles.png" alt="">
-                            EN
-                        </a>
-                    </div>
-                </div>
-            </div>
+            {{#flags}}{{/flags}}
         </div>
     </nav>
 </div>
 
 <div class="whats-icon">
-    <a href="https://api.whatsapp.com/send?phone={{whatsapp.number}}">
+    <a href="https://api.whatsapp.com/send?phone={{whatsapp.number}}" target='_blank'>
         <img src="/img/whatsapp.png" alt="">
     </a>
 </div>

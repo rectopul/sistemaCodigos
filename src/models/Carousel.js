@@ -33,6 +33,7 @@ class Carousel extends Model {
 
     static associate(models) {
         this.belongsTo(models.Image, { foreignKey: 'image_id', as: 'image' })
+        this.hasMany(models.TranslateCarousel, { foreignKey: 'carousel_id', as: 'translations' })
     }
 }
 

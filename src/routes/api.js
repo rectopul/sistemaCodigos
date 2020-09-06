@@ -47,6 +47,7 @@ const BullController = require('../controllers/BullController')
 
 const TranslationController = require('../controllers/TranslationController')
 const WhatsappController = require('../controllers/WhatsappController')
+const TranslateCarouselController = require('../controllers/TranslateCarouselController')
 
 //API
 //Product
@@ -122,10 +123,14 @@ routes.put(`/api/carousel/:carousel_id`, CarouselController.update)
 routes.get(`/api/carousel/:carousel_id`, CarouselController.show)
 routes.put(`/api/carousel_image/:carousel_id`, multer(multerConfig).single('file'), CarouselController.imageUpdate)
 routes.delete(`/api/carousel/:carousel_id`, CarouselController.destroy)
-//session
+
 //Translate
 routes.post(`/api/v1/translate`, TranslationController.store)
 routes.post(`/api/v1/whatsapp`, WhatsappController.store)
+
+routes.post(`/api/translate_carousel/image`, multer(multerConfig).single('file'), ImageController.store)
+routes.post(`/api/translate_carousel`, TranslateCarouselController.store)
+//session
 routes.post(`/api/login`, SessionController.store)
 
 module.exports = routes

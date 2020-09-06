@@ -40,7 +40,7 @@ const util = (() => {
         return object
     }
 
-    image = (input, output, mode, size) => {
+    const image = (input, output, mode, size) => {
         input.addEventListener('change', (e) => {
             e.preventDefault()
 

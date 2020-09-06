@@ -45,6 +45,7 @@ class Image extends Model {
     static associate(models) {
         this.hasOne(models.Partner, { foreignKey: 'image_id', as: 'partner' })
         this.hasOne(models.Carousel, { foreignKey: 'image_id', as: 'carousels' })
+        this.hasOne(models.TranslateCarousel, { foreignKey: 'image_id', as: 'translate' })
     }
 }
 

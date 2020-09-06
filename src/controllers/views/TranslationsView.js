@@ -4,6 +4,7 @@ const Page = require('../../models/Page')
 const Contact = require('../../models/Contact')
 const Product = require('../../models/Product')
 const Category = require('../../models/Category')
+const Carousel = require('../../models/Carousel')
 
 module.exports = {
     async view(req, res) {
@@ -22,6 +23,8 @@ module.exports = {
 
             const { translate_type } = req.params
 
+            console.log(req.params)
+
             let typeList
 
             if (translate_type === `pages`) typeList = await Page.findAll({ include: { association: `translations` } })
@@ -32,7 +35,10 @@ module.exports = {
             if (translate_type === `categories`)
                 typeList = await Category.findAll({ include: { association: `translations` } })
 
-            return res.render('pages/translations', {
+            if (translate_type === `carousels`)
+                typeList = await Carousel.findAll({ include: { association: `translations` } })
+
+            const objectToSend = {
                 user: user.toJSON(),
                 userName: user.name,
                 avatar: user.avatar ? user.avatar.url : `https://source.unsplash.com/lySzv_cqxH8/60x60`,
@@ -56,7 +62,15 @@ module.exports = {
                 pages: pages.map((page) => page.toJSON()),
                 translateType: translate_type,
                 translateList: typeList.map((translate) => translate.toJSON()),
-            })
+                btnClass: `editTranslate`,
+            }
+
+            if (translate_type === `carousels`) {
+                objectToSend.formFiles = 'true'
+                objectToSend.btnClass = `editTranslateCarousel`
+            }
+
+            return res.render('pages/translations', objectToSend)
         } catch (error) {
             console.log(error)
             return res.redirect('/login')

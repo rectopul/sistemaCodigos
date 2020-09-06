@@ -1,3 +1,51 @@
+{{#ifCond formFiles 'true'}}
+
+
+<!-- Modal -->
+<div class="modal fade" id="translateModal" tabindex="-1" role="dialog" aria-labelledby="translateModal"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="carouselEditModalLabel">Editar tradução de carroceis</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulário -->
+                <form class="needs-validation formTranslateFile" data-type="{{../translateType}}" novalidate>
+                    <input type="hidden" name="carousel_id" value="">
+
+                    <div class="form-group">
+                        <label for="selectLanguage">Selecione o idioma ao qual deseja traduzir</label>
+                        <select class="form-control" name="language" id="selectLanguage">
+                            <option value="en">ENG</option>
+                            <option value="esp">ESP</option>
+                        </select>
+                    </div>
+
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="customFile" name="file">
+                        <label class="custom-file-label" for="customFile">Choose file</label>
+                    </div>
+
+                    <div class="form-group imgPreview">
+
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Salvar tradução</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{else}}
+
+
 <!-- Modal -->
 <div class="modal fade" id="translateModal" tabindex="-1" role="dialog" aria-labelledby="translateModal"
     aria-hidden="true">
@@ -11,7 +59,7 @@
             </div>
             <div class="modal-body">
                 <!-- Formulário -->
-                <form class="needs-validation formEditTranslate" data-type="{{translateType}}" data-page=""
+                <form class="needs-validation formEditTranslate" data-type="{{../translateType}}" data-page=""
                     data-product="" novalidate>
                     <input type="hidden" name="page_id" value="">
                     <input type="hidden" name="product_id" value="">
@@ -31,6 +79,7 @@
                             placeholder="Informe o titulo ou no caso de produto o nome">
                     </div>
 
+
                     <div class="form-group">
                         <label for="contentTranslate">Conteúdo</label>
                         <textarea class="form-control" name="contentTranslate" id="contentTranslate" rows="3"
@@ -46,3 +95,4 @@
         </div>
     </div>
 </div>
+{{/ifCond}}

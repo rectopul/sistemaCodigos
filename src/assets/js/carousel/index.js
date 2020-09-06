@@ -333,3 +333,92 @@ const carouselForm = document.querySelector('.carouselForm')
 
 if (carouselForm) carousel.create(carouselForm)
 if (carouselImage) carousel.change(carouselImage)
+
+const translateCarousel = (() => {
+    const theForm = document.querySelector('.formTranslateFile')
+    //private var/functions
+    function handleBtn(btn) {
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault()
+
+                const id = btn.dataset.id
+
+                theForm.elements['carousel_id'].value = id
+            })
+        }
+    }
+
+    function image(element) {
+        return new Promise((resolve, reject) => {
+            const form = new FormData()
+
+            const file = element.elements['file'].files[0]
+
+            form.append('file', file)
+
+            fetch(`/api/translate_carousel/image`, {
+                method: 'POST',
+                headers: {
+                    authorization: `Bearer ${document.body.dataset.token}`,
+                },
+                body: form,
+            })
+                .then((r) => r.json())
+                .then((res) => resolve({ image: res, form: element }))
+                .catch((err) => reject(err))
+        })
+    }
+
+    function carousel(object) {
+        return new Promise((resolve, reject) => {
+            const language = object.form.elements['language'].value
+
+            const image_id = object.image.id
+
+            const carousel_id = object.form.elements['carousel_id'].value
+
+            fetch(`/api/translate_carousel`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${document.body.dataset.token}`,
+                },
+                body: JSON.stringify({ language, image_id, carousel_id }),
+            })
+                .then((r) => r.json())
+                .then(resolve)
+                .catch((err) => reject(err))
+        })
+    }
+
+    function store() {
+        if (theForm) {
+            theForm.addEventListener('submit', function (e) {
+                e.preventDefault()
+
+                return image(theForm)
+                    .then(carousel)
+                    .then((res) => {
+                        return Swal.fire({
+                            title: `Banner traduzido con sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+            })
+        }
+    }
+
+    return {
+        //public var/functions
+        store,
+        handleBtn,
+    }
+})()
+
+translateCarousel.store()
+
+const btnTranslateCarousel = [...document.querySelectorAll('.editTranslateCarousel')]
+
+if (btnTranslateCarousel) btnTranslateCarousel.map(translateCarousel.handleBtn)

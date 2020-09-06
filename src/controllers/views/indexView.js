@@ -3,6 +3,7 @@ const { Op } = require('sequelize')
 const Page = require('../../models/Page')
 const Carousel = require('../../models/Carousel')
 const Translation = require('../../models/Translation')
+const TranslateCarousel = require('../../models/TranslateCarousel')
 const Whatsapp = require('../../models/Whatsapp')
 const partialTranslations = require('../../modules/translate')
 
@@ -33,7 +34,11 @@ module.exports = {
                 include: { association: `banner`, include: { association: `image` } },
             })
 
-            console.log(language)
+            const whatsapp = await Whatsapp.findAll()
+
+            const carousel = await Carousel.findAll({ include: { association: `image` } })
+
+            let translateCarousel = carousel.map((carousel) => carousel.toJSON())
 
             if (language) {
                 const translate = await Translation.findOne({
@@ -45,20 +50,64 @@ module.exports = {
 
                 if (translate) home.content = translate.text
                 if (translate) home.title = translate.title
+
+                //translate banner
+                translateCarousel = await carousel.map(async (crsl) => {
+                    try {
+                        const image = crsl.toJSON()
+                        const translate = await TranslateCarousel.findOne({
+                            where: {
+                                carousel_id: image.id,
+                                language,
+                            },
+                            include: { association: `image` },
+                        })
+
+                        if (translate) image.image = translate.toJSON().image
+
+                        return image
+                    } catch (error) {
+                        console.log(error)
+                    }
+                })
+
+                //translate category
+                categories.map(async (category) => {
+                    const _translate = await Translation.findOne({
+                        where: {
+                            category_id: category.id,
+                            language,
+                        },
+                    })
+
+                    if (_translate) {
+                        category.description = _translate.text
+                        category.name = _translate.title
+                    }
+
+                    //translate child
+                    category.child.map(async (child) => {
+                        const __translate = await Translation.findOne({
+                            where: {
+                                category_id: child.id,
+                                language,
+                            },
+                        })
+
+                        if (__translate) {
+                            child.description = __translate.text
+                            child.name = __translate.title
+                        }
+                    })
+                })
             }
 
-            const whatsapp = await Whatsapp.findAll()
-
-            const carousel = await Carousel.findAll({ include: { association: `image` } })
-
-            console.log(partialTranslations(language))
+            translateCarousel = await Promise.all(translateCarousel)
 
             return res.render('index', {
                 pageTitle: `Bratva`,
                 categories,
-                banners: carousel.map((carr) => {
-                    return carr.toJSON()
-                }),
+                banners: translateCarousel,
                 bannerPape: home.toJSON().banner.image,
                 home: home.toJSON(),
                 partials: partialTranslations(language),
