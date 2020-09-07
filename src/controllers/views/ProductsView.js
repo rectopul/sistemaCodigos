@@ -48,13 +48,16 @@ module.exports = {
                 products.products.map(async (product) => {
                     const translate = await Translation.findOne({
                         where: {
-                            product_id: product.id,
+                            product_id: product.product.id,
                             language,
                         },
                     })
 
-                    if (translate) product.description = translate.text
-                    if (translate) product.name = translate.title
+                    if (translate) product.product.description = translate.text
+                    if (translate) product.product.name = translate.title
+
+                    console.log(`traducao`, translate)
+                    console.log(`produto`, product.product)
 
                     //translate category
                     categories.map(async (category) => {

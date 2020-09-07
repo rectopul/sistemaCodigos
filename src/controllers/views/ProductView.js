@@ -103,7 +103,7 @@ module.exports = {
                 productSend.map(async (product) => {
                     const _translate = await Translation.findOne({
                         where: {
-                            category_id: category.id,
+                            product_id: product.id,
                             language,
                         },
                     })

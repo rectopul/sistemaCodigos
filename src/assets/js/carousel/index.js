@@ -417,9 +417,13 @@ const translateCarousel = (() => {
     }
 })()
 
-$('#dataTable').on('draw.dt', function () {
-    translateCarousel.store()
+translateCarousel.store()
 
+const btnTranslateCarousel = [...document.querySelectorAll('.editTranslateCarousel')]
+
+if (btnTranslateCarousel) btnTranslateCarousel.map(translateCarousel.handleBtn)
+
+$('#dataTable').on('draw.dt', function () {
     const btnTranslateCarousel = [...document.querySelectorAll('.editTranslateCarousel')]
 
     if (btnTranslateCarousel) btnTranslateCarousel.map(translateCarousel.handleBtn)
