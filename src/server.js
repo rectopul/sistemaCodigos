@@ -63,20 +63,21 @@ app.engine(
                 }
                 return options.inverse(this)
             },
-            carousel: (arr) => {
+            carousel: (arr, options) => {
+                const myParam = options.data.root.language
                 if (arr.length) {
                     return arr.map((item, key) => {
                         if (key < 1) {
                             return `
                             <div class="carousel-item active">
-                                <a href="${item.url || `/`}">
+                                <a href="${item.url || `/`}?lang=${myParam}">
                                     <img src="${item.image.url}" class="d-block w-100" alt="...">
                                 </a>
                             </div>`
                         } else {
                             return `
                             <div class="carousel-item">
-                                <a href="${item.url || `/`}">
+                                <a href="${item.url || `/`}?lang=${myParam}">
                                     <img src="${item.image.url}" class="d-block w-100" alt="...">
                                 </a>
                             </div>`
