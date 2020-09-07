@@ -18,7 +18,7 @@ module.exports = (lang) => {
             consult: `query code`,
             subject: `Message subject`,
             message: `Message`,
-            sendMessage: `send Message`,
+            sendMessage: `send message`,
             details: `see details`,
             toBuy: `where to buy`,
             seePackage: `See package insert`,
