@@ -43,7 +43,19 @@ const translate = (() => {
             form.addEventListener('submit', function (e) {
                 e.preventDefault()
 
-                store(form)
+                store(form).then((res) => {
+                    //translateModal
+                    $('#translateModal').modal('hide')
+                    $('#translateModal').on('hidden.bs.modal', function (e) {
+                        // do something...
+                        $(this).off('hidden.bs.modal')
+                        return Swal.fire({
+                            title: `Traduzido con sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                })
             })
         }
     }

@@ -400,10 +400,16 @@ const translateCarousel = (() => {
                 return image(theForm)
                     .then(carousel)
                     .then((res) => {
-                        return Swal.fire({
-                            title: `Banner traduzido con sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
+                        //translateModal
+                        $('#translateModal').modal('hide')
+                        $('#translateModal').on('hidden.bs.modal', function (e) {
+                            // do something...
+                            $(this).off('hidden.bs.modal')
+                            return Swal.fire({
+                                title: `Banner traduzido con sucesso!`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
                         })
                     })
             })
