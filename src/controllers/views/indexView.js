@@ -34,7 +34,10 @@ module.exports = {
                 include: { association: `banner`, include: { association: `image` } },
             })
 
+
             const whatsapp = await Whatsapp.findAll()
+
+            if(!home || !whatsapp) return res.redirect('/dashboard')
 
             const carousel = await Carousel.findAll({ include: { association: `image` } })
 
@@ -112,10 +115,9 @@ module.exports = {
                 home: home.toJSON(),
                 partials: partialTranslations(language),
                 language: language || ``,
-                whatsapp: whatsapp[0].toJSON(),
+                whatsapp: whatsapp[0] ? whatsapp[0].toJSON() : '',
             })
         } catch (error) {
-            console.log(error)
             return res.redirect('/dashboard')
         }
     },

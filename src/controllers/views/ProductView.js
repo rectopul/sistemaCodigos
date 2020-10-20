@@ -59,7 +59,7 @@ module.exports = {
                 include: { association: `products` },
             })
 
-            const hidenIds = hiddenProducts.products.map((id) => id.product_id)
+            const hidenIds = hiddenProducts ? hiddenProducts.products.map((id) => id.product_id) : []
 
             const productInfos = await Product.findOne({
                 where: { slug: product_slug },
@@ -161,7 +161,7 @@ module.exports = {
                 content: productPage ? productPage.toJSON() : null,
                 partials: partialTranslations(language),
                 language: language || ``,
-                whatsapp: whatsapp[0].toJSON(),
+                whatsapp: whatsapp[0] ? whatsapp[0].toJSON() : '',
             })
         } catch (error) {
             console.log(error)

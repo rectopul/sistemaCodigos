@@ -17,6 +17,8 @@
                         <th>Código</th>
                         <th>IP</th>
                         <th>Data</th>
+                        <th>Código digitado</th>
+                        <th>status</th>
                     </tr>
                 </thead>
                 <tfoot>
@@ -27,6 +29,8 @@
                         <th>Código</th>
                         <th>IP</th>
                         <th>Data</th>
+                        <th>Código digitado</th>
+                        <th>status</th>
                     </tr>
                 </tfoot>
                 <tbody class="listConsults">
@@ -38,6 +42,8 @@
                         <td>{{code.code}}</td>
                         <td>{{ip}}</td>
                         <td>{{date}}</td>
+                        <td>{{inserted_code}}</td>
+                        <td>{{status}}</td>
                     </tr>
                     {{else}}
                     {{/each}}

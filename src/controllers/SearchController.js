@@ -57,7 +57,22 @@ module.exports = {
                 include: [{ association: `item` }, { association: `product` }],
             })
 
-            if (!search) return res.status(204).send({ error: `Código não existe` })
+            if (!search) {
+                const insertCode = await Search.create({
+                    name,
+                    surname,
+                    email,
+                    code_id: null,
+                    ip,
+                    city: city || 'não captado',
+                    device,
+                    address: region || 'não captado',
+                    status: 'invalid',
+                    inserted_code: code
+                })
+
+                return res.status(204).send({ error: `Código não existe` })
+            }
 
             if (!email) return res.status(400).send({ error: `Please enter your mail` })
 
@@ -85,6 +100,8 @@ module.exports = {
                 city,
                 device,
                 address: region,
+                status: 'success',
+                inserted_code: code
             })
             //code
             const response = await Search.findByPk(insertCode.id, {

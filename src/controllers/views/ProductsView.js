@@ -107,7 +107,7 @@ module.exports = {
                 content: productPage ? productPage.toJSON() : null,
                 partials: partialTranslations(language),
                 language,
-                whatsapp: whatsapp[0].toJSON(),
+                whatsapp: whatsapp[0] ? whatsapp[0].toJSON() : '',
             })
         } catch (error) {
             console.log(error)

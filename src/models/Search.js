@@ -86,6 +86,12 @@ class Search extends Model {
                         },
                     },
                 },
+                status: {
+                    type: DataTypes.STRING
+                },
+                inserted_code: {
+                    type: DataTypes.STRING
+                }
             },
             {
                 sequelize,
