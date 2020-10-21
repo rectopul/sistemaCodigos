@@ -25,7 +25,7 @@ const adjustDate = (dateString) => {
 module.exports = {
     async store(req, res) {
         try {
-            const { name, surname, email, code } = req.body
+            const { name, surname, email, code, localization } = req.body
             let oldDevice = req.headers['user-agent']
 
             const ip = req.clientIp.replace('::', '')

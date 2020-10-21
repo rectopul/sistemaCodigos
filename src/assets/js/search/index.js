@@ -88,23 +88,31 @@ const search = (() => {
     }
 
     const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { name, surname, email, code } = object
-
-            fetch(`/api/search`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
+        return new Promise( async (resolve, reject) => {
+            try {
+    
+                const localization = await fetch(`https://ipapi.co/json/`)
+                
+                const { name, surname, email, code } = object
+    
+                fetch(`/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, surname, email, code, ip, city, region, localization }),
                 })
-                .catch((error) => reject(error))
+                    .then((res) => res.json())
+                    .then((res) => {
+                        if (res.error) return reject(res.error)
+                        return resolve(res)
+                    })
+                    .catch(reject)
+
+            } catch (error) {
+                console.log(error);
+                reject(error)
+            }
         })
     }
 
@@ -143,7 +151,7 @@ const search = (() => {
                 document.querySelector('.consultMail').innerHTML = res.email
                 document.querySelector('.consultCity').innerHTML = res.city
                 document.querySelector('.consultAddress').innerHTML = res.address
-                document.querySelector('.consultCode').innerHTML = res.code.code
+                document.querySelector('.consultCode').innerHTML = res.code ? res.code.code : res.inserted_code + ' (código inválido)'
                 document.querySelector('.consultIp').innerHTML = res.ip
                 document.querySelector('.constData').innerHTML = date
                 $('#modalShowConsult').modal('show')

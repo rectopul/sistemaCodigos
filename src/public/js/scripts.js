@@ -277,6 +277,554 @@ if (btnValidat) util.scroll(btnValidat)
     )
 })()
 
+const category = (() => {
+    const table = $('#dataTable').DataTable()
+
+    //Private vars/functions
+    const btnClick = (btn) => {
+        const id = btn.dataset.id
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+            return removeCategory(btn, id)
+        })
+    }
+
+    const removeCategory = (element, id) => {
+        requestDestroy(id)
+            .then((res) => {
+                table
+                    .row($(element.closest('tr')))
+                    .remove()
+                    .draw()
+                /* if (element.closest('tr')) {
+                    element.closest('tr').remove()
+                } */
+
+                return Swal.fire({
+                    title: `Categoria ${res.name} removida com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) => {
+                return Swal.fire({
+                    title: err,
+                    text: `Ocorreu um erro ao remover a categoria`,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            })
+    }
+
+    const requestDestroy = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/category/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao deletar categoria`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const destroy = (btn) => {
+        return btnClick(btn)
+    }
+
+    //Validate form
+    const validateForm = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //Create new category
+    const requestCreate = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, description, slug, parent, position } = object
+
+            fetch(`/api/category`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, description, slug, parent, position }),
+            })
+                .then((r) => r.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    //Create category in front
+    const createFront = (object) => {
+        const { id, name, description, createdAt, position } = object
+
+        let data = new Date(createdAt)
+
+        data = new Intl.DateTimeFormat('pt-BR').format(data)
+
+        const newRow = table.row
+            .add([
+                id,
+                name,
+                description,
+                position,
+                0,
+                `<!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <!-- Botão de ação Editar // -->
+            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
+                <i class="far fa-trash-alt"></i>
+            </button>`,
+            ])
+            .draw()
+            .node()
+
+        newRow.classList.add(`category-${id}`)
+
+        const btnEdit = newRow.querySelector('.editCategory')
+
+        openModal(btnEdit)
+
+        const btnDestroy = newRow.querySelector('.categoryDestroy')
+
+        destroy(btnDestroy)
+
+        //document.querySelector('.listCaregories').append(tr)
+    }
+
+    const create = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const inputName = document.querySelector('.categoryName')
+            const inputDescription = document.querySelector('.categoryDescription')
+            const inputSlug = document.querySelector('.categorySlug')
+            const inputParent = document.querySelector('.categoryParent')
+            const inputPosition = document.querySelector('.categoryPosition')
+
+            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
+
+            return validateForm(inputsValidate)
+                .then(() => {
+                    return requestCreate({
+                        name: inputName.value,
+                        description: inputDescription.value,
+                        slug: inputSlug.value,
+                        parent: inputParent.value || null,
+                        position: inputPosition.value,
+                    })
+                        .then((res) => {
+                            createFront(res)
+                            return Swal.fire({
+                                title: `Categoria ${res.name} criada com sucesso!`,
+                                icon: 'success',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                        .catch((err) => {
+                            return Swal.fire({
+                                title: err,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+                        })
+                })
+                .catch((err) => console.log(err))
+        })
+    }
+
+    //Find category
+    const find = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+            fetch(`/api/category/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //edit
+    const edit = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { id, name, description, slug, parent, position } = object
+
+            fetch(`/api/category/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, description, slug, parent, position }),
+            })
+                .then((res) => {
+                    if (!res.ok) return reject(`Erro ao criar categoria`)
+                    return res.json()
+                })
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    //Update category in front
+    const updateFront = (object) => {
+        const { id, name, description, slug, parent, createdAt } = object
+
+        const category = document.querySelector(`.category-${id}`)
+
+        if (category) {
+            table.row($(category)).remove().draw()
+
+            createFront(object)
+
+            return Swal.fire({
+                title: `Categoria ${name} editada com sucesso!`,
+                icon: 'success',
+                confirmButtonText: 'Ok',
+            })
+        }
+    }
+
+    const formSubmitEdit = (form) => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+            const id = form.dataset.id
+
+            const name = form.querySelector('.editCategoryName').value
+            const description = form.querySelector('.editCategoryDescription').value
+            const slug = form.querySelector('.editCategorySlug').value
+            const parent = form.querySelector('.editCategoryParent').value || null
+            const position = form.querySelector('.editCategoryPosition').value
+
+            return edit({
+                id,
+                name,
+                description,
+                slug,
+                parent,
+                position,
+            }).then((res) => {
+                console.log(res)
+                $('#modalEditCategory').modal('hide')
+
+                return updateFront(res)
+            })
+        })
+    }
+
+    //Functions from edit categories
+    const openModal = (btn) => {
+        btn.addEventListener('click', (e) => {
+            const id = btn.dataset.id
+            const action = `editCategory`
+
+            //const btnModal = document.querySelector('.btnEditCategory')
+
+            return find(id)
+                .then((res) => {
+                    const inputName = document.querySelector('.editCategoryName')
+                    const inputDescription = document.querySelector('.editCategoryDescription')
+                    const inputSlug = document.querySelector('.editCategorySlug')
+                    const inputParent = document.querySelector('.editCategoryParent')
+                    const inputPosition = document.querySelector('.editCategoryPosition')
+
+                    const { id, name, description, slug, parent, position } = res
+
+                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
+                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
+                    }
+
+                    inputName.value = name
+                    inputDescription.value = description
+                    inputSlug.value = slug
+                    inputPosition.value = position
+
+                    return (document.querySelector('.modalEditCategory form').dataset.id = id)
+                })
+                .catch((err) => {
+                    console.log(err)
+                    return Swal.fire({
+                        title: `Erro ao editar categoria`,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+                })
+        })
+    }
+
+    return {
+        destroy,
+        create,
+        edit: openModal,
+        formSubmitEdit,
+    }
+})()
+
+const formEditCategory = document.querySelector('.modalEditCategory form')
+
+if (formEditCategory) category.formSubmitEdit(document.querySelector('.modalEditCategory form'))
+
+if (document.querySelector('.editCategorySlug')) {
+    document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
+        e.preventDefault()
+
+        const thisValue = document.querySelector('.editCategorySlug').value
+
+        document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
+    })
+}
+
+const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
+
+if (btnCategoryDestroy) {
+    Array.from(btnCategoryDestroy).forEach((btn) => {
+        return category.destroy(btn)
+    })
+}
+
+const btnModalEditCategory = document.querySelectorAll('.editCategory')
+
+if (btnModalEditCategory) {
+    Array.from(btnModalEditCategory).forEach((btn) => {
+        return category.edit(btn)
+    })
+}
+
+const btnCreateCategory = document.querySelector('.btnCreateCategory')
+
+if (btnCreateCategory) category.create(btnCreateCategory)
+
+const search = (() => {
+    //validate form
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                if (!input.value) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    //private vars/functions
+    const search = (btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            console.log()
+
+            const inputCode = document.querySelector('input.Code')
+
+            const inputName = document.querySelector('input.name')
+            const inputSurname = document.querySelector('input.surname')
+            const inputMail = document.querySelector('input.mail')
+
+            if (inputName && inputSurname && inputMail) {
+                const objectValidate = [
+                    { input: inputName, msg: `Informe seu nome` },
+                    { input: inputSurname, msg: `Informe seu sobrenome` },
+                    { input: inputMail, msg: `Informe seu e-mail` },
+                ]
+
+                return validate(objectValidate)
+                    .then((res) => {
+                        return request({
+                            code: inputCode.value,
+                            name: inputName.value,
+                            surname: inputSurname.value,
+                            email: inputMail.value,
+                        })
+                            .then((res) => {
+                                const { device, code, ip, city, address } = res
+                                const clientInfo = document.querySelector('.clientInfo')
+
+                                return (clientInfo.innerHTML = `
+                            <p>
+                                <strong>Código: </strong> ${code.code}
+                            </p>
+                            <p>
+                                <strong>Produto: </strong> ${code.product.name}
+                            </p>
+                            <p>
+                                <strong>Item: </strong> ${code.item.name}
+                            </p>
+                            <p>
+                                <strong>Device: </strong> ${device}
+                            </p>
+                            <p>
+                                <strong>Cidade: </strong> ${city}
+                            </p>
+                            <p>
+                                <strong>Estado: </strong> ${address}
+                            </p>
+                            <p>
+                                <strong>Endereço IP: </strong> ${ip}
+                            </p>
+                        `)
+                            })
+                            .catch((err) => {
+                                return Swal.fire({
+                                    title: err,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok',
+                                })
+                            })
+                    })
+                    .catch((err) => console.log(err))
+            }
+        })
+    }
+
+    const request = (object) => {
+        return new Promise( async (resolve, reject) => {
+            try {
+    
+                const localization = await fetch(`https://ipapi.co/json/`)
+                
+                const { name, surname, email, code } = object
+    
+                fetch(`/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, surname, email, code, ip, city, region, localization }),
+                })
+                    .then((res) => res.json())
+                    .then((res) => {
+                        if (res.error) return reject(res.error)
+                        return resolve(res)
+                    })
+                    .catch(reject)
+
+            } catch (error) {
+                console.log(error);
+                reject(error)
+            }
+        })
+    }
+
+    const requestShow = (id) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            fetch(`/api/search/${id}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+            })
+                .then((res) => res.json())
+                .then((res) => {
+                    if (res.error) return reject(res.error)
+                    return resolve(res)
+                })
+                .catch((error) => reject(error))
+        })
+    }
+
+    const show = (searche) => {
+        //modalShowConsult
+        searche.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const id = searche.dataset.id
+
+            return requestShow(id).then((res) => {
+                const date = new Intl.DateTimeFormat('pt-BR').format(new Date(res.createdAt))
+                document.querySelector('.consultId').innerHTML = res.id
+                document.querySelector('.consultName').innerHTML = res.name
+                document.querySelector('.consultSurname').innerHTML = res.surname
+                document.querySelector('.consultMail').innerHTML = res.email
+                document.querySelector('.consultCity').innerHTML = res.city
+                document.querySelector('.consultAddress').innerHTML = res.address
+                document.querySelector('.consultCode').innerHTML = res.code ? res.code.code : res.inserted_code + ' (código inválido)'
+                document.querySelector('.consultIp').innerHTML = res.ip
+                document.querySelector('.constData').innerHTML = date
+                $('#modalShowConsult').modal('show')
+            })
+        })
+    }
+    return {
+        //piblic vars/function
+        search,
+        show,
+    }
+})()
+
+const consults = document.querySelectorAll('.listConsults > tr')
+
+if (consults) {
+    Array.from(consults).forEach((consult) => {
+        search.show(consult)
+    })
+}
+
+$('.page-adm-consults #dataTable').on('draw.dt', function () {
+    const elementsConsults = document.querySelectorAll('.listConsults > tr')
+
+    if (elementsConsults) {
+        Array.from(elementsConsults).forEach((consult) => {
+            search.show(consult)
+        })
+    }
+})
+
+const btnSearchCode = document.querySelector('.submitSearch')
+
+if (btnSearchCode) search.search(btnSearchCode)
+
 const carousel = (() => {
     //private var/functions
     const table = $('#dataTable').DataTable()
@@ -713,365 +1261,6 @@ $('#dataTable').on('draw.dt', function () {
 
     if (btnTranslateCarousel) btnTranslateCarousel.map(translateCarousel.handleBtn)
 })
-
-const category = (() => {
-    const table = $('#dataTable').DataTable()
-
-    //Private vars/functions
-    const btnClick = (btn) => {
-        const id = btn.dataset.id
-
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-            return removeCategory(btn, id)
-        })
-    }
-
-    const removeCategory = (element, id) => {
-        requestDestroy(id)
-            .then((res) => {
-                table
-                    .row($(element.closest('tr')))
-                    .remove()
-                    .draw()
-                /* if (element.closest('tr')) {
-                    element.closest('tr').remove()
-                } */
-
-                return Swal.fire({
-                    title: `Categoria ${res.name} removida com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) => {
-                return Swal.fire({
-                    title: err,
-                    text: `Ocorreu um erro ao remover a categoria`,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            })
-    }
-
-    const requestDestroy = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/category/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao deletar categoria`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const destroy = (btn) => {
-        return btnClick(btn)
-    }
-
-    //Validate form
-    const validateForm = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //Create new category
-    const requestCreate = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, description, slug, parent, position } = object
-
-            fetch(`/api/category`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, description, slug, parent, position }),
-            })
-                .then((r) => r.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-                    resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    //Create category in front
-    const createFront = (object) => {
-        const { id, name, description, createdAt, position } = object
-
-        let data = new Date(createdAt)
-
-        data = new Intl.DateTimeFormat('pt-BR').format(data)
-
-        const newRow = table.row
-            .add([
-                id,
-                name,
-                description,
-                position,
-                0,
-                `<!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark editCategory py-0" data-toggle="modal" data-target="#modalEditCategory" data-id="${id}">
-                <i class="fas fa-edit"></i>
-            </button>
-            <!-- Botão de ação Editar // -->
-            <button type="button" class="btn btn-datatable btn-icon btn-transparent-dark categoryDestroy py-0" data-id="${id}">
-                <i class="far fa-trash-alt"></i>
-            </button>`,
-            ])
-            .draw()
-            .node()
-
-        newRow.classList.add(`category-${id}`)
-
-        const btnEdit = newRow.querySelector('.editCategory')
-
-        openModal(btnEdit)
-
-        const btnDestroy = newRow.querySelector('.categoryDestroy')
-
-        destroy(btnDestroy)
-
-        //document.querySelector('.listCaregories').append(tr)
-    }
-
-    const create = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const inputName = document.querySelector('.categoryName')
-            const inputDescription = document.querySelector('.categoryDescription')
-            const inputSlug = document.querySelector('.categorySlug')
-            const inputParent = document.querySelector('.categoryParent')
-            const inputPosition = document.querySelector('.categoryPosition')
-
-            const inputsValidate = [{ input: inputName, msg: `Informe um nome para a categoria` }]
-
-            return validateForm(inputsValidate)
-                .then(() => {
-                    return requestCreate({
-                        name: inputName.value,
-                        description: inputDescription.value,
-                        slug: inputSlug.value,
-                        parent: inputParent.value || null,
-                        position: inputPosition.value,
-                    })
-                        .then((res) => {
-                            createFront(res)
-                            return Swal.fire({
-                                title: `Categoria ${res.name} criada com sucesso!`,
-                                icon: 'success',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                        .catch((err) => {
-                            return Swal.fire({
-                                title: err,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
-                        })
-                })
-                .catch((err) => console.log(err))
-        })
-    }
-
-    //Find category
-    const find = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-            fetch(`/api/category/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    //edit
-    const edit = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { id, name, description, slug, parent, position } = object
-
-            fetch(`/api/category/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, description, slug, parent, position }),
-            })
-                .then((res) => {
-                    if (!res.ok) return reject(`Erro ao criar categoria`)
-                    return res.json()
-                })
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    //Update category in front
-    const updateFront = (object) => {
-        const { id, name, description, slug, parent, createdAt } = object
-
-        const category = document.querySelector(`.category-${id}`)
-
-        if (category) {
-            table.row($(category)).remove().draw()
-
-            createFront(object)
-
-            return Swal.fire({
-                title: `Categoria ${name} editada com sucesso!`,
-                icon: 'success',
-                confirmButtonText: 'Ok',
-            })
-        }
-    }
-
-    const formSubmitEdit = (form) => {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault()
-            const id = form.dataset.id
-
-            const name = form.querySelector('.editCategoryName').value
-            const description = form.querySelector('.editCategoryDescription').value
-            const slug = form.querySelector('.editCategorySlug').value
-            const parent = form.querySelector('.editCategoryParent').value || null
-            const position = form.querySelector('.editCategoryPosition').value
-
-            return edit({
-                id,
-                name,
-                description,
-                slug,
-                parent,
-                position,
-            }).then((res) => {
-                console.log(res)
-                $('#modalEditCategory').modal('hide')
-
-                return updateFront(res)
-            })
-        })
-    }
-
-    //Functions from edit categories
-    const openModal = (btn) => {
-        btn.addEventListener('click', (e) => {
-            const id = btn.dataset.id
-            const action = `editCategory`
-
-            //const btnModal = document.querySelector('.btnEditCategory')
-
-            return find(id)
-                .then((res) => {
-                    const inputName = document.querySelector('.editCategoryName')
-                    const inputDescription = document.querySelector('.editCategoryDescription')
-                    const inputSlug = document.querySelector('.editCategorySlug')
-                    const inputParent = document.querySelector('.editCategoryParent')
-                    const inputPosition = document.querySelector('.editCategoryPosition')
-
-                    const { id, name, description, slug, parent, position } = res
-
-                    if (inputParent.querySelector(`option[value="${parent}"]`)) {
-                        inputParent.querySelector(`option[value="${parent}"]`).selected = true
-                    }
-
-                    inputName.value = name
-                    inputDescription.value = description
-                    inputSlug.value = slug
-                    inputPosition.value = position
-
-                    return (document.querySelector('.modalEditCategory form').dataset.id = id)
-                })
-                .catch((err) => {
-                    console.log(err)
-                    return Swal.fire({
-                        title: `Erro ao editar categoria`,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-                })
-        })
-    }
-
-    return {
-        destroy,
-        create,
-        edit: openModal,
-        formSubmitEdit,
-    }
-})()
-
-const formEditCategory = document.querySelector('.modalEditCategory form')
-
-if (formEditCategory) category.formSubmitEdit(document.querySelector('.modalEditCategory form'))
-
-if (document.querySelector('.editCategorySlug')) {
-    document.querySelector('.editCategorySlug').addEventListener('keyup', function (e) {
-        e.preventDefault()
-
-        const thisValue = document.querySelector('.editCategorySlug').value
-
-        document.querySelector('.editCategorySlug').value = util.validateSlug(thisValue)
-    })
-}
-
-const btnCategoryDestroy = document.querySelectorAll('.categoryDestroy')
-
-if (btnCategoryDestroy) {
-    Array.from(btnCategoryDestroy).forEach((btn) => {
-        return category.destroy(btn)
-    })
-}
-
-const btnModalEditCategory = document.querySelectorAll('.editCategory')
-
-if (btnModalEditCategory) {
-    Array.from(btnModalEditCategory).forEach((btn) => {
-        return category.edit(btn)
-    })
-}
-
-const btnCreateCategory = document.querySelector('.btnCreateCategory')
-
-if (btnCreateCategory) category.create(btnCreateCategory)
 
 const loginResource = `login`
 
@@ -1597,6 +1786,138 @@ const newsletter = (() => {
 const newsForm = document.querySelector('.newsForm')
 
 if (newsForm) newsletter.subscribe(newsForm)
+
+const translate = (() => {
+    //private var/functions
+    const form = document.querySelector('.formEditTranslate')
+
+    const handleForm = (btn) => {
+        btn.addEventListener('click', function (e) {
+            const id = btn.dataset.id
+
+            const type = form.dataset.type
+
+            if (type === `pages`) form.elements['page_id'].value = id
+            if (type === `products`) form.elements['product_id'].value = id
+            if (type === `categories`) form.elements['category_id'].value = id
+
+            if (form) form.dataset.id = id
+        })
+    }
+
+    function store(form) {
+        return new Promise((resolve, reject) => {
+            const type = form.dataset.type
+
+            const values = util.serialize(form)
+
+            values.type = type
+
+            fetch(`/api/v1/translate`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${document.body.dataset.token}`,
+                },
+                body: JSON.stringify(values),
+            })
+                .then((r) => r.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    function handleSubmit() {
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault()
+
+                store(form).then((res) => {
+                    //translateModal
+                    $('#translateModal').modal('hide')
+                    $('#translateModal').on('hidden.bs.modal', function (e) {
+                        // do something...
+                        $(this).off('hidden.bs.modal')
+                        return Swal.fire({
+                            title: `Traduzido con sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                })
+            })
+        }
+    }
+
+    function init() {
+        handleSubmit()
+    }
+
+    return {
+        //public var/functions
+        handleForm,
+        init,
+    }
+})()
+
+translate.init()
+
+const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
+
+if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
+
+$('#dataTable').on('draw.dt', function () {
+    const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
+
+    if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
+})
+
+const whatsapp = (() => {
+    //private var/functions
+    function store(form) {
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault()
+
+                const body = JSON.stringify(util.serialize(form))
+
+                fetch(`/api/v1/whatsapp`, {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                        authorization: `Bearer ${document.body.dataset.token}`,
+                    },
+                    body,
+                })
+                    .then((r) => r.json())
+                    .then((res) => {
+                        if (res.error)
+                            return Swal.fire({
+                                title: res.error,
+                                icon: 'error',
+                                confirmButtonText: 'Ok',
+                            })
+
+                        return Swal.fire({
+                            title: `O número ${res.number} foi cadastrado com sucesso!`,
+                            icon: 'success',
+                            confirmButtonText: 'Ok',
+                        })
+                    })
+                    .catch((error) => console.log(error))
+            })
+        }
+    }
+
+    return {
+        //public var/functions
+        store,
+    }
+})()
+
+const formWhats = document.querySelector('.formWhats')
+
+if (formWhats) whatsapp.store(formWhats)
 
 const partner = (() => {
     const table = $('#dataTable').DataTable()
@@ -3220,454 +3541,6 @@ const ImageProduct = document.querySelector('.productImage')
 
 if (ImageProduct) imgProduct.change(ImageProduct)
 
-const profile = (() => {
-    //private functions/var
-    const request = (file) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const reqUrl = `/api/user/image`
-
-            const form = new FormData()
-            form.append('file', file)
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-                body: form,
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestProfile = (object) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
-
-            const reqUrl = `/api/user`
-
-            fetch(reqUrl, {
-                method: 'PUT',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
-            })
-                .then((res) => res.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    const changeState = (input) => {
-        input.addEventListener('change', function (e) {
-            editAvatar(input)
-        })
-    }
-
-    const editAvatar = (input) => {
-        console.log(input.files)
-        return request(input.files[0])
-            .then((res) => {
-                if (res.error) return console.log(res.error)
-
-                document.querySelector('.img-profile').src = res.url
-
-                return (document.querySelector('.profile-avatar').src = res.url)
-            })
-            .catch((err) => console.log(err))
-    }
-
-    const enableForm = (button) => {
-        if (!button) console.log(`Botão não existe`)
-        button.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
-
-            const formulario = document.querySelector('.formEditUser')
-
-            if (button.classList.contains('save')) {
-                Array.from(form).forEach((input) => {
-                    input.disabled = true
-                })
-
-                button.innerHTML = `Edit profile`
-
-                if (formulario) getFields(formulario)
-
-                return button.classList.remove('save')
-            } else {
-                Array.from(form).forEach((input) => {
-                    input.disabled = false
-                })
-
-                button.innerHTML = `Salvar alterações`
-
-                return button.classList.add('save')
-            }
-        })
-    }
-
-    //get all fields
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                console.log()
-
-                if (!input.value || input.value == `Selecione...`) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    const getFields = (form) => {
-        if (!form) return console.log(`Formulário não existe`)
-
-        const listElements = Array.from(form.elements)
-
-        const object = {
-            name: form.querySelector('#input-username').value,
-            email: form.querySelector('#input-email').value,
-            currentPassword: form.querySelector('#input-current-password').value,
-            newPassword: form.querySelector('#input-new-password').value,
-            address: form.querySelector('#input-address').value,
-            city: form.querySelector('#input-city').value,
-            phone: form.querySelector('#input-phone').value,
-            cell: form.querySelector('#input-cell').value,
-            about: form.querySelector('#textarea-about').value,
-        }
-
-        return requestProfile(object)
-            .then((res) => {
-                if (res.error)
-                    return Swal.fire({
-                        title: `Erro ao atualizar usuário`,
-                        text: res.error,
-                        icon: 'error',
-                        confirmButtonText: 'Ok',
-                    })
-
-                return Swal.fire({
-                    title: `Perfil atualizado`,
-                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
-                    icon: 'success',
-                    confirmButtonText: 'Ok',
-                })
-            })
-            .catch((err) =>
-                Swal.fire({
-                    title: `Erro ao atualizar usuário`,
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Ok',
-                })
-            )
-
-        console.log(object)
-    }
-
-    //requestSaveProfile
-
-    return {
-        //public var/functions
-        edit: changeState,
-        enableEdit: enableForm,
-        save: getFields,
-    }
-})()
-
-const inputEditAvatar = document.querySelector('.inputProfileAvatar')
-
-if (inputEditAvatar) profile.edit(inputEditAvatar)
-
-//btnEditUser
-const btnEditUser = document.querySelector('.btnEditUser')
-
-if (btnEditUser) profile.enableEdit(btnEditUser)
-
-const search = (() => {
-    //validate form
-    const validate = (list) => {
-        return new Promise((resolve, reject) => {
-            list.map((item) => {
-                const { input, msg } = item
-
-                if (!input.value) {
-                    input.setCustomValidity(msg)
-
-                    input.reportValidity()
-
-                    return reject(msg)
-                }
-
-                return resolve()
-            })
-        })
-    }
-
-    //private vars/functions
-    const search = (btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            console.log()
-
-            const inputCode = document.querySelector('input.Code')
-
-            const inputName = document.querySelector('input.name')
-            const inputSurname = document.querySelector('input.surname')
-            const inputMail = document.querySelector('input.mail')
-
-            if (inputName && inputSurname && inputMail) {
-                const objectValidate = [
-                    { input: inputName, msg: `Informe seu nome` },
-                    { input: inputSurname, msg: `Informe seu sobrenome` },
-                    { input: inputMail, msg: `Informe seu e-mail` },
-                ]
-
-                return validate(objectValidate)
-                    .then((res) => {
-                        return request({
-                            code: inputCode.value,
-                            name: inputName.value,
-                            surname: inputSurname.value,
-                            email: inputMail.value,
-                        })
-                            .then((res) => {
-                                const { device, code, ip, city, address } = res
-                                const clientInfo = document.querySelector('.clientInfo')
-
-                                return (clientInfo.innerHTML = `
-                            <p>
-                                <strong>Código: </strong> ${code.code}
-                            </p>
-                            <p>
-                                <strong>Produto: </strong> ${code.product.name}
-                            </p>
-                            <p>
-                                <strong>Item: </strong> ${code.item.name}
-                            </p>
-                            <p>
-                                <strong>Device: </strong> ${device}
-                            </p>
-                            <p>
-                                <strong>Cidade: </strong> ${city}
-                            </p>
-                            <p>
-                                <strong>Estado: </strong> ${address}
-                            </p>
-                            <p>
-                                <strong>Endereço IP: </strong> ${ip}
-                            </p>
-                        `)
-                            })
-                            .catch((err) => {
-                                return Swal.fire({
-                                    title: err,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok',
-                                })
-                            })
-                    })
-                    .catch((err) => console.log(err))
-            }
-        })
-    }
-
-    const request = (object) => {
-        return new Promise((resolve, reject) => {
-            const { name, surname, email, code } = object
-
-            fetch(`/api/search`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                },
-                body: JSON.stringify({ name, surname, email, code, ip, city, region }),
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    console.log(res)
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const requestShow = (id) => {
-        return new Promise((resolve, reject) => {
-            const token = document.body.dataset.token
-
-            fetch(`/api/search/${id}`, {
-                method: 'GET',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((res) => {
-                    if (res.error) return reject(res.error)
-                    return resolve(res)
-                })
-                .catch((error) => reject(error))
-        })
-    }
-
-    const show = (searche) => {
-        //modalShowConsult
-        searche.addEventListener('click', (e) => {
-            e.preventDefault()
-
-            const id = searche.dataset.id
-
-            return requestShow(id).then((res) => {
-                const date = new Intl.DateTimeFormat('pt-BR').format(new Date(res.createdAt))
-                document.querySelector('.consultId').innerHTML = res.id
-                document.querySelector('.consultName').innerHTML = res.name
-                document.querySelector('.consultSurname').innerHTML = res.surname
-                document.querySelector('.consultMail').innerHTML = res.email
-                document.querySelector('.consultCity').innerHTML = res.city
-                document.querySelector('.consultAddress').innerHTML = res.address
-                document.querySelector('.consultCode').innerHTML = res.code.code
-                document.querySelector('.consultIp').innerHTML = res.ip
-                document.querySelector('.constData').innerHTML = date
-                $('#modalShowConsult').modal('show')
-            })
-        })
-    }
-    return {
-        //piblic vars/function
-        search,
-        show,
-    }
-})()
-
-const consults = document.querySelectorAll('.listConsults > tr')
-
-if (consults) {
-    Array.from(consults).forEach((consult) => {
-        search.show(consult)
-    })
-}
-
-$('.page-adm-consults #dataTable').on('draw.dt', function () {
-    const elementsConsults = document.querySelectorAll('.listConsults > tr')
-
-    if (elementsConsults) {
-        Array.from(elementsConsults).forEach((consult) => {
-            search.show(consult)
-        })
-    }
-})
-
-const btnSearchCode = document.querySelector('.submitSearch')
-
-if (btnSearchCode) search.search(btnSearchCode)
-
-const translate = (() => {
-    //private var/functions
-    const form = document.querySelector('.formEditTranslate')
-
-    const handleForm = (btn) => {
-        btn.addEventListener('click', function (e) {
-            const id = btn.dataset.id
-
-            const type = form.dataset.type
-
-            if (type === `pages`) form.elements['page_id'].value = id
-            if (type === `products`) form.elements['product_id'].value = id
-            if (type === `categories`) form.elements['category_id'].value = id
-
-            if (form) form.dataset.id = id
-        })
-    }
-
-    function store(form) {
-        return new Promise((resolve, reject) => {
-            const type = form.dataset.type
-
-            const values = util.serialize(form)
-
-            values.type = type
-
-            fetch(`/api/v1/translate`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/json',
-                    authorization: `Bearer ${document.body.dataset.token}`,
-                },
-                body: JSON.stringify(values),
-            })
-                .then((r) => r.json())
-                .then((res) => resolve(res))
-                .catch((error) => reject(error))
-        })
-    }
-
-    function handleSubmit() {
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault()
-
-                store(form).then((res) => {
-                    //translateModal
-                    $('#translateModal').modal('hide')
-                    $('#translateModal').on('hidden.bs.modal', function (e) {
-                        // do something...
-                        $(this).off('hidden.bs.modal')
-                        return Swal.fire({
-                            title: `Traduzido con sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                })
-            })
-        }
-    }
-
-    function init() {
-        handleSubmit()
-    }
-
-    return {
-        //public var/functions
-        handleForm,
-        init,
-    }
-})()
-
-translate.init()
-
-const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
-
-if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
-
-$('#dataTable').on('draw.dt', function () {
-    const btnOpenFormTranslate = [...document.querySelectorAll('button.editTranslate')]
-
-    if (btnOpenFormTranslate) btnOpenFormTranslate.map(translate.handleForm)
-})
-
 const userResource = `user`
 
 const user = (() => {
@@ -4046,52 +3919,187 @@ const formNewUser = document.querySelector('.formCreateUser')
 
 if (formNewUser) user.create(formNewUser)
 
-const whatsapp = (() => {
-    //private var/functions
-    function store(form) {
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault()
+const profile = (() => {
+    //private functions/var
+    const request = (file) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
 
-                const body = JSON.stringify(util.serialize(form))
+            const reqUrl = `/api/user/image`
 
-                fetch(`/api/v1/whatsapp`, {
-                    method: 'POST',
-                    headers: {
-                        'content-type': 'application/json',
-                        authorization: `Bearer ${document.body.dataset.token}`,
-                    },
-                    body,
-                })
-                    .then((r) => r.json())
-                    .then((res) => {
-                        if (res.error)
-                            return Swal.fire({
-                                title: res.error,
-                                icon: 'error',
-                                confirmButtonText: 'Ok',
-                            })
+            const form = new FormData()
+            form.append('file', file)
 
-                        return Swal.fire({
-                            title: `O número ${res.number} foi cadastrado com sucesso!`,
-                            icon: 'success',
-                            confirmButtonText: 'Ok',
-                        })
-                    })
-                    .catch((error) => console.log(error))
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    authorization: `Bearer ${token}`,
+                },
+                body: form,
             })
-        }
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
     }
+
+    const requestProfile = (object) => {
+        return new Promise((resolve, reject) => {
+            const token = document.body.dataset.token
+
+            const { name, email, phone, cell, currentPassword, newPassword, address, about, city } = object
+
+            const reqUrl = `/api/user`
+
+            fetch(reqUrl, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json',
+                    authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ name, email, phone, cell, currentPassword, newPassword, address, about, city }),
+            })
+                .then((res) => res.json())
+                .then((res) => resolve(res))
+                .catch((error) => reject(error))
+        })
+    }
+
+    const changeState = (input) => {
+        input.addEventListener('change', function (e) {
+            editAvatar(input)
+        })
+    }
+
+    const editAvatar = (input) => {
+        console.log(input.files)
+        return request(input.files[0])
+            .then((res) => {
+                if (res.error) return console.log(res.error)
+
+                document.querySelector('.img-profile').src = res.url
+
+                return (document.querySelector('.profile-avatar').src = res.url)
+            })
+            .catch((err) => console.log(err))
+    }
+
+    const enableForm = (button) => {
+        if (!button) console.log(`Botão não existe`)
+        button.addEventListener('click', (e) => {
+            e.preventDefault()
+
+            const form = document.querySelectorAll('.formEditUser input, .formEditUser textarea')
+
+            const formulario = document.querySelector('.formEditUser')
+
+            if (button.classList.contains('save')) {
+                Array.from(form).forEach((input) => {
+                    input.disabled = true
+                })
+
+                button.innerHTML = `Edit profile`
+
+                if (formulario) getFields(formulario)
+
+                return button.classList.remove('save')
+            } else {
+                Array.from(form).forEach((input) => {
+                    input.disabled = false
+                })
+
+                button.innerHTML = `Salvar alterações`
+
+                return button.classList.add('save')
+            }
+        })
+    }
+
+    //get all fields
+    const validate = (list) => {
+        return new Promise((resolve, reject) => {
+            list.map((item) => {
+                const { input, msg } = item
+
+                console.log()
+
+                if (!input.value || input.value == `Selecione...`) {
+                    input.setCustomValidity(msg)
+
+                    input.reportValidity()
+
+                    return reject(msg)
+                }
+
+                return resolve()
+            })
+        })
+    }
+
+    const getFields = (form) => {
+        if (!form) return console.log(`Formulário não existe`)
+
+        const listElements = Array.from(form.elements)
+
+        const object = {
+            name: form.querySelector('#input-username').value,
+            email: form.querySelector('#input-email').value,
+            currentPassword: form.querySelector('#input-current-password').value,
+            newPassword: form.querySelector('#input-new-password').value,
+            address: form.querySelector('#input-address').value,
+            city: form.querySelector('#input-city').value,
+            phone: form.querySelector('#input-phone').value,
+            cell: form.querySelector('#input-cell').value,
+            about: form.querySelector('#textarea-about').value,
+        }
+
+        return requestProfile(object)
+            .then((res) => {
+                if (res.error)
+                    return Swal.fire({
+                        title: `Erro ao atualizar usuário`,
+                        text: res.error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok',
+                    })
+
+                return Swal.fire({
+                    title: `Perfil atualizado`,
+                    text: `O Usuário ${res.name} foi atualizado com sucesso!`,
+                    icon: 'success',
+                    confirmButtonText: 'Ok',
+                })
+            })
+            .catch((err) =>
+                Swal.fire({
+                    title: `Erro ao atualizar usuário`,
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Ok',
+                })
+            )
+
+        console.log(object)
+    }
+
+    //requestSaveProfile
 
     return {
         //public var/functions
-        store,
+        edit: changeState,
+        enableEdit: enableForm,
+        save: getFields,
     }
 })()
 
-const formWhats = document.querySelector('.formWhats')
+const inputEditAvatar = document.querySelector('.inputProfileAvatar')
 
-if (formWhats) whatsapp.store(formWhats)
+if (inputEditAvatar) profile.edit(inputEditAvatar)
+
+//btnEditUser
+const btnEditUser = document.querySelector('.btnEditUser')
+
+if (btnEditUser) profile.enableEdit(btnEditUser)
 
 const contact = (() => {
     //private var/functions
